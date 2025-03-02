@@ -20,6 +20,21 @@ export async function connectRedis() {
   return redisClient;
 }
 
+export async function cacheFile(fileId:string, fileData:any , ttl=3600){
+  const redis = await connectRedis();
+  await redis.set(`file:${fileId}`, JSON.stringify(fileData), { EX: ttl });
+}
+
+export async function getCacheFile(fileId:string){
+  const redis = await connectRedis();
+  const cacheData = await redis.get(`file:${fileId}`);
+  return cacheData ? JSON.parse(cacheData) : null;
+}
+
+export async function  invalidateFileCache(fileId:string){
+  const redis = await connectRedis();
+  await redis.del(`file:${fileId}`);
+}
 
 
 
