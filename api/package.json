@@ -16,6 +16,7 @@
     "@node-rs/bcrypt": "^1.10.7",
     "@types/clamav.js": "^0.12.4",
     "@types/clamscan": "^2.4.0",
+    "bufferutil": "^4.0.9",
     "clamav.js": "^0.12.0",
     "clamdjs": "^1.0.2",
     "clamscan": "^2.4.0",
@@ -30,6 +31,10 @@
     "node-clamav": "^1.0.11",
     "qrcode": "^1.5.4",
     "redis": "^4.7.0",
+    "socket-io-server": "^1.0.5",
+    "socket-server": "^0.0.4",
+    "socket.io": "^4.8.1",
+    "utf-8-validate": "^6.0.5",
     "zod": "^3.24.2"
   },
   "devDependencies": {
