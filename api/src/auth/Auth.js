@@ -2,7 +2,7 @@ import { authPlugin } from '@hapi/cookie';
 import { Elysia } from 'elysia';
 
 export function authPlugin() {
-  return new Elysia()
+  return  Elysia()
     .use(jwt({
       name: 'jwt',
       secret: process.env.AUTH_SECRET,

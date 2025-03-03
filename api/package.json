@@ -16,6 +16,7 @@
     "@node-rs/bcrypt": "^1.10.7",
     "@types/clamav.js": "^0.12.4",
     "@types/clamscan": "^2.4.0",
+    "@upstash/redis": "^1.34.4",
     "bufferutil": "^4.0.9",
     "clamav.js": "^0.12.0",
     "clamdjs": "^1.0.2",
