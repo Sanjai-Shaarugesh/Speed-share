@@ -180,14 +180,11 @@
       <div class="mt-4 flex flex-row gap-2">
         <button class="btn btn-primary" onclick={generateOfferLink}>Generate Offer</button>
         {#if !showOfferOptions}
-          <button
-            class="btn btn-secondary gap-2"
-            onclick={() => {
-              showOfferOptions = true;
-            }}
-          >
-            Settings
-          </button>
+          
+
+          <button class="btn btn-success" onclick={() => {
+            showOfferOptions = true;
+          }}>Setting</button>
         {/if}
       </div>
     </div>

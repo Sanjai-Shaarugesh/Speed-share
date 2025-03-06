@@ -52,6 +52,8 @@
     for=""
   >
     <h3 class="text-lg font-bold">Scan QR Code</h3>
-    <video class="w-96 max-w-full h-auto" id="reader"> </video>
+    <video class="w-96 max-w-full h-auto" id="reader">
+      <track kind="captions" src="" label="English" srclang="en" default>
+    </video>
   </label>
 </label>
