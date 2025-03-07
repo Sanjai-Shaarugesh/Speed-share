@@ -2,101 +2,139 @@
   import QrScanner from 'qr-scanner';
   import { onMount, onDestroy } from 'svelte';
 
-  type Props = {
+  // Define component props
+  const { onScanSuccess } = $props<{
     onScanSuccess: (data: string) => void;
-  };
-
-  const { onScanSuccess }: Props = $props();
-
+  }>();
+  
+  // State management with Svelte 5 runes
   let isModalOpen = $state(false);
-  let qrScanner: QrScanner | undefined = $state(undefined);
+  let qrScanner: QrScanner | null = $state(null);
   let videoElement: HTMLVideoElement;
+  let hasError = $state(false);
+  let errorMessage = $state('');
 
-  // Configuration for better performance
-  const qrScannerOptions = {
-    highlightScanRegion: true,
-    highlightCodeOutline: true,
-    preferredCamera: 'environment', // Use back camera for better scanning
-    maxScansPerSecond: 5, // Limit scanning frequency to reduce CPU usage
-  };
-
-  onMount(() => {
-    qrScanner = new QrScanner(
-      document.getElementById('reader') as any,
-      (decodedText: QrScanner.ScanResult) => {
-        isModalOpen = false;
-        onScanSuccess(decodedText.data);
-      },
-      {}
-    );
-  });
-
-  onDestroy(() => {
-    // Ensure scanner is properly destroyed to free resources
-    if (qrScanner) {
-      qrScanner.stop();
-      qrScanner.destroy();
+  // Reactive effect to handle modal state changes
+  $effect(() => {
+    if (isModalOpen) {
+      startScanner();
+    } else if (qrScanner) {
+      stopScanner();
     }
   });
 
+  // Clean up resources when component is destroyed
+  onDestroy(() => {
+    if (qrScanner) {
+      qrScanner.destroy();
+      qrScanner = null;
+    }
+  });
+
+  // Initialize the scanner with the video element
   function initializeScanner() {
-    if (!qrScanner && videoElement) {
+    if (!videoElement || qrScanner) return;
+    
+    try {
       qrScanner = new QrScanner(
         videoElement,
         (result) => {
           isModalOpen = false;
           onScanSuccess(result.data);
         },
-        qrScannerOptions
+        {
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+          preferredCamera: 'environment',
+          maxScansPerSecond: 5,
+          returnDetailedScanResult: true,
+        }
       );
-      start();
+      
+      hasError = false;
+      errorMessage = '';
+    } catch (error) {
+      hasError = true;
+      errorMessage = error instanceof Error ? error.message : 'Failed to initialize scanner';
+      console.error("QR Scanner initialization error:", error);
     }
   }
 
-  function start() {
-    qrScanner?.start().catch(error => {
-      console.error('Failed to start QR scanner:', error);
-    });
+  // Start the scanner
+  async function startScanner() {
+    if (!qrScanner) {
+      initializeScanner();
+    }
+    
+    try {
+      await qrScanner?.start();
+    } catch (error) {
+      hasError = true;
+      errorMessage = error instanceof Error ? error.message : 'Camera access failed';
+      console.error("QR Scanner error:", error);
+    }
   }
 
-  function stop() {
+  // Stop the scanner
+  async function stopScanner() {
+    try {
+      await qrScanner?.stop();
+    } catch (error) {
+      console.error("Error stopping scanner:", error);
+    }
+  }
+
+  // Reset error state and retry scanner
+  function retryScanner() {
+    hasError = false;
+    errorMessage = '';
+    
     if (qrScanner) {
-      qrScanner.stop();
+      qrScanner.destroy();
+      qrScanner = null;
     }
-  }
-
-  function handleModalToggle(isOpen: boolean) {
-    if (isOpen) {
-      // Initialize scanner when modal opens
-      setTimeout(() => initializeScanner(), 100);
-    } else {
-      // Stop scanner when modal closes
-      stop();
-    }
+    
+    setTimeout(() => {
+      startScanner();
+    }, 100);
   }
 </script>
 
-<label for="scan-qr-modal" class="btn gap-2"> Scan QR Code </label>
+<label for="scan-qr-modal" class="btn gap-2">Scan QR Code</label>
 
 <input
   type="checkbox"
   id="scan-qr-modal"
   class="modal-toggle"
   bind:checked={isModalOpen}
-  onchange={() => handleModalToggle(isModalOpen)}
 />
+
 <label for="scan-qr-modal" class="modal cursor-pointer">
   <label
-    class="modal-box relative flex flex-col justify-center items-center p-2 w-fit max-w-none"
+    class="modal-box relative flex flex-col justify-center items-center p-4 w-fit max-w-none"
     for=""
   >
-    <h3 class="text-lg font-bold">Scan QR Code</h3>
+    <h3 class="text-lg font-bold mb-4">Scan QR Code</h3>
+    
+    {#if hasError}
+      <div class="text-error mb-4">
+        <p>Error: {errorMessage}</p>
+        <button class="btn btn-sm btn-primary mt-2" onclick={retryScanner}>
+          Retry
+        </button>
+      </div>
+    {/if}
+    
     <video 
-      bind:this={videoElement} 
-      class="w-96 max-w-full h-auto" 
-      id="reader"
+      class="w-96 max-w-full h-auto rounded-lg" 
+      id="reader" 
+      bind:this={videoElement}
     >
       <track kind="captions" />
     </video>
+    
+    <p class="text-sm mt-4 text-center">
+      Position your QR code in the camera view
+    </p>
   </label>
 </label>
