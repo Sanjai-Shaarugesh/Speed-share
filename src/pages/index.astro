@@ -1,5 +1,7 @@
 ---
 import MainLayout from '../layouts/main.astro';
+import Analytics from '@vercel/analytics/astro';
+
 
 import OfferPage from '../components/OfferPage.svelte';
 ---
@@ -8,5 +10,6 @@ import OfferPage from '../components/OfferPage.svelte';
   title="Speed Share | Offer"
   description="A client-side secure P2P file sharing using WebRTC."
 >
+<Analytics/>
   <OfferPage client:load client:only="svelte" />
 </MainLayout>
