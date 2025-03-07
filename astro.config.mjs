@@ -7,6 +7,10 @@ import serviceWorker from 'astrojs-service-worker';
 export default defineConfig({
   site: 'https://github.com/Sanjai-Shaarugesh/Speed-share',
   outDir: './build',
+  server: {
+    host: '0.0.0.0',
+    port: 3000 
+  },
   output: 'static',
   compressHTML: true,
   integrations: [tailwind(), svelte(), serviceWorker()],
