@@ -5,7 +5,7 @@ import serviceWorker from 'astrojs-service-worker';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://zero-share.github.io',
+  site: 'https://github.com/Sanjai-Shaarugesh/Speed-share',
   outDir: './build',
   output: 'static',
   compressHTML: true,

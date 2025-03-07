@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "zero-share",
+      "name": "speed-share",
       "devDependencies": {
         "@astrojs/svelte": "^5.7.2",
         "@astrojs/tailwind": "^5.1.2",
