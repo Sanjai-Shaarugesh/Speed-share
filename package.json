@@ -17,6 +17,7 @@
     "@astrojs/svelte": "^7.0.5",
     "@astrojs/tailwind": "^5.1.5",
     "@nuintun/qrcode": "^3.4.0",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.26.0",
     "@typescript-eslint/parser": "^8.26.0",
     "astro": "^4.16.18",
@@ -43,7 +44,16 @@
   },
   "dependencies": {
     "@astrojs/upgrade": "^0.5.0",
+    "@capacitor-community/barcode-scanner": "^4.0.1",
+    "@capacitor/android": "^7.0.1",
+    "@capacitor/camera": "^7.0.0",
+    "@capacitor/cli": "^7.0.1",
+    "@capacitor/core": "^7.0.1",
+    "@capacitor/ios": "^7.0.1",
     "@sveltejs/vite-plugin-svelte": "^4.0.0-next.6",
-    "protobufjs": "^7.4.0"
+    "android": "^0.0.8",
+    "ios": "^0.0.1",
+    "protobufjs": "^7.4.0",
+    "uuid": "^11.1.0"
   }
 }
