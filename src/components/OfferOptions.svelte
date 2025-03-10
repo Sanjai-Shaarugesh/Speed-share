@@ -13,7 +13,7 @@
   let iceServer: string = $state(defaultSendOptions.iceServer);
 
   function getEncryptionEnabled(): boolean {
-    return encryptionEnabled === 'true';
+    return encryptionEnabled === 'true' ;
   }
 
   function onChange() {
@@ -37,6 +37,7 @@
       <option value="true">On</option>
       <option value="false">Off</option>
     </select>
+   
   </div>
 
   <div class="flex flex-row justify-between items-center">

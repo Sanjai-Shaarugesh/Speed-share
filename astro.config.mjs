@@ -1,7 +1,9 @@
 import { defineConfig } from 'astro/config';
-import tailwind from '@astrojs/tailwind';
+import tailwindcss from "@tailwindcss/vite";
 import svelte from '@astrojs/svelte';
 import serviceWorker from 'astrojs-service-worker';
+
+import solidJs from '@astrojs/solid-js';
 
 // https://astro.build/config
 export default defineConfig({
@@ -9,8 +11,8 @@ export default defineConfig({
   outDir: './build',
   output: 'static',
   compressHTML: true,
-  integrations: [tailwind(), svelte(), serviceWorker()],
+  integrations: [svelte(), serviceWorker(), solidJs({ devtools: true })],
   vite: {
-    plugins: []
+    plugins: [tailwindcss()]
   }
 });

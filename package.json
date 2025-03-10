@@ -22,8 +22,8 @@
     "@typescript-eslint/parser": "^8.26.0",
     "astro": "^4.16.18",
     "astrojs-service-worker": "^2.0.0",
-    "autoprefixer": "^10.4.20",
-    "daisyui": "^4.12.24",
+    "autoprefixer": "^10.4.21",
+    "daisyui": "^5.0.0",
     "daisyui-ntsd": "1.0.10",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
@@ -35,14 +35,15 @@
     "prettier-plugin-svelte": "^3.3.3",
     "qr-scanner": "^1.4.2",
     "sdp-compact": "^0.0.6",
-    "svelte": "^5.22.5",
-    "tailwindcss": "^3.4.17",
+    "svelte": "^5.22.6",
+    "tailwindcss": "^4.0.12",
     "ts-proto": "^1.181.2"
   },
   "overrides": {
     "@sveltejs/vite-plugin-svelte": "^4.0.0-next.6"
   },
   "dependencies": {
+    "@astrojs/solid-js": "^5.0.5",
     "@astrojs/upgrade": "^0.5.0",
     "@capacitor-community/barcode-scanner": "^4.0.1",
     "@capacitor/android": "^7.0.1",
@@ -50,10 +51,12 @@
     "@capacitor/cli": "^7.0.1",
     "@capacitor/core": "^7.0.1",
     "@capacitor/ios": "^7.0.1",
-    "@sveltejs/vite-plugin-svelte": "^4.0.0-next.6",
+    "@sveltejs/vite-plugin-svelte": "^4.0.4",
+    "@tailwindcss/vite": "^4.0.12",
     "android": "^0.0.8",
     "ios": "^0.0.1",
     "protobufjs": "^7.4.0",
+    "solid-js": "^1.9.5",
     "uuid": "^11.1.0"
   }
 }

@@ -48,7 +48,7 @@
     try {
       const { sdp, iceServer, chunkSize, publicKey } = parseUniqueCode(offerCode);
       
-      // Initialize WebRTC connection
+      // Initialize WebRTC connection to send the connection request 
       connection = new RTCPeerConnection({
         iceServers: [{ urls: iceServer || defaultSendOptions.iceServer }]
       });
@@ -63,13 +63,13 @@
         };
         dataChannel.onmessage = (event) => {
           const message = Message.decode(new Uint8Array(event.data));
-
-          if (message.metaData !== undefined) {
+           
+          if (message.metaData !== undefined && receiver) {
             receiver.onMetaData(message.id, message.metaData);
             showNewFile = true;
-          } else if (message.chunk !== undefined) {
+          } else if (message.chunk !== undefined && receiver) {
             receiver.onChunkData(message.id, message.chunk);
-          } else if (message.receiveEvent !== undefined) {
+          } else if (message.receiveEvent !== undefined && sender) {
             sender.onReceiveEvent(message.id, message.receiveEvent);
           }
         };
@@ -105,7 +105,6 @@
       isProcessingOffer = false;
     }
   }
-
   async function generateAnswerCode(isEncrypt: boolean, chunkSize?: number) {
     let publicKeyBase64 = '';
     if (isEncrypt) {
@@ -164,7 +163,7 @@
     </p>
     <div class="mt-4">
       <input 
-        type="text" 
+        type="password" 
         class="input input-bordered w-full" 
         placeholder="Enter offer code" 
         bind:value={offerCode}
