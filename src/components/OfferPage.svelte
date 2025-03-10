@@ -155,7 +155,7 @@
   function onOptionsUpdate(options: SendOptions) {
     sendOptions = options;
   }
-</script>
+</script>               
 
 <Collapse title="1. Generate Offer" isOpen={!offerLink}>
   {#if generating}

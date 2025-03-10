@@ -4,7 +4,7 @@
     customTextEnabled: boolean;
     value: string;
   };
-
+// options 
   let { options, customTextEnabled, value = $bindable() }: Props = $props();
 
   let selectedValue: string = $state(value);
@@ -37,7 +37,7 @@
       <input
         type="text"
         class="input input-bordered w-full"
-        placeholder="Custom text"
+        placeholder="Enter here "
         bind:value={customText}
       />
     {/if}
