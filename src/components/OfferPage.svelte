@@ -86,12 +86,12 @@
     dataChannel.onmessage = (event) => {
       const message = Message.decode(new Uint8Array(event.data));
 
-      if (message.metaData !== undefined) {
+      if (message.metaData !== undefined && receiver) {
         receiver.onMetaData(message.id, message.metaData);
         showNewFile = true;
-      } else if (message.chunk !== undefined) {
+      } else if (message.chunk !== undefined && receiver) {
         receiver.onChunkData(message.id, message.chunk);
-      } else if (message.receiveEvent !== undefined) {
+      } else if (message.receiveEvent !== undefined && sender) {
         sender.onReceiveEvent(message.id, message.receiveEvent);
       }
     };
@@ -106,7 +106,6 @@
       offerLink = '';
     };
   }
-
   async function generateOfferLink() {
     generating = true;
     await createPeerAndDataCannel();
