@@ -44,11 +44,11 @@
     }
 
     isProcessingOffer = true;
-    
+
     try {
       const { sdp, iceServer, chunkSize, publicKey } = parseUniqueCode(offerCode);
-      
-      // Initialize WebRTC connection to send the connection request 
+
+      // Initialize WebRTC connection to send the connection request
       connection = new RTCPeerConnection({
         iceServers: [{ urls: iceServer || defaultSendOptions.iceServer }]
       });
@@ -63,7 +63,7 @@
         };
         dataChannel.onmessage = (event) => {
           const message = Message.decode(new Uint8Array(event.data));
-           
+
           if (message.metaData !== undefined && receiver) {
             receiver.onMetaData(message.id, message.metaData);
             showNewFile = true;
@@ -90,7 +90,7 @@
       };
 
       await connection.setRemoteDescription(sessionDesc);
-      
+
       // If encryption is enabled, import the public key
       const isEncrypt = !!publicKey;
       if (isEncrypt) {
@@ -149,7 +149,7 @@
 </script>
 
 <div class="container mx-auto p-4 max-w-3xl">
-  <h1 class="text-2xl font-bold mb-4">WebRTC File Transfer - Answer Page</h1>
+  <h1 class="text-2xl font-bold mb-4">File Transfer - Answer Page</h1>
 
   <Collapse title="1. Enter Offer Code" isOpen={!answerCode && !isConnecting}>
     <p>
@@ -162,19 +162,15 @@
       >
     </p>
     <div class="mt-4">
-      <input 
-        type="password" 
-        class="input input-bordered w-full" 
-        placeholder="Enter offer code" 
+      <input
+        type="password"
+        class="input input-bordered w-full"
+        placeholder="Enter offer code"
         bind:value={offerCode}
         disabled={isProcessingOffer}
       />
       <div class="mt-4 flex gap-2">
-        <button 
-          class="btn btn-primary" 
-          onclick={processOfferCode}
-          disabled={isProcessingOffer}
-        >
+        <button class="btn btn-primary" onclick={processOfferCode} disabled={isProcessingOffer}>
           {#if isProcessingOffer}
             <span class="loading loading-spinner loading-sm"></span>
             Processing
@@ -190,9 +186,7 @@
 
   <Collapse title="2. Share Answer Code" isOpen={answerCode !== '' && !isConnecting}>
     {#if answerCode}
-      <p>
-        Share this answer code with your peer to complete the connection.
-      </p>
+      <p>Share this answer code with your peer to complete the connection.</p>
       <div class="relative mt-4">
         <input
           type={showAnswerCode ? 'text' : 'password'}
@@ -244,7 +238,13 @@
         </div>
       </div>
       <div hidden={!sendMode}>
-        <Sender bind:this={sender} {dataChannel} {rsaPub} isEncrypt={!!rsa} chunkSize={defaultSendOptions.chunkSize} />
+        <Sender
+          bind:this={sender}
+          {dataChannel}
+          {rsaPub}
+          isEncrypt={!!rsa}
+          chunkSize={defaultSendOptions.chunkSize}
+        />
       </div>
       <div hidden={sendMode}>
         <Receiver bind:this={receiver} {dataChannel} isEncrypt={!!rsa} {rsa} />

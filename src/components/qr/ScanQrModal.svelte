@@ -2,162 +2,271 @@
   import QrScanner from 'qr-scanner';
   import { onMount, onDestroy } from 'svelte';
 
-  // Import Capacitor plugins dynamically to avoid Vite bundling issues
-  let Camera: any;
-  let Capacitor: any;
-  let isNative = false;
-
   type Props = {
     onScanSuccess: (data: string) => void;
+    buttonText?: string;
+    modalTitle?: string;
   };
 
-  const { onScanSuccess }: Props = $props();
+  // Destructure props with defaults
+  const { 
+    onScanSuccess, 
+    buttonText = 'Scan QR Code',
+    modalTitle = 'Scan QR Code'
+  }: Props = $props();
 
+  // Reactive states
   let isModalOpen = $state(false);
-  let qrScanner: QrScanner | undefined = $state(undefined);
-  let hasCameraPermission = $state(false);
-  let isCapacitorLoaded = $state(false);
+  let qrScanner: QrScanner | null = $state(null);
+  let videoElement = $state<HTMLVideoElement | null>(null);
+  let isCameraActive = $state(false);
+  let errorMessage = $state('');
+  let permissionRequested = $state(false);
 
-  onMount(async () => {
-    // Dynamically import Capacitor modules only when needed
-    try {
-      const capacitorCore = await import('@capacitor/core');
-      Capacitor = capacitorCore.Capacitor;
-      isNative = Capacitor.isNativePlatform();
-      
-      if (isNative) {
-        const capacitorCamera = await import('@capacitor/camera');
-        Camera = capacitorCamera.Camera;
-        
-        // Request camera permissions for mobile
-        try {
-          const permissionStatus = await Camera.requestPermissions({
-            permissions: ['camera']
-          });
-          hasCameraPermission = permissionStatus.camera === 'granted';
-        } catch (error) {
-          console.error('Error requesting camera permission:', error);
-        }
-      } else {
-        // For web, we'll check permissions when starting the scanner
-        hasCameraPermission = true;
+  // Initialize scanner on mount
+  onMount(() => {
+    // Clean up function for when component is destroyed
+    return () => {
+      if (qrScanner) {
+        qrScanner.stop();
+        qrScanner.destroy();
       }
-      isCapacitorLoaded = true;
-    } catch (error) {
-      console.error('Capacitor not available, falling back to web-only mode:', error);
-      // Fall back to web-only mode if Capacitor fails to load
-      isNative = false;
-      hasCameraPermission = true;
-      isCapacitorLoaded = true;
-    }
+    };
+  });
 
-    // Initialize QR scanner
-    const videoElement = document.getElementById('reader') as HTMLVideoElement;
-    if (videoElement) {
+  onDestroy(() => {
+    stopScanner();
+  });
+
+  // Request camera permission explicitly
+  async function requestCameraPermission(): Promise<boolean> {
+    errorMessage = '';
+    permissionRequested = true;
+    
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      errorMessage = 'Your browser does not support camera access.';
+      return false;
+    }
+    
+    try {
+      // Attempt to get camera stream to trigger permission prompt
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'environment' // Prefer back camera
+        } 
+      });
+      
+      // Stop the stream immediately - we just needed permission
+      stream.getTracks().forEach(track => track.stop());
+      
+      return true;
+    } catch (err) {
+      const error = err as Error;
+      
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        errorMessage = 'Camera access was denied. Please grant permission and try again.';
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        errorMessage = 'No camera found on this device.';
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        errorMessage = 'Camera is already in use by another application.';
+      } else if (error.name === 'OverconstrainedError') {
+        errorMessage = 'Could not find a suitable camera.';
+      } else {
+        errorMessage = `Camera error: ${error.message || 'Unknown error'}`;
+      }
+      
+      return false;
+    }
+  }
+
+  // Start the scanner with error handling
+  async function startScanner() {
+    errorMessage = '';
+    
+    if (!videoElement) {
+      errorMessage = 'Video element not found.';
+      return;
+    }
+    
+    // First ensure we have camera permission if not already requested
+    if (!permissionRequested) {
+      const permissionGranted = await requestCameraPermission();
+      if (!permissionGranted) return;
+    }
+    
+    try {
       qrScanner = new QrScanner(
         videoElement,
-        (result: QrScanner.ScanResult) => {
-          isModalOpen = false;
-          onScanSuccess(result.data);
+        (result) => {
+          handleScanSuccess(result);
         },
         {
           highlightScanRegion: true,
           highlightCodeOutline: true,
-          returnDetailedScanResult: true
+          preferredCamera: 'environment'
         }
       );
-    }
-  });
-
-  onDestroy(() => {
-    // Clean up resources when component is destroyed
-    if (qrScanner) {
-      qrScanner.destroy();
-    }
-  });
-
-  async function start() {
-    if (!qrScanner) return;
-
-    try {
-      // For web, this will trigger permission request if not already granted
-      await qrScanner.start();
-    } catch (error) {
-      console.error('Failed to start scanner:', error);
-      hasCameraPermission = false;
-    }
-  }
-
-  async function stop() {
-    if (qrScanner) {
-      await qrScanner.stop();
-    }
-  }
-
-  // Handle camera permission errors
-  async function requestCameraPermission() {
-    if (isNative && Camera) {
-      try {
-        const result = await Camera.requestPermissions({
-          permissions: ['camera']
+      
+      qrScanner.start()
+        .then(() => {
+          isCameraActive = true;
+        })
+        .catch((err) => {
+          errorMessage = `Camera error: ${err.message}`;
+          isCameraActive = false;
+          
+          // If camera failed after permission was supposedly granted, 
+          // we might need to request again
+          if (permissionRequested) {
+            permissionRequested = false;
+          }
         });
-        hasCameraPermission = result.camera === 'granted';
-        if (hasCameraPermission && isModalOpen) {
-          start();
+    } catch (err) {
+      errorMessage = `Scanner initialization error: ${err instanceof Error ? err.message : String(err)}`;
+    }
+  }
+
+  // Stop the scanner
+  function stopScanner() {
+    if (qrScanner) {
+      qrScanner.stop();
+      isCameraActive = false;
+    }
+  }
+
+  // Handle successful scan
+  function handleScanSuccess(result: QrScanner.ScanResult) {
+    // Stop scanner to save resources
+    stopScanner();
+    // Close modal
+    isModalOpen = false;
+    // Call the success callback with the data
+    onScanSuccess(result.data);
+  }
+
+  // Toggle modal and scanner state
+  function toggleModal(open: boolean) {
+    isModalOpen = open;
+    if (open) {
+      // Request permission immediately when modal opens
+      setTimeout(() => {
+        if (!permissionRequested) {
+          requestCameraPermission().then(granted => {
+            if (granted) {
+              startScanner();
+            }
+          });
+        } else {
+          startScanner();
         }
-      } catch (error) {
-        console.error('Error requesting camera permission:', error);
-      }
+      }, 100);
     } else {
-      // For web, attempt to start scanner which will trigger permission dialog
-      start();
+      stopScanner();
     }
   }
 </script>
 
-<label for="scan-qr-modal" class="btn gap-2"> Scan QR Code </label>
+<!-- Styled button to open the modal -->
+<button 
+  class="btn btn-primary flex items-center gap-2"
+  onclick={() => toggleModal(true)}
+  aria-label="Open QR Scanner"
+>
+  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M3 9h6V3H3v6zm0 12h6v-6H3v6zm12 0h6v-6h-6v6zm0-18v6h6V3h-6z" />
+  </svg>
+  {buttonText}
+</button>
 
-<input
-  type="checkbox"
-  id="scan-qr-modal"
-  class="modal-toggle"
-  bind:checked={isModalOpen}
-  onchange={() => {
-    if (isModalOpen) {
-      if (!isCapacitorLoaded) {
-        return; // Wait for Capacitor to finish loading
-      }
-      if (hasCameraPermission) {
-        start();
-      } else {
-        requestCameraPermission();
-      }
-      return;
-    }
-    stop();
-  }}
-/>
-<label for="scan-qr-modal" class="modal cursor-pointer">
-  <label
-    class="modal-box relative flex flex-col justify-center items-center p-2 w-fit max-w-none"
-    for=""
-  >
-    <h3 class="text-lg font-bold">Scan QR Code</h3>
-    {#if !isCapacitorLoaded}
-      <div class="p-4 text-center">
-        <p>Loading camera...</p>
-      </div>
-    {:else if !hasCameraPermission}
-      <div class="p-4 text-center">
-        <p class="mb-4">Camera permission is required to scan QR codes.</p>
-        <button class="btn btn-primary" onclick={requestCameraPermission}>
-          Grant Camera Access
+<!-- Modal implementation with backdrop -->
+{#if isModalOpen}
+  <div class="fixed inset-0  backdrop-blur-xs bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-transparent  rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+      <!-- Modal header -->
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-gray-900">{modalTitle}</h3>
+        <button 
+          class="text-gray-500 hover:text-gray-700"
+          onclick={() => toggleModal(false)}
+          aria-label="Close QR Scanner"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
-    {:else}
-      <video class="w-96 max-w-full h-auto" id="reader">
-        <track kind="captions" />
-      </video>
-    {/if}
-  </label>
-</label>
+      
+      <!-- Scanner content -->
+      <div class="relative w-full aspect-square bg-gray-100 rounded-lg overflow-hidden">
+        <video 
+          bind:this={videoElement}
+          class="w-full h-full object-cover"
+          playsinline
+        >
+          <track kind="captions" />
+        </video>
+        
+        <!-- Scanner overlay with targeting frame -->
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div></div>
+        </div>
+        
+        <!-- Loading or error states -->
+        {#if !isCameraActive && !errorMessage}
+          <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+            <div class="text-white text-lg">Initializing camera...</div>
+          </div>
+        {/if}
+        
+        {#if errorMessage}
+          <div class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 p-4">
+            <div class="text-white text-center mb-4">{errorMessage}</div>
+            <button 
+              class="btn btn-sm btn-primary"
+              onclick={() => {
+                permissionRequested = false;
+                requestCameraPermission().then(granted => {
+                  if (granted) {
+                    startScanner();
+                  }
+                });
+              }}
+            >
+              Request Permission Again
+            </button>
+          </div>
+        {/if}
+      </div>
+      
+      <!-- Instructions -->
+      <p class="mt-4 text-sm text-gray-600">
+        Position the QR code within the frame to scan. Make sure it's well-lit and clearly visible.
+      </p>
+      
+      <!-- Action buttons -->
+      <div class="mt-4 flex justify-end gap-2">
+        <button 
+          class="btn btn-outline"
+          onclick={() => toggleModal(false)}
+        >
+          Cancel
+        </button>
+        {#if !isCameraActive && errorMessage}
+          <button 
+            class="btn btn-primary"
+            onclick={() => {
+              permissionRequested = false;
+              requestCameraPermission().then(granted => {
+                if (granted) {
+                  startScanner();
+                }
+              });
+            }}
+          >
+            Retry
+          </button>
+        {/if}
+      </div>
+    </div>
+  </div>
+{/if}

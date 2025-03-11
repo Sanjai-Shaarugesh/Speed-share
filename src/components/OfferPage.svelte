@@ -159,7 +159,7 @@
 </script>
 
 <div class="container mx-auto p-4 max-w-3xl">
-  <h1 class="text-2xl font-bold mb-4">WebRTC File Transfer - Offer Page</h1>
+  <h1 class="text-2xl font-bold mb-4">File Transfer - Offer Page</h1>
   
   <Collapse title="1. Generate Offer" isOpen={!offerCode}>
     {#if generating}
@@ -167,6 +167,8 @@
         <span class="loading loading-spinner loading-lg"></span>
         <div>Generating Offer</div>
       </div>
+      
+      
     {:else}
       <p>
         Generate a unique offer code to establish a connection. See
@@ -182,16 +184,30 @@
           <OfferOptions onUpdate={onOptionsUpdate} />
         {/if}
         <div class="mt-4 flex flex-row gap-2">
-          <button class="btn btn-primary" onclick={generateOfferCode}>Generate Offer Code</button>
+          
+          
+          <a href="#"  onclick={generateOfferCode} class="relative inline-flex items-center justify-center inline-block p-4 px-5 py-3 overflow-hidden font-medium text-indigo-600 rounded-lg shadow-2xl group">
+              <span  class="absolute top-0 left-0 w-40 h-40 -mt-10 -ml-3 transition-all duration-700 bg-red-500 rounded-full blur-md ease"></span>
+              <span  class="absolute inset-0 w-full h-full transition duration-700 group-hover:rotate-180 ease">
+                  <span class="absolute bottom-0 left-0 w-24 h-24 -ml-10 bg-purple-500 rounded-full blur-md"></span>
+                  <span class="absolute bottom-0 right-0 w-24 h-24 -mr-10 bg-pink-500 rounded-full blur-md"></span>
+              </span>
+              <span class="relative text-white">Generate Offer Code</span>
+          </a>
+          
           {#if !showOfferOptions}
-            <button
-              class="btn btn-secondary gap-2"
-              onclick={() => {
-                showOfferOptions = true;
-              }}
-            >
-              Settings
-            </button>
+            
+            
+            <a href="#_"  onclick={() => {
+              showOfferOptions = true;
+            }} class="relative inline-flex items-center justify-start px-6 py-3 overflow-hidden font-medium transition-all bg-red-500 rounded-xl group">
+                <span class="absolute top-0 right-0 inline-block w-4 h-4 transition-all duration-500 ease-in-out bg-red-700 rounded group-hover:-mr-4 group-hover:-mt-4">
+                    <span class="absolute top-0 right-0 w-5 h-5 rotate-45 translate-x-1/2 -translate-y-1/2 bg-white"></span>
+                </span>
+                <span class="absolute bottom-0 left-0 w-full h-full transition-all duration-500 ease-in-out delay-200 -translate-x-full translate-y-full bg-red-600 rounded-2xl group-hover:mb-12 group-hover:translate-x-0"></span>
+                <span class="relative w-full text-left text-white transition-colors duration-200 ease-in-out group-hover:text-white">Settings</span>
+            </a>
+            
           {/if}
           <button class="btn btn-outline" onclick={navigateToAnswerPage}>Go to Answer Page</button>
         </div>

@@ -13,7 +13,7 @@ export const stunServers: string[] = [
   'stun:stun.voipstunt.com:3478'
 ];
 
-export const pageDescription = 'A client-side secure P2P file sharing using WebRTC.';
+export const pageDescription = 'A client-side secure P2P file sharing app.';
 
 export const githubLink = 'https://github.com/Sanjai-Shaarugesh/Speed-share';
 
