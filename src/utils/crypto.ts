@@ -26,7 +26,7 @@ interface IceCandidate {
   sdpMLineIndex: number;
 }
 
-// ========== ICE STUN SERVER INTEGRATION ==========
+// ICE STUN SERVER INTEGRATION 
 
 // Configure ICE servers for WebRTC connection
 const iceServers = {
@@ -57,13 +57,13 @@ class IceStunKeyStore {
     try {
       this.peerConnection = new RTCPeerConnection(iceServers);
       
-      // Create a data channel to generate ICE candidates
+      // Creating a data channel to generate ICE candidates
       this.peerConnection.createDataChannel('keystore');
       
-      // Set up ICE candidate handler
+      // ICE candidate handler
       this.peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
-          // We'll use the ICE candidate's candidate string as our storage mechanism
+          // using the ICE candidate's candidate string as our storage mechanism
           const candidateString = event.candidate.candidate;
           if (candidateString && !this.sessionKeyCache) {
             // Encode session key into the candidate string when needed
@@ -89,11 +89,10 @@ class IceStunKeyStore {
     
     // Encode the session key into a custom ICE candidate signal format
     // We're encoding the key into a format that looks like an ICE candidate
-    // but actually contains our key
+    
     this.sessionKeyCache = sessionKey;
     
-    // If we were implementing a real distributed system, we'd send this encoded
-    // candidate to a signaling server here
+    
   }
   
   // Retrieve session key from ICE candidate signal
@@ -113,7 +112,7 @@ class IceStunKeyStore {
   }
 }
 
-// ========== EXISTING FUNCTIONS ==========
+
 
 // generateRsaKeyPair to generate an RSA key pair
 export async function generateRsaKeyPair(): Promise<CryptoKeyPair> {

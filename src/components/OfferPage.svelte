@@ -56,44 +56,44 @@
     });
   }
 
-  async function createPeerAndDataCannel() {
-    connection = new RTCPeerConnection({
-      iceServers: [{ urls: sendOptions.iceServer }],
-      bundlePolicy: 'balanced',
-      iceCandidatePoolSize: 4
-    });
+    async function createPeerAndDataCannel() {
+      connection = new RTCPeerConnection({
+        iceServers: [{ urls: sendOptions.iceServer }],
+        bundlePolicy: 'balanced',
+        iceCandidatePoolSize: 4
+      });
 
-    connection.onicecandidateerror = () => {
-      addToastMessage('ICE Candidate error', 'error');
-    };
+      connection.onicecandidateerror = () => {
+        addToastMessage('ICE Candidate error', 'error');
+      };
 
-    dataChannel = connection.createDataChannel('data', {
-      ordered: false // we handle the order by response status
-    });
-    dataChannel.onopen = () => {
-      addToastMessage('Connected', 'success');
-      isConnecting = true;
-      qrModal?.close();
-    };
-    dataChannel.onmessage = (event) => {
-      const message = Message.decode(new Uint8Array(event.data));
+      dataChannel = connection.createDataChannel('data', {
+        ordered: false // we handle the order by response status
+      });
+      dataChannel.onopen = () => {
+        addToastMessage('Connected', 'success');
+        isConnecting = true;
+        qrModal?.close();
+      };
+      dataChannel.onmessage = (event) => {
+        const message = Message.decode(new Uint8Array(event.data));
 
-      if (message.metaData !== undefined) {
-        receiver.onMetaData(message.id, message.metaData);
-        showNewFile = true;
-      } else if (message.chunk !== undefined) {
-        receiver.onChunkData(message.id, message.chunk);
-      } else if (message.receiveEvent !== undefined) {
-        sender.onReceiveEvent(message.id, message.receiveEvent);
-      }
-    };
-    dataChannel.onerror = () => {
-      addToastMessage('WebRTC error', 'error');
-      isConnecting = false;
-      offerCode = '';
-    };
-    dataChannel.onclose = () => {
-      addToastMessage('Disconnected', 'error');
+        if (message.metaData !== undefined && receiver) {
+          receiver.onMetaData(message.id, message.metaData);
+          showNewFile = true;
+        } else if (message.chunk !== undefined && receiver) {
+          receiver.onChunkData(message.id, message.chunk);
+        } else if (message.receiveEvent !== undefined && sender) {
+          sender.onReceiveEvent(message.id, message.receiveEvent);
+        }
+      };
+      dataChannel.onerror = () => {
+        addToastMessage('WebRTC error', 'error');
+        isConnecting = false;
+        offerCode = '';
+      };
+      dataChannel.onclose = () => {
+        addToastMessage('Disconnected', 'error');
       isConnecting = false;
       offerCode = '';
     };
@@ -186,7 +186,7 @@
         <div class="mt-4 flex flex-row gap-2">
           
           
-          <a href="#"  onclick={generateOfferCode} class="relative inline-flex items-center justify-center inline-block p-4 px-5 py-3 overflow-hidden font-medium text-indigo-600 rounded-lg shadow-2xl group">
+          <a href="#_"  onclick={generateOfferCode} class="relative  items-center justify-center inline-block p-4 px-5 py-3 overflow-hidden font-medium text-indigo-600 rounded-lg shadow-2xl group">
               <span  class="absolute top-0 left-0 w-40 h-40 -mt-10 -ml-3 transition-all duration-700 bg-red-500 rounded-full blur-md ease"></span>
               <span  class="absolute inset-0 w-full h-full transition duration-700 group-hover:rotate-180 ease">
                   <span class="absolute bottom-0 left-0 w-24 h-24 -ml-10 bg-purple-500 rounded-full blur-md"></span>
