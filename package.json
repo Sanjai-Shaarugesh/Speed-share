@@ -17,6 +17,7 @@
     "@astrojs/svelte": "^7.0.5",
     "@astrojs/tailwind": "^5.1.5",
     "@nuintun/qrcode": "^3.4.0",
+    "@types/pako": "^2.0.3",
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.26.0",
     "@typescript-eslint/parser": "^8.26.0",
@@ -55,6 +56,7 @@
     "@tailwindcss/vite": "^4.0.12",
     "android": "^0.0.8",
     "ios": "^0.0.1",
+    "pako": "^2.1.0",
     "protobufjs": "^7.4.0",
     "solid-js": "^1.9.5",
     "uuid": "^11.1.0"
