@@ -499,8 +499,6 @@ export function createOptimizedDataChannel(
 ): RTCDataChannel {
   return peerConnection.createDataChannel(label, {
     ordered: false, // Allow out-of-order delivery for speed
-    maxRetransmits: 0, // No retransmission for faster throughput
-    // Set high priority for file data
-    priority: 'high'
+    maxRetransmits: 0 // No retransmission for faster throughput
   });
 }
