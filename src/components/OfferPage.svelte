@@ -57,47 +57,47 @@
   }
 
   async function createPeerAndDataCannel() {
-    connection = new RTCPeerConnection({
-      iceServers: [{ urls: sendOptions.iceServer }],
-      bundlePolicy: 'balanced',
-      iceCandidatePoolSize: 4
-    });
+      connection = new RTCPeerConnection({
+        iceServers: [{ urls: sendOptions.iceServer }],
+        bundlePolicy: 'balanced',
+        iceCandidatePoolSize: 4
+      });
 
-    connection.onicecandidateerror = () => {
-      addToastMessage('ICE Candidate error', 'error');
-    };
+      connection.onicecandidateerror = () => {
+        addToastMessage('ICE Candidate error', 'error'); 
+      };
 
-    dataChannel = connection.createDataChannel('data', {
-      ordered: false // we handle the order by response status
-    });
-    dataChannel.onopen = () => {
-      addToastMessage('Connected', 'success');
-      isConnecting = true;
-      qrModal?.close();
-    };
-    dataChannel.onmessage = (event) => {
-      const message = Message.decode(new Uint8Array(event.data));
+      dataChannel = connection.createDataChannel('data', {
+        ordered: false // we handle the order by response status
+      });
+      dataChannel.onopen = () => {
+        addToastMessage('Connected', 'success');
+        isConnecting = true;
+        qrModal?.close();
+      };
+      dataChannel.onmessage = (event) => {
+        const message = Message.decode(new Uint8Array(event.data));
 
-      if (message.metaData !== undefined) {
-        receiver.onMetaData(message.id, message.metaData);
-        showNewFile = true;
-      } else if (message.chunk !== undefined) {
-        receiver.onChunkData(message.id, message.chunk);
-      } else if (message.receiveEvent !== undefined) {
-        sender.onReceiveEvent(message.id, message.receiveEvent);
-      }
-    };
-    dataChannel.onerror = () => {
-      addToastMessage('WebRTC error', 'error');
-      isConnecting = false;
-      offerCode = '';
-    };
-    dataChannel.onclose = () => {
-      addToastMessage('Disconnected', 'error');
-      isConnecting = false;
-      offerCode = '';
-    };
-  }
+        if (message.metaData !== undefined && receiver) {
+          receiver.onMetaData(message.id, message.metaData);
+          showNewFile = true;
+        } else if (message.chunk !== undefined && receiver) {
+          receiver.onChunkData(message.id, message.chunk);
+        } else if (message.receiveEvent !== undefined && sender) {
+          sender.onReceiveEvent(message.id, message.receiveEvent);
+        }
+      };
+      dataChannel.onerror = () => {
+        addToastMessage('WebRTC error', 'error');
+        isConnecting = false;
+        offerCode = '';
+      };
+      dataChannel.onclose = () => {
+        addToastMessage('Disconnected', 'error');
+        isConnecting = false;
+        offerCode = '';
+      };
+    }
 
   async function generateOfferCode() {
     generating = true;
