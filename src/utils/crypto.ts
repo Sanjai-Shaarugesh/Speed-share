@@ -37,7 +37,7 @@ const iceServers = {
     { urls: 'stun:stun3.l.google.com:19302' },
     { urls: 'stun:stun4.l.google.com:19302' }
   ],
-  iceCandidatePoolSize: 10 // Increase candidate pool for faster connection establishment
+  iceCandidatePoolSize: 25 // Increase candidate pool for faster connection establishment
 };
 
 // Store and retrieve data using WebRTC ICE candidates as signals

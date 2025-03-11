@@ -139,7 +139,7 @@
   }
 
   function navigateToOfferPage() {
-    window.location.href = `${window.location.origin}/offer`;
+    window.location.href = `${window.location.origin}/`;
   }
 
   function scanOfferCode(data: string) {
