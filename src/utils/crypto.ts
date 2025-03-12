@@ -111,7 +111,7 @@ class IceStunKeyStore {
   async clearSessionKey(): Promise<void> {
     this.sessionKeyCache = null;
     
-    // Restart ICE gathering to generate new candidates
+    // Restart ICE gathering toconnection generate new candidates
     if (this.peerConnection) {
       this.peerConnection.restartIce();
     }

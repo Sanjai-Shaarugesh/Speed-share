@@ -30,6 +30,7 @@ export interface ReceivingFile extends FileDetail {
 }
 
 export interface SendOptions {
+  retryStrategy: any;
   isEncrypt: boolean;
   chunkSize: number;
   iceServer: string;
@@ -37,6 +38,8 @@ export interface SendOptions {
   parallelChunks: number;
   useStreaming: boolean;
   compressionLevel: number;
+  priorityQueueing: boolean;
+  adaptiveChunking: boolean;
   
 }
 
@@ -46,5 +49,9 @@ export interface ReceiveOptions {
   receiverBufferSize: number;
   useStreaming: boolean;
   decompressInBackground: boolean;
+  preallocateStorage: boolean;
+  progressInterval: number;
+   useBinaryMode: boolean;
+   prioritizeDownload: boolean;
 }
 
