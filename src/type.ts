@@ -33,9 +33,18 @@ export interface SendOptions {
   isEncrypt: boolean;
   chunkSize: number;
   iceServer: string;
+  wasmBufferSize: number;
+  parallelChunks: number;
+  useStreaming: boolean;
+  compressionLevel: number;
+  
 }
 
 export interface ReceiveOptions {
   autoAccept: boolean;
   maxSize: number;
+  receiverBufferSize: number;
+  useStreaming: boolean;
+  decompressInBackground: boolean;
 }
+
