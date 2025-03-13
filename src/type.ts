@@ -22,6 +22,7 @@ export interface SendingFile extends FileDetail {
   stop: boolean;
   file: File;
   event?: EventEmitter;
+  trackers: string[];
 }
 
 export interface ReceivingFile extends FileDetail {
@@ -30,6 +31,7 @@ export interface ReceivingFile extends FileDetail {
 }
 
 export interface SendOptions {
+ 
   retryStrategy: any;
   isEncrypt: boolean;
   chunkSize: number;
@@ -40,6 +42,10 @@ export interface SendOptions {
   compressionLevel: number;
   priorityQueueing: boolean;
   adaptiveChunking: boolean;
+  onProgress: (progress: number) => void;
+  signal: AbortSignal;
+  timeout: number;
+  retryAttempts: number;
   
 }
 
@@ -53,5 +59,6 @@ export interface ReceiveOptions {
   progressInterval: number;
    useBinaryMode: boolean;
    prioritizeDownload: boolean;
+   chunkTimeout: number;
 }
 

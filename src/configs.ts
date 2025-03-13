@@ -29,20 +29,27 @@ export const defaultSendOptions: SendOptions = {
   parallelChunks: 2, // Fewer parallel chunks for lower bandwidth environments
   useStreaming: true,
   compressionLevel: 9, // Maximum compression to reduce data size
-  adaptiveChunkSize: true, // New option for dynamic chunk sizing based on network quality
+  adaptiveChunking: true, // New option for dynamic chunk sizing based on network quality
   retryAttempts: 3, // Auto-retry failed chunks
-  priorityQueueing: true // Prioritize metadata and small files
+  priorityQueueing: true, // Prioritize metadata and small files
+  retryStrategy: 'exponential',
+  onProgress: (progress: number) => {},
+  signal: AbortSignal.timeout(30000),
+  timeout: 30000
 };
 
 // Optimized receive options for low network conditions
 export const defaultReceiveOptions: ReceiveOptions = {
   autoAccept: true,
-  maxSize: 10 * 1024 * 1024 * 1024, // 10GB max size support
+  maxSize: 10 * 1024 * 1024 * 1024, // 10GB max size support 
   receiverBufferSize: 512 * 1024, // Reduced buffer for better memory usage
   useStreaming: true,
   decompressInBackground: true,
-  progressiveRendering: true, // Show/use files before complete download
-  chunkTimeout: 10000 // Longer timeout for slow networks
+  chunkTimeout: 10000, // Longer timeout for slow networks
+  preallocateStorage: true, // Preallocate storage for better performance
+  progressInterval: 1000, // Progress update interval in ms
+  useBinaryMode: true, // Use binary transfer mode
+  prioritizeDownload: true // Prioritize download over other operations
 };
 
 export const waitIceCandidatesTimeout = 5000; // Increased timeout for slow network discovery
