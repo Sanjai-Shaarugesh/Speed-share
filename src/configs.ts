@@ -22,10 +22,10 @@ export const githubLink = 'https://github.com/Sanjai-Shaarugesh/Speed-share';
 
 // Optimized send options for low network conditions
 export const defaultSendOptions: SendOptions = {
-  chunkSize: 100 * 1024, // Smaller chunks for more reliable transmission in poor networks
+  chunkSize: 250 * 1024, // Smaller chunks for more reliable transmission in poor networks
   isEncrypt: true,
   iceServer: stunServers[0],
-  wasmBufferSize: 512 * 1024, // Reduced buffer size for less memory pressure
+  wasmBufferSize: 100000 * 1024, // Reduced buffer size for less memory pressure
   parallelChunks: 2, // Fewer parallel chunks for lower bandwidth environments
   useStreaming: true,
   compressionLevel: 9, // Maximum compression to reduce data size
