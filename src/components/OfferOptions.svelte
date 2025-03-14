@@ -15,14 +15,25 @@
   function getEncryptionEnabled(): boolean {
     return encryptionEnabled === 'true' ;
   }
-
+   
   function onChange() {
-    onUpdate({
-      isEncrypt: getEncryptionEnabled(),
-      chunkSize,
-      iceServer
-    });
-  }
+      onUpdate({
+        isEncrypt: getEncryptionEnabled(),
+        chunkSize,
+        iceServer,
+        retryStrategy: defaultSendOptions.retryStrategy,
+        wasmBufferSize: defaultSendOptions.wasmBufferSize,
+        parallelChunks: defaultSendOptions.parallelChunks,
+        useStreaming: defaultSendOptions.useStreaming,
+        onProgress: defaultSendOptions.onProgress,
+        signal: defaultSendOptions.signal,
+        timeout: defaultSendOptions.timeout,
+        compressionLevel: defaultSendOptions.compressionLevel,
+        priorityQueueing: defaultSendOptions.priorityQueueing,
+        adaptiveChunking: defaultSendOptions.adaptiveChunking,
+        retryAttempts: defaultSendOptions.retryAttempts
+      });
+    }
 </script>
 
 <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">

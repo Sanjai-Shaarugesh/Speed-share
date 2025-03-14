@@ -9,10 +9,9 @@ export const stunServers: string[] = [
   'stun:stun.sipgate.net:3478',
   'stun:stun.sipgate.net:10000',
   'stun:stun.nextcloud.com:3478',
-  'stun:stun.nextcloud.com:443',
+  'stun:stun.nextcloud.com:443',// Added TURN servers for fallback when STUN fails in restrictive networks
   'stun:stun.myvoipapp.com:3478',
   'stun:stun.voipstunt.com:3478',
-  // Added TURN servers for fallback when STUN fails in restrictive networks
   'turn:numb.viagenie.ca:3478',
   'turn:turn.anyfirewall.com:443'
 ];
@@ -20,34 +19,41 @@ export const stunServers: string[] = [
 export const pageDescription = 'A client-side secure P2P file sharing app optimized for low-bandwidth conditions.';
 export const githubLink = 'https://github.com/Sanjai-Shaarugesh/Speed-share';
 
-// Optimized send options for low network conditions
+
 export const defaultSendOptions: SendOptions = {
-  chunkSize: 16 * 1024, // Smaller chunks for more reliable transmission in poor networks
+  chunkSize: 250 * 1024, 
   isEncrypt: true,
   iceServer: stunServers[0],
-  wasmBufferSize: 512 * 1024, // Reduced buffer size for less memory pressure
-  parallelChunks: 2, // Fewer parallel chunks for lower bandwidth environments
+  wasmBufferSize: 100000 * 1024, 
+  parallelChunks: 20, // Fewer parallel chunks for lower bandwidth environments
   useStreaming: true,
-  compressionLevel: 9, // Maximum compression to reduce data size
-  adaptiveChunkSize: true, // New option for dynamic chunk sizing based on network quality
+  compressionLevel: 20, 
+  adaptiveChunking: true, 
   retryAttempts: 3, // Auto-retry failed chunks
-  priorityQueueing: true // Prioritize metadata and small files
+  priorityQueueing: true, // Prioritize metadata and small files
+  retryStrategy: 'exponential',
+  onProgress: (progress: number) => {},
+  signal: AbortSignal.timeout(30000),
+  timeout: 30000
 };
 
 // Optimized receive options for low network conditions
 export const defaultReceiveOptions: ReceiveOptions = {
   autoAccept: true,
-  maxSize: 10 * 1024 * 1024 * 1024, // 10GB max size support
-  receiverBufferSize: 512 * 1024, // Reduced buffer for better memory usage
+  maxSize: 20 * 1024 * 1024 * 1024, 
+  receiverBufferSize: 1000 * 1024 * 1024, 
   useStreaming: true,
   decompressInBackground: true,
-  progressiveRendering: true, // Show/use files before complete download
-  chunkTimeout: 10000 // Longer timeout for slow networks
+  chunkTimeout: 10000, // Longer timeout for slow networks
+  preallocateStorage: true, // Preallocate storage for better performance
+  progressInterval: 1000, // Progress update interval in ms
+  useBinaryMode: true, 
+  prioritizeDownload: true 
 };
 
 export const waitIceCandidatesTimeout = 5000; // Increased timeout for slow network discovery
 
-// Enhanced WebAssembly processing with caching and better memory management
+
 let wasmModule: WebAssembly.Module | null = null;
 let wasmInstance: WebAssembly.Instance | null = null;
 let wasmMemory: WebAssembly.Memory | null = null;
@@ -124,7 +130,7 @@ function processFileChunkFallback(chunk: Uint8Array): Uint8Array {
   return chunk;
 }
 
-// New adaptive network quality detection
+// New adaptive network quality detection by sanjai own method 😆
 export async function detectNetworkQuality(): Promise<{
   bandwidth: number;
   latency: number;
@@ -152,14 +158,14 @@ export async function detectNetworkQuality(): Promise<{
   } catch (error) {
     console.warn('Network quality detection failed', error);
     return {
-      bandwidth: 10 * 1024, // Assume very low bandwidth (10 KB/s)
+      bandwidth: 10 * 1024, // Assume very low bandwidth (10 KB/s)  😆  eg:india with low network connection 
       latency: 800, // Assume high latency
       reliability: 0.3 // Assume poor reliability
     };
   }
 }
 
-// New function to optimize transfer parameters based on network conditions
+// New function to optimize transfer parameters based on network conditions i may think this will work sanjai will only know's 😆
 export async function optimizeTransferSettings(
   options: SendOptions
 ): Promise<SendOptions> {
@@ -167,15 +173,15 @@ export async function optimizeTransferSettings(
   
   const optimized = { ...options };
   
-  if (networkQuality.bandwidth < 50 * 1024) { // Less than 50 KB/s
-    optimized.chunkSize = 4 * 1024; // Tiny chunks
-    optimized.parallelChunks = 1; // Sequential sending
+  if (networkQuality.bandwidth < 50 * 1024) { 
+    optimized.chunkSize = 4 * 1024; 
+    optimized.parallelChunks = 1; 
     optimized.compressionLevel = 9; // Max compression
-  } else if (networkQuality.bandwidth < 200 * 1024) { // Less than 200 KB/s
+  } else if (networkQuality.bandwidth < 200 * 1024) { 
     optimized.chunkSize = 8 * 1024;
     optimized.parallelChunks = 2;
     optimized.compressionLevel = 9;
-  } else if (networkQuality.bandwidth < 1024 * 1024) { // Less than 1 MB/s
+  } else if (networkQuality.bandwidth < 1024 * 1024) { 
     optimized.chunkSize = 16 * 1024;
     optimized.parallelChunks = 3;
     optimized.compressionLevel = 7;
