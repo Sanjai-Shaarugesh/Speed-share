@@ -25,7 +25,7 @@
   let rsaPub: CryptoKey | undefined = $state(undefined); // public key from other peer
 
   // webRTC
-  let connection: RTCPeerConnection;
+  let connection: RTCPeerConnection | undefined = $state(undefined);
   let dataChannel: RTCDataChannel | undefined = $state(undefined);
   let isConnecting = $state(false);
   let generating = $state(false);
@@ -40,6 +40,33 @@
   let showNewFile = $state(false);
   let showOfferOptions = $state(false);
   let qrModal: QrModal | undefined = $state(undefined);
+
+  // Debug logging functions
+  function logWebRTCState() {
+    if (!connection) {
+      console.error('WebRTC Connection: Not initialized');
+      return;
+    }
+
+    console.log('WebRTC Connection Details:', {
+      signalingState: connection.signalingState,
+      iceConnectionState: connection.iceConnectionState,
+      connectionState: connection.connectionState,
+      hasLocalDescription: !!connection.localDescription,
+      hasRemoteDescription: !!connection.remoteDescription
+    });
+  }
+
+  function debugAcceptAnswer() {
+    console.log('Debug Accept Answer:', {
+      answerCode,
+      sendOptions,
+      isEncrypting: sendOptions.isEncrypt,
+      connectionExists: !!connection
+    });
+    
+    logWebRTCState();
+  }
 
   async function createOfferCode(offer: RTCSessionDescription) {
     let publicKeyBase64 = '';
@@ -57,51 +84,57 @@
   }
 
   async function createPeerAndDataCannel() {
-      connection = new RTCPeerConnection({
-        iceServers: [{ urls: sendOptions.iceServer }],
-        bundlePolicy: 'balanced',
-        iceCandidatePoolSize: 4
-      });
+    connection = new RTCPeerConnection({
+      iceServers: [{ urls: sendOptions.iceServer }],
+      bundlePolicy: 'balanced',
+      iceCandidatePoolSize: 4
+    });
 
-      connection.onicecandidateerror = () => {
-        addToastMessage('ICE Candidate error', 'error'); 
-      };
+    connection.onicecandidateerror = () => {
+      addToastMessage('ICE Candidate error', 'error'); 
+    };
 
-      dataChannel = connection.createDataChannel('data', {
-        ordered: false // we handle the order by response status
-      });
-      dataChannel.onopen = () => {
-        addToastMessage('Connected', 'success');
-        isConnecting = true;
-        qrModal?.close();
-      };
-      dataChannel.onmessage = (event) => {
-        const message = Message.decode(new Uint8Array(event.data));
+    dataChannel = connection.createDataChannel('data', {
+      ordered: false // we handle the order by response status
+    });
+    dataChannel.onopen = () => {
+      addToastMessage('Connected', 'success');
+      isConnecting = true;
+      qrModal?.close();
+    };
+    dataChannel.onmessage = (event) => {
+      const message = Message.decode(new Uint8Array(event.data));
 
-        if (message.metaData !== undefined && receiver) {
-          receiver.onMetaData(message.id, message.metaData);
-          showNewFile = true;
-        } else if (message.chunk !== undefined && receiver) {
-          receiver.onChunkData(message.id, message.chunk);
-        } else if (message.receiveEvent !== undefined && sender) {
-          sender.onReceiveEvent(message.id, message.receiveEvent);
-        }
-      };
-      dataChannel.onerror = () => {
-        addToastMessage('WebRTC error', 'error');
-        isConnecting = false;
-        offerCode = '';
-      };
-      dataChannel.onclose = () => {
-        addToastMessage('Disconnected', 'error');
-        isConnecting = false;
-        offerCode = '';
-      };
-    }
+      if (message.metaData !== undefined && receiver) {
+        receiver.onMetaData(message.id, message.metaData);
+        showNewFile = true;
+      } else if (message.chunk !== undefined && receiver) {
+        receiver.onChunkData(message.id, message.chunk);
+      } else if (message.receiveEvent !== undefined && sender) {
+        sender.onReceiveEvent(message.id, message.receiveEvent);
+      }
+    };
+    dataChannel.onerror = () => {
+      addToastMessage('WebRTC error', 'error');
+      isConnecting = false;
+      offerCode = '';
+    };
+    dataChannel.onclose = () => {
+      addToastMessage('Disconnected', 'error');
+      isConnecting = false;
+      offerCode = '';
+    };
+  }
 
   async function generateOfferCode() {
     generating = true;
     await createPeerAndDataCannel();
+
+    if (!connection) {
+      addToastMessage('Failed to create WebRTC connection', 'error');
+      generating = false;
+      return;
+    }
 
     connection.onicecandidate = async (event) => {
       if (!event.candidate && connection.localDescription) {
@@ -110,42 +143,93 @@
       }
     };
 
-    const offer = await connection.createOffer({
-      offerToReceiveVideo: false,
-      offerToReceiveAudio: false
-    });
-    await connection.setLocalDescription(offer);
+    try {
+      const offer = await connection.createOffer({
+        offerToReceiveVideo: false,
+        offerToReceiveAudio: false
+      });
+      await connection.setLocalDescription(offer);
 
-    // stop waiting for ice candidates if longer than timeout
-    setTimeout(async () => {
-      if (!connection.localDescription || !generating) return;
-      addToastMessage('timeout waiting ICE candidates');
-      await createOfferCode(connection.localDescription);
+      // stop waiting for ice candidates if longer than timeout
+      setTimeout(async () => {
+        if (!connection?.localDescription || !generating) return;
+        addToastMessage('timeout waiting ICE candidates');
+        await createOfferCode(connection.localDescription);
+        generating = false;
+      }, waitIceCandidatesTimeout);
+    } catch (error) {
+      console.error('Error generating offer:', error);
+      addToastMessage('Failed to generate offer', 'error');
       generating = false;
-    }, waitIceCandidatesTimeout);
+    }
   }
 
   async function copyOfferCode() {
-    await navigator.clipboard.writeText(offerCode);
-    addToastMessage('Copied to clipboard', 'info');
+    try {
+      await navigator.clipboard.writeText(offerCode);
+      addToastMessage('Copied to clipboard', 'info');
+    } catch (error) {
+      console.error('Failed to copy offer code:', error);
+      addToastMessage('Failed to copy offer code', 'error');
+    }
   }
 
   async function acceptAnswer() {
-    try {
-      const { sdp, publicKey } = parseUniqueCode(answerCode);
+    // Debugging log
+    debugAcceptAnswer();
 
-      if (sendOptions.isEncrypt && publicKey) {
-        rsaPub = await importRsaPublicKeyFromBase64(publicKey);
+    if (!answerCode.trim()) {
+      addToastMessage('Please enter an answer code', 'error');
+      return;
+    }
+
+    try {
+      // Validate the answer code structure first
+      let parsedCode;
+      try {
+        parsedCode = parseUniqueCode(answerCode);
+      } catch (parseError) {
+        addToastMessage('Invalid answer code format', 'error');
+        console.error('Parse error:', parseError);
+        return;
       }
 
+      const { sdp, publicKey } = parsedCode;
+
+      // Ensure we have a valid connection before setting remote description
+      if (!connection) {
+        addToastMessage('WebRTC connection not established', 'error');
+        return;
+      }
+
+      // Handle encryption key if needed
+      if (sendOptions.isEncrypt && publicKey) {
+        try {
+          rsaPub = await importRsaPublicKeyFromBase64(publicKey);
+        } catch (cryptoError) {
+          addToastMessage('Failed to import public key', 'error');
+          console.error('Crypto import error:', cryptoError);
+          return;
+        }
+      }
+
+      // Decode and set remote description
       const remoteDesc: RTCSessionDescriptionInit = {
         type: 'answer',
         sdp: sdpDecode(sdp, false)
       };
-      await connection.setRemoteDescription(remoteDesc);
+
+      // Add error handling for setRemoteDescription
+      try {
+        await connection.setRemoteDescription(remoteDesc);
+        addToastMessage('Answer code accepted', 'success');
+      } catch (setDescError) {
+        addToastMessage('Failed to set remote description', 'error');
+        console.error('Set remote description error:', setDescError);
+      }
     } catch (error) {
-      addToastMessage('Invalid answer code', 'error');
-      console.error('Failed to parse answer code:', error);
+      addToastMessage('Unexpected error processing answer code', 'error');
+      console.error('Unexpected error:', error);
     }
   }
 
@@ -167,8 +251,6 @@
         <span class="loading loading-spinner loading-lg"></span>
         <div>Generating Offer</div>
       </div>
-      
-      
     {:else}
       <p>
         Generate a unique offer code to establish a connection. See
@@ -184,21 +266,12 @@
           <OfferOptions onUpdate={onOptionsUpdate} />
         {/if}
         <div class="">
-          
-          
-            
-            
-            <button class="btn btn-soft btn-secondary"  onclick={generateOfferCode}>Generate Offer Code</button>
+          <button class="btn btn-soft btn-secondary" onclick={generateOfferCode}>Generate Offer Code</button>
           
           {#if !showOfferOptions}
-            
-            
-             
-              
-              <button class="btn btn-secondary" onclick={() => {
-   showOfferOptions = true;
- }}>Settings</button>
-            
+            <button class="btn btn-secondary" onclick={() => {
+              showOfferOptions = true;
+            }}>Settings</button>
           {/if}
           
           <button class="btn btn-dash btn-warning" onclick={navigateToAnswerPage}>Go to Answer Page</button>
