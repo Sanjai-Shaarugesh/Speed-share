@@ -21,10 +21,10 @@ export const githubLink = 'https://github.com/Sanjai-Shaarugesh/Speed-share';
 
 
 export const defaultSendOptions: SendOptions = {
-  chunkSize: 250 * 1024, 
+  chunkSize: 250 * 1024 , 
   isEncrypt: true,
   iceServer: stunServers[0],
-  wasmBufferSize: 100000 * 1024, 
+  wasmBufferSize: 10000000 * 1024, 
   parallelChunks: 20, // Fewer parallel chunks for lower bandwidth environments
   useStreaming: true,
   compressionLevel: 20, 
@@ -40,8 +40,8 @@ export const defaultSendOptions: SendOptions = {
 // Optimized receive options for low network conditions
 export const defaultReceiveOptions: ReceiveOptions = {
   autoAccept: true,
-  maxSize: 20 * 1024 * 1024 * 1024, 
-  receiverBufferSize: 1000 * 1024 * 1024, 
+  maxSize: 1000 * 1024 * 1024 * 1024, 
+  receiverBufferSize: 10000000 * 1024 * 1024, 
   useStreaming: true,
   decompressInBackground: true,
   chunkTimeout: 10000, // Longer timeout for slow networks
