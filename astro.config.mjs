@@ -14,5 +14,9 @@ export default defineConfig({
   integrations: [svelte(), serviceWorker(), solidJs({ devtools: true })],
   vite: {
     plugins: [tailwindcss()]
+  },
+  server: {
+    host: '0.0.0.0', // This makes it accessible from other devices
+    port: 5173 // Default Vite port (you can change this if needed)
   }
 });

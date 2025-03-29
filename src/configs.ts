@@ -9,7 +9,7 @@ export const stunServers: string[] = [
   'stun:stun.sipgate.net:3478',
   'stun:stun.sipgate.net:10000',
   'stun:stun.nextcloud.com:3478',
-  'stun:stun.nextcloud.com:443',// Added TURN servers for fallback when STUN fails in restrictive networks
+  'stun:stun.nextcloud.com:443', // Added TURN servers for fallback when STUN fails in restrictive networks
   'stun:stun.myvoipapp.com:3478',
   'stun:stun.voipstunt.com:3478',
   'turn:numb.viagenie.ca:3478',
@@ -18,7 +18,6 @@ export const stunServers: string[] = [
 
 export const pageDescription = 'A client-side secure P2P file sharing app optimized for low-bandwidth conditions.';
 export const githubLink = 'https://github.com/Sanjai-Shaarugesh/Speed-share';
-
 
 export const defaultSendOptions: SendOptions = {
   chunkSize: 250 * 1024, 
@@ -32,7 +31,9 @@ export const defaultSendOptions: SendOptions = {
   retryAttempts: 3, // Auto-retry failed chunks
   priorityQueueing: true, // Prioritize metadata and small files
   retryStrategy: 'exponential',
-  onProgress: (progress: number) => {},
+  onProgress: (progress: number) => {
+    console.log(`Progress: ${progress.toFixed(2)}%`);
+  },
   signal: AbortSignal.timeout(30000),
   timeout: 30000
 };
@@ -52,7 +53,6 @@ export const defaultReceiveOptions: ReceiveOptions = {
 };
 
 export const waitIceCandidatesTimeout = 5000; // Increased timeout for slow network discovery
-
 
 let wasmModule: WebAssembly.Module | null = null;
 let wasmInstance: WebAssembly.Instance | null = null;
@@ -158,14 +158,15 @@ export async function detectNetworkQuality(): Promise<{
   } catch (error) {
     console.warn('Network quality detection failed', error);
     return {
-      bandwidth: 10 * 1024, // Assume very low bandwidth (10 KB/s)  😆  eg:india with low network connection 
+      bandwidth: 10 * 1024, // Assume very low bandwidth (10 KB/s) 😆  eg:india with low network connection 
       latency: 800, // Assume high latency
       reliability: 0.3 // Assume poor reliability
     };
   }
 }
 
-// New function to optimize transfer parameters based on network conditions i may think this will work sanjai will only know's 😆
+// New function to optimize transfer parameters based on network conditions
+// (This function is extended below via a wrapper to “force” high throughput for our target)
 export async function optimizeTransferSettings(
   options: SendOptions
 ): Promise<SendOptions> {
@@ -246,3 +247,100 @@ export async function createReliableDataChannel(
   
   throw new Error('Failed to create data channel after max retries');
 }
+
+/*
+ * =============================================================================
+ * ADDITIONAL FUNCTIONALITY FOR HIGH-THROUGHPUT FILE TRANSFER
+ * =============================================================================
+ *
+ * This new section wraps the file sending logic. It leverages the existing
+ * functions but “forces” the transfer settings to extreme values so that, in
+ * theory, a 10GB file could be sent in 10 seconds (i.e. ~1GB/s throughput).
+ *
+ * Note: Achieving such performance on low‑latency or mobile devices is highly
+ * theoretical and will depend on the actual network/hardware.
+ */
+
+// Wrapper to override optimized settings for high throughput
+async function forceHighThroughputSettings(options: SendOptions): Promise<SendOptions> {
+  const forced: SendOptions = { ...options };
+  // Force a much larger chunk size and higher parallelism:
+  forced.chunkSize = 10 * 1024 * 1024; // 10 MB chunks
+  forced.parallelChunks = 16;         // Increase parallel chunks
+  // Optionally lower compression to reduce CPU overhead:
+  forced.compressionLevel = 3;
+  return forced;
+}
+
+// New function to send a file using the (forced) high-throughput settings
+export async function sendFile(file: File, peerConnection: RTCPeerConnection): Promise<void> {
+  // Get default optimized settings then force high-throughput overrides
+  const optimizedOptions = await optimizeTransferSettings(defaultSendOptions);
+  const highThroughputOptions = await forceHighThroughputSettings(optimizedOptions);
+
+  // Create the reliable data channel
+  const dataChannel = await createReliableDataChannel(peerConnection, 'fileTransfer');
+  
+  const fileSize = file.size;
+  const totalChunks = Math.ceil(fileSize / highThroughputOptions.chunkSize);
+  
+  console.log(`Starting transfer: ${fileSize} bytes in ${totalChunks} chunks`);
+  
+  let sentChunks = 0;
+  const startTime = performance.now();
+
+  // Function to process and send one chunk
+  async function sendChunk(chunkIndex: number): Promise<void> {
+    const start = chunkIndex * highThroughputOptions.chunkSize;
+    const end = Math.min(start + highThroughputOptions.chunkSize, fileSize);
+    const blobChunk = file.slice(start, end);
+    const arrayBuffer = await blobChunk.arrayBuffer();
+    let chunk = new Uint8Array(arrayBuffer);
+    // Process chunk using WASM or JS fallback
+    chunk = await processFileChunk(chunk);
+    // Send the processed chunk over the data channel
+    dataChannel.send(chunk);
+    sentChunks++;
+    const progress = (sentChunks / totalChunks) * 100;
+    highThroughputOptions.onProgress(progress);
+  }
+
+  // Limit concurrency using the forced parallelChunks setting
+  let currentIndex = 0;
+  async function runQueue() {
+    while (currentIndex < totalChunks) {
+      const batch: Promise<void>[] = [];
+      for (let i = 0; i < highThroughputOptions.parallelChunks && currentIndex < totalChunks; i++) {
+        batch.push(sendChunk(currentIndex));
+        currentIndex++;
+      }
+      await Promise.all(batch);
+    }
+  }
+  
+  await runQueue();
+
+  const endTime = performance.now();
+  const durationSec = (endTime - startTime) / 1000;
+  console.log(`File transfer completed in ${durationSec.toFixed(2)} seconds`);
+
+  if (durationSec > 10) {
+    console.warn('Transfer did not complete within 10 seconds. This may be due to network or hardware limitations.');
+  } else {
+    console.log('Transfer achieved the 10-second target (theoretical performance).');
+  }
+}
+
+/*
+ * =============================================================================
+ * USAGE EXAMPLE:
+ *
+ * Assume you have an established RTCPeerConnection (peerConnection) and a File
+ * object (e.g. from an input element or drag-and-drop). You could call:
+ *
+ *    sendFile(selectedFile, peerConnection)
+ *      .then(() => console.log('File sent successfully'))
+ *      .catch(err => console.error('File transfer failed', err));
+ *
+ * =============================================================================
+ */
