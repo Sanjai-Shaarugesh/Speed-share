@@ -18,6 +18,7 @@
   import QrModal from '../components/qr/QrModal.svelte';
   import ScanQrModal from '../components/qr/ScanQrModal.svelte';
   import Toast from '../components/Toast.svelte';
+  import { navigate } from '../stores/navigationStore';
 
   // options
   let sendOptions = $state(defaultSendOptions);
@@ -238,7 +239,7 @@
   }
 
   function navigateToAnswerPage() {
-    window.location.href = `${window.location.origin}/answer`;
+   window.location.href = `${window.location.origin}/answer.html`;
   }
 </script>
 
@@ -273,8 +274,10 @@
               showOfferOptions = true;
             }}>Settings</button>
           {/if}
+          <button class="btn btn-dash btn-warning" onclick={navigateToAnswerPage}>
+            Go to Answer Page
+          </button>
           
-          <button class="btn btn-dash btn-warning" onclick={navigateToAnswerPage}>Go to Answer Page</button>
         </div>
       </div>
     {/if}

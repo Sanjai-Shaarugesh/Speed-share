@@ -2,6 +2,7 @@
 import MainLayout from '../layouts/main.astro';
 
 import OfferPage from '../components/OfferPage.svelte';
+
 ---
 
 <MainLayout
@@ -9,7 +10,9 @@ import OfferPage from '../components/OfferPage.svelte';
   description="A client-side secure P2P file sharing using app."
 >
 
-  <OfferPage client:load client:only="svelte" />
-</MainLayout>
 
+
+  <OfferPage client:load client:only="svelte" />
+  
+</MainLayout>
 

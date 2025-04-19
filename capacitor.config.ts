@@ -1,14 +1,12 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.example.app',
-  appName: 'Speed-share-mobile',
-  webDir: 'build',
-  plugins: {
-    Camera: {
-      // Required for iOS
-      iosUseDocumentPicker: false
-    }
+  appId: 'com.Speed-share.app',
+  appName: 'Speed-share',
+  webDir: './build', 
+  server: {
+    androidScheme: 'https',
+    allowNavigation: ['*'] // allow all internal routes like /offer, /answer
   }
 };
 
