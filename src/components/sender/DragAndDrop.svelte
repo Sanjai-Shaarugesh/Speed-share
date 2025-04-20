@@ -2,6 +2,14 @@
   import { onMount } from 'svelte';
   import { addToastMessage } from '../../stores/toastStore';
 
+  type FileItem = {
+    file: File;
+    url?: string;
+    status?: 'pending' | 'sent';
+  };
+
+  let fileItems: FileItem[] = $state([]);
+
   type Props = {
     onFilesPick: (files: FileList) => void;
   };
@@ -10,26 +18,20 @@
   let dropArea: HTMLElement;
   let fileInput: HTMLInputElement;
 
-  // State for previews: array of { file: File, url?: string }
-  let previews = $state([]);
-
-  // Function to update previews, revoking old URLs and creating new ones for images
   function setPreviewFiles(files: FileList) {
-    // Revoke previous URLs to prevent memory leaks
-    previews.forEach(preview => {
-      if (preview.url) URL.revokeObjectURL(preview.url);
-    });
-    // Create new previews
-    previews = [...files].map(file => {
-      if (file.type.startsWith('image/')) {
-        return { file, url: URL.createObjectURL(file) };
-      } else {
-        return { file };
-      }
-    });
+    const existingKeys = new Set(fileItems.map(p => p.file.name + p.file.lastModified));
+
+    const newItems = [...files]
+      .filter(file => !existingKeys.has(file.name + file.lastModified))
+      .map(file => ({
+        file,
+        url: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
+        status: 'pending',
+      }));
+
+    fileItems = [...fileItems, ...newItems];
   }
 
-  // Drop area event setup
   function setupDropAreaListeners() {
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
       dropArea.addEventListener(
@@ -42,27 +44,18 @@
       );
     });
 
-    ['dragenter', 'dragover'].forEach((eventName) => {
-      dropArea.addEventListener(eventName, highlight, false);
+    ['dragenter', 'dragover'].forEach(event => {
+      dropArea.addEventListener(event, () => dropArea.classList.add('bg-blue-200'), false);
     });
 
-    ['dragleave', 'drop'].forEach((eventName) => {
-      dropArea.addEventListener(eventName, unhighlight, false);
+    ['dragleave', 'drop'].forEach(event => {
+      dropArea.addEventListener(event, () => dropArea.classList.remove('bg-blue-200'), false);
     });
 
     dropArea.addEventListener('drop', handleDrop, false);
   }
 
-  function highlight() {
-    dropArea.classList.add('bg-blue-200');
-  }
-
-  function unhighlight() {
-    dropArea.classList.remove('bg-blue-200');
-  }
-
   function handleDrop(e: DragEvent) {
-    unhighlight();
     const files = e.dataTransfer?.files;
     if (files) {
       onFilesPick(files);
@@ -78,13 +71,12 @@
     }
   }
 
-  function handlePasteEvent(event: ClipboardEvent): void {
+  function handlePasteEvent(event: ClipboardEvent) {
     const clipboardData = event.clipboardData;
     if (!clipboardData) return;
 
     const files: File[] = [];
 
-    // Handle text as a file
     const text = clipboardData.getData('Text');
     if (text) {
       const textBlob = new Blob([text], { type: 'text/plain' });
@@ -92,13 +84,10 @@
       files.push(textFile);
     }
 
-    // Handle files (e.g., images)
     const items = clipboardData.items;
     for (let i = 0; i < items.length; i++) {
       const file = items[i].getAsFile();
-      if (file) {
-        files.push(file);
-      }
+      if (file) files.push(file);
     }
 
     if (files.length > 0) {
@@ -146,20 +135,27 @@
     }
   }
 
+  function removeFile(index: number) {
+    const removed = fileItems[index];
+    if (removed.url) URL.revokeObjectURL(removed.url);
+    fileItems = fileItems.filter((_, i) => i !== index);
+    addToastMessage(`Removed ${removed.file.name}`);
+  }
+
   onMount(() => {
     setupDropAreaListeners();
     document.addEventListener('paste', handlePasteEvent);
 
-    // Cleanup URLs on component destruction
     return () => {
       document.removeEventListener('paste', handlePasteEvent);
-      previews.forEach(preview => {
-        if (preview.url) URL.revokeObjectURL(preview.url);
+      fileItems.forEach(item => {
+        if (item.url) URL.revokeObjectURL(item.url);
       });
     };
   });
 </script>
 
+<!-- Upload Area -->
 <label
   class="relative flex flex-col border border-base-300 border-dashed cursor-pointer"
   bind:this={dropArea}
@@ -191,28 +187,48 @@
     </svg>
 
     <p class="m-0 hidden xl:block">
-      Drop your files, paste from clipboard (ctrl+v), or click to this area
+      Drop your files, paste from clipboard (ctrl+v), or click this area
     </p>
-    <p class="m-0 xl:hidden">Click to this area</p>
+    <p class="m-0 xl:hidden">Click this area</p>
   </div>
 </label>
+
+<!-- Paste button for mobile -->
 <button class="btn btn-secondary xl:hidden" onclick={handlePastFromClipboardButton}>
   Paste from clipboard
 </button>
 
-<!-- Preview Section -->
-{#if previews.length > 0}
+<!-- File Preview Section -->
+{#if fileItems.length > 0}
   <div class="mt-4">
-    <h3>Selected Files:</h3>
+    <h3>Selected {fileItems.length === 1 ? 'File' : 'Files'}:</h3>
     <div class="flex flex-wrap gap-4">
-      {#each previews as preview}
-        {#if preview.url}
-          <img src={preview.url} alt={preview.file.name} class="w-24 h-24 object-cover" />
-        {:else}
-          <div class="p-2 border border-gray-300">
-            {preview.file.name}
+      {#each fileItems as item, index}
+        <div class="p-4 mb-4 border rounded-md bg-gray-800 flex gap-4 items-center w-full xl:w-[calc(50%-0.5rem)]">
+          {#if item.url}
+            <img src={item.url} alt={item.file.name} class="w-20 h-20 object-cover rounded-md" />
+          {/if}
+
+          <div class="flex-1">
+            <p><strong>Name:</strong> {item.file.name}</p>
+            <p><strong>Size:</strong> {(item.file.size / 1024).toFixed(2)} KB</p>
+            <p><strong>Type:</strong> {item.file.type}</p>
+            <p><strong>Status:</strong> {item.status}</p>
+
+            
+
+            <div class="flex gap-2">
+             
+                
+              <button
+                class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-1 rounded"
+                onclick={() => removeFile(index)}
+              >
+                Remove
+              </button>
+            </div>
           </div>
-        {/if}
+        </div>
       {/each}
     </div>
   </div>

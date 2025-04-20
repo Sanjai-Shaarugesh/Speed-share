@@ -1,12 +1,6 @@
 <script lang="ts">
   import { FileStatus, type FileDetail } from '../type';
   import { humanFileSize } from '../utils/humanFIleSize';
-  import { onDestroy } from 'svelte';
- 
-   let file: File | null = null;
-   let objectUrl: string | null = null;
-   let progress = 0;
-   let error: string | null = null;
 
   type Props = {
     fileDetail: FileDetail;
@@ -14,37 +8,6 @@
     children: () => any;
   };
   const { fileDetail, isSender, children }: Props = $props();
-  
-  function handleFileChange(event: Event) {
-     const input = event.target as HTMLInputElement;
-     if (input.files && input.files.length > 0) {
-       file = input.files[0];
-       if (objectUrl) URL.revokeObjectURL(objectUrl);
-       objectUrl = URL.createObjectURL(file);
-       error = null;
-       simulateProgress();
-     }
-   }
- 
-   function simulateProgress() {
-     progress = 0;
-     const interval = setInterval(() => {
-       if (progress >= 100) {
-         clearInterval(interval);
-       } else {
-         progress += 10;
-       }
-     }, 150);
-   }
- 
-   const isImage = () => file?.type.startsWith('image/');
-   const isVideo = () => file?.type.startsWith('video/');
-   const isAudio = () => file?.type.startsWith('audio/');
-   const isPDF = () => file?.type === 'application/pdf';
- 
-   onDestroy(() => {
-     if (objectUrl) URL.revokeObjectURL(objectUrl);
-   });
 </script>
 
 <div class="card bg-base-100 shadow-lg shadow-base-300">
