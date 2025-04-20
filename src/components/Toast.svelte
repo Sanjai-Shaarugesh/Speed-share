@@ -19,7 +19,7 @@
 <div class="fixed bottom-4 right-4 space-y-2">
   {#each toasts as toast}
     <div
-      class="alert alert-{toast.status}"
+      class="alert alert-{toast.status}  alert-soft"
       in:fade|global={{ duration: 300 }}
       out:fade|global={{ duration: 300 }}
     >

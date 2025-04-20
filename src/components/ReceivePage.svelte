@@ -228,12 +228,13 @@
         </button>
         <div class="indicator flex-grow">
           <span
-            class="indicator-item badge badge-accent animate-bounce {showNewFile
-              ? 'block'
-              : 'hidden'}">New files</span
-          >
+            class="indicator-item badge badge-success text-xs animate-bounce"
+            class:hidden={!showNewFile}
+            style="top: 0; right: 10%; left: 70%; z-index: 10;">New files</span>
           <button
-            class="btn {sendMode ? 'btn-ghost' : 'btn-primary'} w-full border-black border-dotted"
+            class="btn w-full border-black border-dotted relative"
+            class:btn-ghost={sendMode}
+            class:btn-primary={!sendMode}
             onclick={() => {
               showNewFile = false;
               sendMode = false;

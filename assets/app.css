@@ -1,2 +1,100 @@
 @import "@ionic/core/css/core.css";
 @import "@ionic/core/css/ionic.bundle.css";
+
+
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark, cupcake;
+}
+
+:root {
+  --my-color: #000000; /* default fallback */
+}
+
+/* Loop through all daisyUI themes and assign values */
+[data-theme='light'] {
+  --my-color: #000000;
+}
+[data-theme='dark'] {
+  --my-color: #ffffff;
+}
+[data-theme='cupcake'] {
+  --my-color: #ff69b4;
+}
+[data-theme='bumblebee'] {
+  --my-color: #facc15;
+}
+[data-theme='emerald'] {
+  --my-color: #10b981;
+}
+[data-theme='corporate'] {
+  --my-color: #3b82f6;
+}
+[data-theme='synthwave'] {
+  --my-color: #f472b6;
+}
+[data-theme='retro'] {
+  --my-color: #ef4444;
+}
+[data-theme='cyberpunk'] {
+  --my-color: #e11d48;
+}
+[data-theme='valentine'] {
+  --my-color: #f472b6;
+}
+[data-theme='halloween'] {
+  --my-color: #f97316;
+}
+[data-theme='garden'] {
+  --my-color: #22c55e;
+}
+[data-theme='forest'] {
+  --my-color: #166534;
+}
+[data-theme='aqua'] {
+  --my-color: #06b6d4;
+}
+[data-theme='lofi'] {
+  --my-color: #737373;
+}
+[data-theme='pastel'] {
+  --my-color: #fbbf24;
+}
+[data-theme='fantasy'] {
+  --my-color: #c084fc;
+}
+[data-theme='wireframe'] {
+  --my-color: #374151;
+}
+[data-theme='black'] {
+  --my-color: #ffffff;
+}
+[data-theme='luxury'] {
+  --my-color: #d4af37;
+}
+[data-theme='dracula'] {
+  --my-color: #f8f8f2;
+}
+[data-theme='cmyk'] {
+  --my-color: #00bcd4;
+}
+[data-theme='autumn'] {
+  --my-color: #ea580c;
+}
+[data-theme='business'] {
+  --my-color: #1e40af;
+}
+[data-theme='acid'] {
+  --my-color: #84cc16;
+}
+[data-theme='lemonade'] {
+  --my-color: #facc15;
+}
+[data-theme='night'] {
+  --my-color: #38bdf8;
+}
+[data-theme='coffee'] {
+  --my-color: #6b4c35;
+}
+[data-theme='winter'] {
+  --my-color: #64748b;
+}

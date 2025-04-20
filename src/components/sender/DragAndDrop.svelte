@@ -10,6 +10,26 @@
   let dropArea: HTMLElement;
   let fileInput: HTMLInputElement;
 
+  // State for previews: array of { file: File, url?: string }
+  let previews = $state([]);
+
+  // Function to update previews, revoking old URLs and creating new ones for images
+  function setPreviewFiles(files: FileList) {
+    // Revoke previous URLs to prevent memory leaks
+    previews.forEach(preview => {
+      if (preview.url) URL.revokeObjectURL(preview.url);
+    });
+    // Create new previews
+    previews = [...files].map(file => {
+      if (file.type.startsWith('image/')) {
+        return { file, url: URL.createObjectURL(file) };
+      } else {
+        return { file };
+      }
+    });
+  }
+
+  // Drop area event setup
   function setupDropAreaListeners() {
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
       dropArea.addEventListener(
@@ -46,29 +66,47 @@
     const files = e.dataTransfer?.files;
     if (files) {
       onFilesPick(files);
+      setPreviewFiles(files);
     }
   }
 
   function handleFileInputChange() {
     if (fileInput.files) {
       onFilesPick(fileInput.files);
+      setPreviewFiles(fileInput.files);
       fileInput.value = '';
     }
   }
 
-  function handleTextClipboard(text: string) {
-    const textBlob = new Blob([text], { type: 'text/plain' });
-    const textFile = new File([textBlob], 'clipboard.txt', { type: 'text/plain' });
+  function handlePasteEvent(event: ClipboardEvent): void {
+    const clipboardData = event.clipboardData;
+    if (!clipboardData) return;
 
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(textFile);
-    onFilesPick(dataTransfer.files);
-  }
+    const files: File[] = [];
 
-  function handleFileClipboard(file: File) {
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
-    onFilesPick(dataTransfer.files);
+    // Handle text as a file
+    const text = clipboardData.getData('Text');
+    if (text) {
+      const textBlob = new Blob([text], { type: 'text/plain' });
+      const textFile = new File([textBlob], 'clipboard.txt', { type: 'text/plain' });
+      files.push(textFile);
+    }
+
+    // Handle files (e.g., images)
+    const items = clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      const file = items[i].getAsFile();
+      if (file) {
+        files.push(file);
+      }
+    }
+
+    if (files.length > 0) {
+      const dataTransfer = new DataTransfer();
+      files.forEach(file => dataTransfer.items.add(file));
+      onFilesPick(dataTransfer.files);
+      setPreviewFiles(dataTransfer.files);
+    }
   }
 
   async function handlePastFromClipboardButton() {
@@ -76,9 +114,13 @@
     if (!clipboardData) return;
 
     try {
+      const files: File[] = [];
+
       const text = await clipboardData.readText();
       if (text) {
-        handleTextClipboard(text);
+        const textBlob = new Blob([text], { type: 'text/plain' });
+        const textFile = new File([textBlob], 'clipboard.txt', { type: 'text/plain' });
+        files.push(textFile);
       }
 
       const items = await clipboardData.read();
@@ -87,37 +129,34 @@
           if (!type.startsWith('image/')) continue;
           const blob = await item.getType(type);
           const imageFile = new File([blob], `image.${type.replace('image/', '')}`, { type });
-          handleFileClipboard(imageFile);
+          files.push(imageFile);
         }
       }
-    } catch (e) {
-      addToastMessage('No data on clipboard');
-    }
-  }
 
-  function handlePasteEvent(event: ClipboardEvent): void {
-    const clipboardData = event.clipboardData;
-    if (!clipboardData) return;
-
-    // Handle text data
-    const text = clipboardData.getData('Text');
-    if (text) {
-      handleTextClipboard(text);
-    }
-
-    // Handle image data
-    const items = clipboardData.items;
-    for (let i = 0; i < items.length; i++) {
-      const file = items[i].getAsFile();
-      if (file) {
-        handleFileClipboard(file);
+      if (files.length > 0) {
+        const dataTransfer = new DataTransfer();
+        files.forEach(file => dataTransfer.items.add(file));
+        onFilesPick(dataTransfer.files);
+        setPreviewFiles(dataTransfer.files);
+      } else {
+        addToastMessage('No data on clipboard');
       }
+    } catch (e) {
+      addToastMessage('Failed to read clipboard');
     }
   }
 
   onMount(() => {
     setupDropAreaListeners();
     document.addEventListener('paste', handlePasteEvent);
+
+    // Cleanup URLs on component destruction
+    return () => {
+      document.removeEventListener('paste', handlePasteEvent);
+      previews.forEach(preview => {
+        if (preview.url) URL.revokeObjectURL(preview.url);
+      });
+    };
   });
 </script>
 
@@ -157,6 +196,24 @@
     <p class="m-0 xl:hidden">Click to this area</p>
   </div>
 </label>
-<button class="btn btn-secondary xl:hidden" onclick={handlePastFromClipboardButton}
-  >Paste from clipboard</button
->
+<button class="btn btn-secondary xl:hidden" onclick={handlePastFromClipboardButton}>
+  Paste from clipboard
+</button>
+
+<!-- Preview Section -->
+{#if previews.length > 0}
+  <div class="mt-4">
+    <h3>Selected Files:</h3>
+    <div class="flex flex-wrap gap-4">
+      {#each previews as preview}
+        {#if preview.url}
+          <img src={preview.url} alt={preview.file.name} class="w-24 h-24 object-cover" />
+        {:else}
+          <div class="p-2 border border-gray-300">
+            {preview.file.name}
+          </div>
+        {/if}
+      {/each}
+    </div>
+  </div>
+{/if}
