@@ -169,14 +169,10 @@
 </script>
 
 <!-- Styled button to open the modal -->
-<button 
-  class="btn btn-primary flex items-center gap-2"
-  onclick={() => toggleModal(true)}
-  aria-label="Open QR Scanner"
->
-  <ScanLine />
-  {buttonText}
-</button>
+<button class="btn btn-soft btn-secondary" onclick={() => toggleModal(true)}
+  aria-label="Open QR Scanner"> <ScanLine />
+  {buttonText}</button>
+
 
 <!-- Modal implementation with backdrop -->
 {#if isModalOpen}

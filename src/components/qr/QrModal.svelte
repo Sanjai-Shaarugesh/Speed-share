@@ -36,7 +36,7 @@
     .make();
 </script>
 
-<label for="qr-modal" class="btn gap-2"> <QrCode /> QR Code </label>
+<label for="qr-modal" class="btn btn-outline btn-warning"> <QrCode /> QR Code </label>
 
 <input type="checkbox" id="qr-modal" class="modal-toggle" bind:checked={isModalOpen} />
 <label for="qr-modal" class="modal cursor-pointer">

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @plugin "daisyui";
+@plugin 'flowbite/plugin';
 
 @import "preline/variants.css";
 @source "../../node_modules/preline/dist/*.js";

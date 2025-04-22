@@ -304,7 +304,8 @@
         </div>
       </div>
       <div class="mt-4 flex gap-2">
-        <button class="btn btn-primary gap-2" onclick={copyOfferCode}>Copy Code <Clipboard /></button>
+          <button class="btn btn-dash btn-success" onclick={copyOfferCode}>Copy Code <Clipboard /></button>
+
         <QrModal bind:this={qrModal} qrData={offerCode} title="Offer QR Code" />
       </div>
       <p class="mt-4">Enter the Answer Code from your peer to establish connection.</p>
@@ -312,7 +313,7 @@
         <input type="password" class="input input-bordered w-full" bind:value={answerCode} />
       </div>
       <div class="mt-4 flex gap-2">
-        <button class="btn btn-primary" onclick={acceptAnswer}>Accept Answer <LandPlot /></button>
+        <button class="btn btn-soft btn-warning" onclick={acceptAnswer}>Accept Answer <LandPlot /></button>
         <ScanQrModal
           onScanSuccess={(data) => {
             answerCode = data;
