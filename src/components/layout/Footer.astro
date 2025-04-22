@@ -3,33 +3,16 @@ import { githubLink } from '../../configs';
 import Github from '../icons/Github.astro';
 ---
 
-<footer class="footer footer-center pt-10 p-5 text-base-content gap-4">
-  <div class="grid grid-flow-col gap-4">
+<footer class="footer bg-neutral text-neutral-content p-4 flex justify-center items-center">
+  <aside class="flex items-center gap-4">
+    <Github />
     <a
-      aria-label="Github"
+      href={githubLink + '/blob/main/LICENSE'}
       target="_blank"
-      href={githubLink}
-      rel="noopener"
-      class="drawer-button normal-case"
+      rel="noopener noreferrer"
+      class="text-sm"
     >
-      <Github />
+      <p>Copyright © {new Date().getFullYear()} - All rights reserved</p>
     </a>
-  </div>
-  <div class="text-xs md:text-sm">
-    <p>
-      This project is an open-source
-      <a
-        class="link"
-        href={githubLink + '/blob/main/LICENSE'}
-        target="_blank"
-        rel="noopener noreferrer">License</a
-      >.
-    </p>
-    <p>
-      Copyright &copy; 2025
-      <a class="link" href="https://github.com/Sanjai-Shaarugesh/Speed-share" target="_blank" rel="noopener noreferrer">
-        Sanjai Shaarugesh
-      </a>
-    </p>
-  </div>
+  </aside>
 </footer>

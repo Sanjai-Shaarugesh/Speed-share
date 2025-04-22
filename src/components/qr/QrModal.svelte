@@ -1,5 +1,6 @@
 <script lang="ts">
   import { QRByte, Encoder, ErrorCorrectionLevel } from '@nuintun/qrcode';
+   import { QrCode  } from '@lucide/svelte';
 
   type Props = {
     title: string;
@@ -35,7 +36,7 @@
     .make();
 </script>
 
-<label for="qr-modal" class="btn gap-2"> QR Code </label>
+<label for="qr-modal" class="btn gap-2"> <QrCode /> QR Code </label>
 
 <input type="checkbox" id="qr-modal" class="modal-toggle" bind:checked={isModalOpen} />
 <label for="qr-modal" class="modal cursor-pointer">

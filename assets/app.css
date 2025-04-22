@@ -1,6 +1,22 @@
 @import "@ionic/core/css/core.css";
 @import "@ionic/core/css/ionic.bundle.css";
 
+@import "tailwindcss";
+@plugin "flyonui";
+@import "flyonui/variants.css";
+@source "../node_modules/flyonui/flyonui.js"; // Add only if node_modules is gitignored
+@plugin "flyonui" {
+   themes: light --default, dark --prefersdark;
+}
+/* Import Third-party override css */
+/* @import "flyonui/src/vendor/flatpickr.css"; */
+/* @import "flyonui/src/vendor/notyf.css"; */
+/* @import "flyonui/src/vendor/datatables.css"; */
+/* @import "flyonui/src/vendor/editor.css"; */
+/* @import "flyonui/src/vendor/fullcalendar.css"; */
+/* @import "flyonui/src/vendor/raty.css"; */
+/* @import "flyonui/src/vendor/waves.css"; */
+/* @import "flyonui/src/vendor/apexcharts.css"; */        
 
 @plugin "daisyui" {
   themes: light --default, dark --prefersdark, cupcake;

@@ -8,6 +8,7 @@
   import { FileStatus, type ReceiveOptions, type ReceivingFile } from '../../type';
   import { decryptAesGcm, decryptAesKeyWithRsaPrivateKey } from '../../utils/crypto';
   import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+  import { LoaderPinwheel , Ellipsis , FileStack , Cable } from '@lucide/svelte';
   import JSZip from 'jszip';
   
   type Props = {
@@ -268,6 +269,15 @@
     <button class="btn btn-primary mt-2" onclick={downloadAllFiles}>Download all files (zip)</button
     >
   {:else}
-    <p class="mt-4">Connected, Waiting for files...</p>
+  <p class="mt-4 flex items-center space-x-2">
+    <Cable /> 
+    <span>Connected, Waiting for files</span> 
+   
+    <FileStack />
+    <LoaderPinwheel /> 
+     <Ellipsis /> 
+     
+  </p>
+
   {/if}
 </div>

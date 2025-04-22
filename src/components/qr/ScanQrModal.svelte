@@ -1,6 +1,8 @@
 <script lang="ts">
   import QrScanner from 'qr-scanner';
   import { onMount, onDestroy } from 'svelte';
+   import { ScanLine  } from '@lucide/svelte';
+    import { ScanQrCode  } from '@lucide/svelte';
 
   type Props = {
     onScanSuccess: (data: string) => void;
@@ -172,9 +174,7 @@
   onclick={() => toggleModal(true)}
   aria-label="Open QR Scanner"
 >
-  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <path d="M3 9h6V3H3v6zm0 12h6v-6H3v6zm12 0h6v-6h-6v6zm0-18v6h6V3h-6z" />
-  </svg>
+  <ScanLine />
   {buttonText}
 </button>
 
@@ -190,9 +190,7 @@
           onclick={() => toggleModal(false)}
           aria-label="Close QR Scanner"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+         <ScanQrCode />
         </button>
       </div>
       

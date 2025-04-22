@@ -1,4 +1,6 @@
 <script lang="ts">
+  
+  import {Columns3Cog } from '@lucide/svelte';
   type Props = {
     options: string[];
     customTextEnabled: boolean;
@@ -25,7 +27,7 @@
   });
 </script>
 
-<div class="flex w-full">
+<div class="flex w-full space-x-2">
   <div class="flex-grow">
     {#if !editingCustomText}
       <select class="select select-bordered w-full" bind:value={selectedValue}>
@@ -45,9 +47,10 @@
 
   {#if customTextEnabled}
     <div>
-      <button class="btn btn-secondary" onclick={toggleCustomText}>
-        {editingCustomText ? 'Select' : 'Custom'}
-      </button>
+        <button class="btn btn-secondary" onclick={toggleCustomText}>
+                {editingCustomText ? 'Select' : 'Custom'} <Columns3Cog />
+        </button>
+     
     </div>
   {/if}
 </div>

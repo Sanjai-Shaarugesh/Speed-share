@@ -4,6 +4,7 @@
   import Eye from '../components/icons/Eye.svelte';
   import { Message } from '../proto/message';
   import Collapse from '../components/layout/Collapse.svelte';
+   import { Cpu , CircleArrowOutUpLeft , Copy } from '@lucide/svelte';
   import {
     exportRsaPublicKeyToBase64,
     generateRsaKeyPair,
@@ -170,21 +171,19 @@
         disabled={isProcessingOffer}
       />
       <div class="mt-4 flex gap-2">
-        <button class="btn btn-primary" onclick={processOfferCode} disabled={isProcessingOffer}>
-          {#if isProcessingOffer}
-            <span class="loading loading-spinner loading-sm"></span>
-            Processing
-          {:else}
-            Process Offer
-          {/if}
-        </button>
+          <button class="btn btn-outline btn-accent" onclick={processOfferCode} disabled={isProcessingOffer}>{#if isProcessingOffer}
+                      
+                      Processing
+                    {:else}
+                      Process Offer <Cpu />
+                    {/if}</button>
         <ScanQrModal onScanSuccess={scanOfferCode} />
         
         
         
       </div>
       <div class="mt-4 flex gap-2">
-        <a href="/" data-navigo> <button class="btn btn-dash btn-warning" onclick={navigateToOfferPage}>Go to Offer Page</button></a>
+        <a href="/" data-navigo> <button class="btn btn-dash btn-warning" onclick={navigateToOfferPage}>Go to Offer Page <CircleArrowOutUpLeft /></button></a>
      
       </div>
     </div>
@@ -209,7 +208,7 @@
         </div>
       </div>
       <div class="mt-4 flex gap-2">
-        <button class="btn btn-primary gap-2" onclick={copyAnswerCode}>Copy Answer</button>
+        <button class="btn btn-primary gap-2" onclick={copyAnswerCode}>Copy Answer <Copy /></button>
         <QrModal bind:this={qrModal} qrData={answerCode} title="Answer QR Code" />
       </div>
     {/if}
@@ -218,14 +217,14 @@
   <Collapse title="3. Transfer Files" isOpen={isConnecting}>
     {#if dataChannel}
       <div class="flex w-full mb-4 mt-2">
-        <button
-          class="btn {sendMode ? 'btn-primary' : 'btn-ghost'} flex-grow border-black border-dotted"
-          onclick={() => {
-            sendMode = true;
-          }}
-        >
-          <span class="btm-nav-label">Send</span>
-        </button>
+          <button
+                    class="btn {sendMode ? 'btn-primary' : 'btn-ghost'} flex-grow border-black border-dotted"
+                    onclick={() => {
+                      sendMode = true;
+                    }}
+                  >
+                    <span class="btm-nav-label">Send</span>
+                  </button>
         <div class="indicator flex-grow">
           <span
             class="indicator-item badge badge-success text-xs animate-bounce"

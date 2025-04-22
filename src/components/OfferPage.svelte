@@ -5,6 +5,8 @@
   import { Message } from '../proto/message';
   import Collapse from '../components/layout/Collapse.svelte';
   import OfferOptions from '../components/OfferOptions.svelte';
+   import { Asterisk , Cog , ChevronsLeftRightEllipsis , Clipboard , LandPlot , Send , HeartHandshake , FilePlus } from '@lucide/svelte';
+   
   import {
     exportRsaPublicKeyToBase64,
     generateRsaKeyPair,
@@ -267,15 +269,15 @@
           <OfferOptions onUpdate={onOptionsUpdate} />
         {/if}
         <div class="">
-          <button class="btn btn-soft btn-secondary" onclick={generateOfferCode}>Generate Offer Code</button>
+          <button class="btn btn-soft btn-secondary" onclick={generateOfferCode}>Generate Offer Code <Asterisk /></button>
           
           {#if !showOfferOptions}
             <button class="btn btn-secondary" onclick={() => {
               showOfferOptions = true;
-            }}>Settings</button>
+            }}>Settings <Cog /></button>
           {/if}
           <button class="btn btn-dash btn-warning" onclick={navigateToAnswerPage}>
-            Go to Answer Page
+            Go to Answer Page <ChevronsLeftRightEllipsis />
           </button>
           
         </div>
@@ -302,7 +304,7 @@
         </div>
       </div>
       <div class="mt-4 flex gap-2">
-        <button class="btn btn-primary gap-2" onclick={copyOfferCode}>Copy Code</button>
+        <button class="btn btn-primary gap-2" onclick={copyOfferCode}>Copy Code <Clipboard /></button>
         <QrModal bind:this={qrModal} qrData={offerCode} title="Offer QR Code" />
       </div>
       <p class="mt-4">Enter the Answer Code from your peer to establish connection.</p>
@@ -310,7 +312,7 @@
         <input type="password" class="input input-bordered w-full" bind:value={answerCode} />
       </div>
       <div class="mt-4 flex gap-2">
-        <button class="btn btn-primary" onclick={acceptAnswer}>Accept Answer</button>
+        <button class="btn btn-primary" onclick={acceptAnswer}>Accept Answer <LandPlot /></button>
         <ScanQrModal
           onScanSuccess={(data) => {
             answerCode = data;
@@ -330,13 +332,13 @@
             sendMode = true;
           }}
         >
-          <span class="btm-nav-label">Send</span>
+          <span class="btm-nav-label">Send <Send /></span>
         </button>
         <div class="indicator flex-grow">
           <span
             class="indicator-item badge badge-success text-xs animate-bounce"
             class:hidden={!showNewFile}
-            style="top: 0; right: 10%; left:70%; z-index: 10;">New files</span>
+            style="top: 0; right: 10%; left:70%; z-index: 10;">New files <FilePlus /></span>
           <button
             class="btn w-full border-black border-dotted relative"
             class:btn-ghost={sendMode}
@@ -346,7 +348,7 @@
               sendMode = false;
             }}
           >
-            <span class="btm-nav-label">Receive</span>
+            <span class="btm-nav-label">Receive <HeartHandshake /></span>
           </button>
         </div>
       </div>
