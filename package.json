@@ -68,6 +68,7 @@
     "@sveltejs/vite-plugin-svelte": "^3.1.2",
     "@tailwindcss/vite": "^4.0.12",
     "android": "^0.0.8",
+    "animated-tailwindcss": "^4.0.0",
     "fflate": "^0.8.2",
     "filepond": "^4.32.7",
     "flyonui": "^2.1.0",

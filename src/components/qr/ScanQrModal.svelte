@@ -3,6 +3,7 @@
   import { onMount, onDestroy } from 'svelte';
    import { ScanLine  } from '@lucide/svelte';
     import { ScanQrCode  } from '@lucide/svelte';
+    
 
   type Props = {
     onScanSuccess: (data: string) => void;
@@ -166,6 +167,22 @@
       stopScanner();
     }
   }
+  
+  onMount(() => {
+    function handleShortcut(e: KeyboardEvent) {
+      if (e.shiftKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        toggleModal(true); // 🛠️ OPEN the scanner modal
+      }
+    }
+  
+    window.addEventListener('keydown', handleShortcut);
+  
+    return () => {
+      window.removeEventListener('keydown', handleShortcut);
+    };
+  });
+
 </script>
 
 <!-- Styled button to open the modal -->
@@ -180,7 +197,7 @@
     <div class="bg-transparent  rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
       <!-- Modal header -->
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-bold text-gray-900">{modalTitle}</h3>
+        <h3 class="text-lg font-bold text-white-900">{modalTitle}</h3>
         <button 
           class="text-gray-500 hover:text-gray-700"
           onclick={() => toggleModal(false)}
@@ -240,11 +257,12 @@
       <!-- Action buttons -->
       <div class="mt-4 flex justify-end gap-2">
         <button 
-          class="btn btn-outline"
+          class="btn btn-error"
           onclick={() => toggleModal(false)}
         >
           Cancel
         </button>
+        
         {#if !isCameraActive && errorMessage}
           <button 
             class="btn btn-primary"

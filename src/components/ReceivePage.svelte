@@ -233,7 +233,7 @@
         </div>
       </div>
       <div class="mt-4 flex gap-2">
-        <button class="btn btn-primary gap-2" onclick={copyAnswerCode}>Copy Answer <Copy /></button>
+        <button class="btn btn-soft btn-info gap-2" onclick={copyAnswerCode}>Copy Answer <Copy /></button>
         <QrModal bind:this={qrModal} qrData={answerCode} title="Answer QR Code" />
       </div>
     {/if}

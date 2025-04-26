@@ -389,33 +389,44 @@
 
   <Collapse title="3. Transfer Files" isOpen={isConnecting}>
     {#if dataChannel}
-      <div class="flex w-full mb-4 mt-2">
-        <button
-          class="btn {sendMode ? 'btn-primary' : 'btn-ghost'} flex-grow border-black border-dotted"
-          onclick={() => {
-            sendMode = true;
-          }}
-        >
-          <span class="btm-nav-label">Send <Send /></span>
-        </button>
-        <div class="indicator flex-grow">
-          <span
-            class="indicator-item badge badge-success text-xs animate-bounce"
-            class:hidden={!showNewFile}
-            style="top: 0; right: 10%; left:70%; z-index: 10;">New files <FilePlus /></span>
+      <div class="flex w-full mb-4 mt-2 justify-center">
+        <div class="join w-full">
+          <!-- Send Button -->
           <button
-            class="btn w-full border-black border-dotted relative"
-            class:btn-ghost={sendMode}
-            class:btn-primary={!sendMode}
+            class="btn btn-dash btn-secondary join-item w-1/2 text-xl py-4 min-h-[3.5rem] inline-flex items-center justify-center gap-x-2"
             onclick={() => {
-              showNewFile = false;
-              sendMode = false;
+              sendMode = true;
             }}
           >
-            <span class="btm-nav-label">Receive <HeartHandshake /></span>
+            <Send />
+            <span class="btm-nav-label">Send</span>
           </button>
+  
+          <!-- Receive Button with Badge -->
+          <div class="relative w-1/2">
+            <span
+              class="indicator-item badge badge-success text-xs animate-bounce absolute"
+              class:hidden={!showNewFile}
+              style="top: -8px; right: 12px; z-index: 10;"
+            >
+              New files
+            </span>
+            <button
+              class="btn btn-dash btn-warning join-item w-full text-xl py-4 min-h-[3.5rem] inline-flex items-center justify-center gap-x-2"
+              class:btn-ghost={sendMode}
+              class:btn-primary={!sendMode}
+              onclick={() => {
+                showNewFile = false;
+                sendMode = false;
+              }}
+            >
+              <HeartHandshake />
+              <span class="btm-nav-label">Receive</span>
+            </button>
+          </div>
         </div>
       </div>
+  
       <div hidden={!sendMode}>
         <Sender
           bind:this={sender}
@@ -425,11 +436,14 @@
           chunkSize={sendOptions.chunkSize}
         />
       </div>
+  
       <div hidden={sendMode}>
         <Receiver bind:this={receiver} {dataChannel} isEncrypt={sendOptions.isEncrypt} {rsa} />
       </div>
     {/if}
   </Collapse>
+
+
 
   <Toast />
 </div>

@@ -65,6 +65,9 @@ importers:
       android:
         specifier: ^0.0.8
         version: 0.0.8
+      animated-tailwindcss:
+        specifier: ^4.0.0
+        version: 4.0.0(postcss@8.5.3)(tailwindcss@4.0.12)
       fflate:
         specifier: ^0.8.2
         version: 0.8.2
@@ -2079,6 +2082,15 @@ packages:
 
   android@0.0.8:
     resolution: {integrity: sha512-cMasrXpHR6APDMSTu5JNMTL37GjYbcC9Uz2cyExSnr0f6XanNhPW3+iavHqRmfNW0QlM4kjZQa2epTjpyZcdjQ==}
+
+  animated-tailwindcss@4.0.0:
+    resolution: {integrity: sha512-sJquGVOQkdRuEJiDKX/bjjuXgGTpXBiNKiYD3ef+hoNdpWnjDrOVInOHB9QJC/Q7Ir5Ae+KEAg/ZW/ZBS6KcSw==}
+    peerDependencies:
+      postcss: ^8
+      tailwindcss: ^3
+    peerDependenciesMeta:
+      postcss:
+        optional: true
 
   ansi-align@3.0.1:
     resolution: {integrity: sha512-IOfwwBF5iczOjp/WeY4YxyjqAFMQoZufdQWDd19SEExbVLNXqvpzSJ/M7Za4/sCPmQ0+GRquoA7bGcINcxew6w==}
@@ -8471,6 +8483,12 @@ snapshots:
       require-from-string: 2.0.2
 
   android@0.0.8: {}
+
+  animated-tailwindcss@4.0.0(postcss@8.5.3)(tailwindcss@4.0.12):
+    dependencies:
+      tailwindcss: 4.0.12
+    optionalDependencies:
+      postcss: 8.5.3
 
   ansi-align@3.0.1:
     dependencies:

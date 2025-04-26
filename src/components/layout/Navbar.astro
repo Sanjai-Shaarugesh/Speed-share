@@ -4,22 +4,25 @@ import Github from '../icons/Github.astro';
 import SunMoon from '../icons/SunMoon.astro';
 ---
 
-<div class="navbar w-full">
+<div class="navbar w-full items-center justify-between px-4">
+  <!-- Left Side -->
   <div class="navbar-start">
     <SunMoon />
-    
-    
   </div>
-  
-  
-  <div class="navbar-center text-xl font-bold">Speed-share</div>
+
+  <!-- Center Title -->
+  <div class="navbar-center">
+    <h1 class="text-2xl md:text-4xl font-bold animate-pulse">Speed-share</h1>
+  </div>
+
+  <!-- Right Side -->
   <div class="navbar-end">
     <a
       aria-label="Github"
       href={githubLink}
       target="_blank"
       rel="noopener noreferrer"
-      class="btn btn-ghost drawer-button btn-square normal-case"
+      class="btn btn-ghost btn-square normal-case"
     >
       <Github />
     </a>
