@@ -9,6 +9,7 @@ export enum FileStatus {
 }
 
 export interface FileDetail {
+  fileBlob: any;
   metaData: MetaData;
   progress: number; // percentage
   bitrate: number; // bytes per second

@@ -17,10 +17,12 @@
 
   function onChange() {
     onUpdate({
+      ...defaultReceiveOptions, 
       autoAccept: getAutoAccept(),
-      maxSize: maxSize
+      maxSize: Number(maxSize)
     });
   }
+
 </script>
 
 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -40,7 +42,7 @@
       <span class="text-sm">Max Size</span>
       <p class="text-xs text-gray-500">The max file size to allow to send.</p>
     </div>
-    <select bind:value={maxSize} onchange={onChange} class="select select-bordered">
+    <select bind:value={maxSize} class="select select-bordered" onchange={onChange}>
       <option value={10 * 1024}>10 MB</option>
       <option value={100 * 1024}>100 MB</option>
       <option value={1024 * 1024 * 1024}>1 GB</option>

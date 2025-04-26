@@ -79,8 +79,8 @@
 
   // Get the icon URL based on file extension
   function getIconUrl(fileName: string): string {
-    const extension = fileName.split('.').pop()?.toLowerCase();
-    return iconMap[extension] || iconMap['default'];
+      const extension = fileName.split('.').pop()?.toLowerCase() ?? 'default';
+      return iconMap[extension] || iconMap['default'];
   }
 
   // Clean up object URL on component destruction

@@ -4,7 +4,7 @@
   import Eye from '../components/icons/Eye.svelte';
   import { Message } from '../proto/message';
   import Collapse from '../components/layout/Collapse.svelte';
-   import { Cpu , CircleArrowOutUpLeft , Copy } from '@lucide/svelte';
+   import { Cpu , CircleArrowOutUpLeft , Copy , Send , Antenna } from '@lucide/svelte';
   import {
     exportRsaPublicKeyToBase64,
     generateRsaKeyPair,
@@ -216,33 +216,40 @@
 
   <Collapse title="3. Transfer Files" isOpen={isConnecting}>
     {#if dataChannel}
-      <div class="flex w-full mb-4 mt-2">
-          <button
-                    class="btn {sendMode ? 'btn-primary' : 'btn-ghost'} flex-grow border-black border-dotted"
-                    onclick={() => {
-                      sendMode = true;
-                    }}
-                  >
-                    <span class="btm-nav-label">Send</span>
-                  </button>
-        <div class="indicator flex-grow">
-          <span
-            class="indicator-item badge badge-success text-xs animate-bounce"
-            class:hidden={!showNewFile}
-            style="top: 0; right: 10%; left: 70%; z-index: 10;">New files</span>
-          <button
-            class="btn w-full border-black border-dotted relative"
-            class:btn-ghost={sendMode}
-            class:btn-primary={!sendMode}
-            onclick={() => {
-              showNewFile = false;
-              sendMode = false;
-            }}
-          >
-            <span class="btm-nav-label">Receive</span>
-          </button>
+      <div class="flex w-full mb-4 mt-2 justify-center">
+        <div class="join w-full">
+            <button
+              class="btn btn-dash btn-warning join-item w-1/2 text-xl py-4 min-h-[3.5rem] inline-flex items-center justify-center gap-x-2"
+              onclick={() => {
+                sendMode = true;
+              }}
+            >
+              <Antenna />
+              <span class="btm-nav-label">Receive</span>
+            </button>
+  
+          <div class="indicator w-1/2 join-item relative">
+            <span
+              class="indicator-item badge badge-success text-xs animate-bounce"
+              class:hidden={!showNewFile}
+              style="top: 0; right: 10%; left: 70%; z-index: 10;"
+            >
+              New files
+            </span>
+            <button
+              class="btn btn-dash btn-secondary join-item w-full text-xl py-4 min-h-[3.5rem] inline-flex items-center justify-center gap-x-2"
+              onclick={() => {
+                showNewFile = false;
+                sendMode = false;
+              }}
+            >
+              <Send />
+              <span class="btm-nav-label">Send</span>
+            </button>
+          </div>
         </div>
       </div>
+  
       <div hidden={!sendMode}>
         <Sender
           bind:this={sender}
@@ -252,11 +259,13 @@
           chunkSize={defaultSendOptions.chunkSize}
         />
       </div>
+  
       <div hidden={sendMode}>
         <Receiver bind:this={receiver} {dataChannel} isEncrypt={!!rsa} {rsa} />
       </div>
     {/if}
   </Collapse>
+
 
   <Toast />
 </div>
