@@ -5,6 +5,7 @@
   import { Message } from '../proto/message';
   import Collapse from '../components/layout/Collapse.svelte';
    import { Cpu , CircleArrowOutUpLeft , Copy , Send , Antenna } from '@lucide/svelte';
+   import {onMount , onDestroy } from 'svelte';
   import {
     exportRsaPublicKeyToBase64,
     generateRsaKeyPair,
@@ -147,6 +148,30 @@
     offerCode = data;
     processOfferCode();
   }
+  
+  onMount(() => {
+    let gPressed = $state(false); // correctly create state
+  
+    const handleShortcut = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 'g') {
+        gPressed = true; // use .set() to update
+      } 
+      else if (gPressed && e.key.toLowerCase() === 'o') { // call gPressed() to get the value
+        e.preventDefault();
+        window.location.href = '/';
+        gPressed = false ; // reset after redirect
+      } 
+      else {
+        gPressed = false ; // reset if other keys pressed
+      }
+    };
+  
+    window.addEventListener('keydown', handleShortcut);
+  
+    return () => {
+      window.removeEventListener('keydown', handleShortcut);
+    };
+  });
 </script>
 
 <div class="container mx-auto p-4 max-w-3xl">

@@ -6,6 +6,8 @@
   import Collapse from '../components/layout/Collapse.svelte';
   import OfferOptions from '../components/OfferOptions.svelte';
    import { Asterisk , Cog , ChevronsLeftRightEllipsis , Clipboard , LandPlot , Send , HeartHandshake , FilePlus } from '@lucide/svelte';
+   import {onMount,onDestroy} from 'svelte';
+   import { Capacitor } from '@capacitor/core';
    
   import {
     exportRsaPublicKeyToBase64,
@@ -77,6 +79,8 @@
       rsa = await generateRsaKeyPair();
       publicKeyBase64 = await exportRsaPublicKeyToBase64(rsa.publicKey);
     }
+    
+  
 
     const sdp = sdpEncode(offer.sdp);
     offerCode = generateUniqueCode(sdp, {
@@ -243,6 +247,57 @@
   function navigateToAnswerPage() {
    window.location.href = `${window.location.origin}/answer.html`;
   }
+  
+  const isMobile = Capacitor.isNativePlatform();
+  let gPressed = false;
+  
+  onMount(()=>{
+    const handleShortcut = (event:KeyboardEvent) =>{
+      if(event.ctrlKey && event.key.toLowerCase() == 'o'){
+        event.preventDefault();
+        generateOfferCode();
+      }
+      
+      else if(isMobile){
+        if(event.key == "Enter"){
+          event.preventDefault();
+          acceptAnswer();
+        }
+      }
+      
+      else if(event.ctrlKey && event.key.toLowerCase() == "a"){
+        event.preventDefault();
+        acceptAnswer();
+      }
+      
+      else if(event.key.toLowerCase() == "g"){
+        gPressed = true;
+      }
+      
+      else if(gPressed && event.key.toLowerCase() == 'a'){
+        event.preventDefault();
+        window.location.href = '/answer.html';
+        //gPressed = false ;
+      }
+      
+      else if(event.altKey && event.key == 's'){
+        event.preventDefault();
+        showOfferOptions = true;
+         showOfferOptions.update(v => !v); 
+      }
+     
+      
+      else{
+        gPressed = false;
+      }
+    };
+    
+    window.addEventListener('keydown' , handleShortcut);
+    
+    onDestroy(()=>{
+      window.removeEventListener('keydown',handleShortcut);
+    })
+  })
 </script>
 
 <div class="container mx-auto p-4 max-w-3xl">
