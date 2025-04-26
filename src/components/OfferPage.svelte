@@ -283,9 +283,17 @@
       else if(event.altKey && event.key == 's'){
         event.preventDefault();
         showOfferOptions = true;
-         showOfferOptions.update(v => !v); 
+        // showOfferOptions.update(v => !v); 
       }
      
+      else if(event.ctrlKey && event.key.toLowerCase() == 'c'){
+        event.preventDefault();
+        copyOfferCode()
+      }
+      
+     
+
+      
       
       else{
         gPressed = false;
