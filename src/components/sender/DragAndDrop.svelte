@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { addToastMessage } from '../../stores/toastStore';
-  import {Paperclip} from '@lucide/svelte';
+  import {Paperclip , Shredder } from '@lucide/svelte';
 
   type FileItem = {
     file: File;
@@ -208,12 +208,13 @@
             <div class="flex gap-2">
              
                 
-              <button
-                class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-1 rounded"
-                onclick={() => removeFile(index)}
-              >
-                Remove
-              </button>
+                <button
+                  class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded flex items-center space-x-2"
+                  onclick={() => removeFile(index)}
+                >
+                  <span>Remove</span>
+                  <Shredder class="w-5 h-5" /> 
+                </button>
             </div>
           </div>
         </div>

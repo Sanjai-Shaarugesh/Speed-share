@@ -69,18 +69,19 @@
     'mp4': 'https://img.icons8.com/cotton/100/video-file--v1.png',
     'avi': 'https://img.icons8.com/dusk/100/video.png',
     'mp3': 'https://img.icons8.com/external-bearicons-blue-bearicons/100/external-MP3-file-extension-bearicons-blue-bearicons.png',
-    'wav': '/icons/audio.png',
+    'wav': 'https://img.icons8.com/external-bearicons-outline-color-bearicons/100/external-WAV-file-extension-bearicons-outline-color-bearicons.png',
     'zip': 'https://img.icons8.com/dusk/100/zip.png',
-    'rar': '/icons/archive.png',
-    'default': '/icons/file.png',
+    'rar': "https://img.icons8.com/dusk/100/rar.png" ,
+    'default': "https://img.icons8.com/arcade/100/file.png",
     'gif':'https://img.icons8.com/plasticine/100/gif.png',
-    'svg':'https://img.icons8.com/external-bearicons-blue-bearicons/100/external-SVG-file-extension-bearicons-blue-bearicons.png'
+    'svg':'https://img.icons8.com/external-bearicons-blue-bearicons/100/external-SVG-file-extension-bearicons-blue-bearicons.png',
+    'png':'https://img.icons8.com/plasticine/100/png.png'
   };
 
   // Get the icon URL based on file extension
   function getIconUrl(fileName: string): string {
-      const extension = fileName.split('.').pop()?.toLowerCase() ?? 'default';
-      return iconMap[extension] || iconMap['default'];
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    return iconMap[extension] || iconMap['default'];
   }
 
   // Clean up object URL on component destruction

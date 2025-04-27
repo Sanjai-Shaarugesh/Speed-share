@@ -249,8 +249,8 @@
                 sendMode = true;
               }}
             >
-              <Antenna />
-              <span class="btm-nav-label">Receive</span>
+                <Send />
+                           <span class="btm-nav-label">Send</span>
             </button>
   
           <div class="indicator w-1/2 join-item relative">
@@ -268,8 +268,8 @@
                 sendMode = false;
               }}
             >
-              <Send />
-              <span class="btm-nav-label">Send</span>
+                <Antenna />
+                             <span class="btm-nav-label">Receive</span>
             </button>
           </div>
         </div>
