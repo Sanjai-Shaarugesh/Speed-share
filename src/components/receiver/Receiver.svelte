@@ -169,7 +169,7 @@
   <ReceiverOptions onUpdate={onOptionsUpdate} />
   {#if Object.keys(receivingFiles).length > 0}
     <ReceivingFileList {receivingFiles} {onRemove} {onDownload} {onAccept} {onDeny} />
-    <button class="btn btn-primary mt-2" onclick={downloadAllFiles}>Download <FolderDown /> all files (zip) <FolderArchive /></button
+    <button class="btn btn-dash btn-success mt-2" onclick={downloadAllFiles}>Download <FolderDown /> all files (zip) <FolderArchive /></button
     >
     
   {:else}

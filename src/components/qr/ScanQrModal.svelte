@@ -170,7 +170,7 @@
   
   onMount(() => {
     function handleShortcut(e: KeyboardEvent) {
-      if (e.shiftKey && e.key.toLowerCase() === 's') {
+      if (e.altKey && e.key.toLowerCase() === 's') {
         e.preventDefault();
         toggleModal(true); // 🛠️ OPEN the scanner modal
       }
@@ -178,10 +178,13 @@
   
     window.addEventListener('keydown', handleShortcut);
   
+    // Clean-up function
     return () => {
       window.removeEventListener('keydown', handleShortcut);
     };
   });
+  
+  
 
 </script>
 

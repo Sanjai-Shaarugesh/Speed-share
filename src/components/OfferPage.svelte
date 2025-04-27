@@ -28,6 +28,9 @@
   let sendOptions = $state(defaultSendOptions);
   let rsa: CryptoKeyPair | undefined = $state(undefined); // private key
   let rsaPub: CryptoKey | undefined = $state(undefined); // public key from other peer
+  
+  let showPassword =  $state(false);  // State to control password visibility
+   // Value to bind with the input
 
   // webRTC
   let connection: RTCPeerConnection | undefined = $state(undefined);
@@ -291,8 +294,14 @@
         copyOfferCode()
       }
       
-     
-
+      else if (event.ctrlKey && event.key.toLowerCase() === 'v') {
+            event.preventDefault();
+            navigator.clipboard.readText().then((text) => {
+              answerCode = text; // Paste clipboard text into the answerCode variable
+            }).catch((error) => {
+              console.error('Failed to read clipboard contents: ', error);
+            });
+          }
       
       
       else{
@@ -354,11 +363,13 @@
       <div class="mt-2 relative">
         <input
           type={showOfferCode ? 'text' : 'password'}
-          class="input input-bordered w-full"
+          class="input input-bordered w-full pr-12"
           value={offerCode}
           readonly
         />
-        <div class="absolute top-0 right-0 p-1">
+      
+        <!-- Eye icon -->
+        <div class="absolute top-1/2 transform -translate-y-1/2 right-2 p-1">
           <Eye
             onChange={(show) => {
               showOfferCode = show;
@@ -366,6 +377,7 @@
           />
         </div>
       </div>
+
       <div class="mt-4 flex gap-2">
           <button class="btn btn-dash btn-success" onclick={copyOfferCode}>Copy Code <Clipboard /></button>
 
@@ -373,7 +385,65 @@
       </div>
       <p class="mt-4">Enter the Answer Code from your peer to establish connection.</p>
       <div class="relative mt-4">
-        <input type="password" class="input input-bordered w-full" bind:value={answerCode} />
+        <!-- Toggle the input type based on the showPassword state -->
+        <input
+          class="input input-bordered w-full"
+          type={showPassword ? 'text' : 'password'}  
+          bind:value={answerCode}
+        />
+        
+        <!-- Inline SVG for the eye icon to toggle visibility -->
+        {#if showPassword}
+
+                <button 
+                  type="button" 
+                  class="absolute top-1/2 transform -translate-y-1/2 right-2 p-1" 
+                  onclick={() => showPassword = !showPassword}
+                  aria-label="Toggle password visibility"
+                  onkeydown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      showPassword = !showPassword;
+                    }
+                  }}
+                >
+                    <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                class="h-6 w-6 cursor-pointer"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M15 12c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3z"
+                                />
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M2.458 12C3.732 7.724 7.732 5 12 5c4.268 0 8.268 2.724 9.542 7-1.274 4.276-5.274 7-9.542 7-4.268 0-8.268-2.724-9.542-7z"
+                                />
+                              </svg>
+                </button>
+                {:else}
+                <button 
+                  type="button" 
+                  class="absolute top-1/2 transform -translate-y-1/2 right-2 p-1" 
+                  onclick={() => showPassword = !showPassword}
+                  aria-label="Toggle password visibility"
+                  onkeydown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      showPassword = !showPassword;
+                    }
+                  }}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-off-icon lucide-eye-off"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>
+                </button>
+                {/if}
       </div>
       <div class="mt-4 flex gap-2">
         <button class="btn btn-soft btn-warning" onclick={acceptAnswer}>Accept Answer <LandPlot /></button>

@@ -92,47 +92,48 @@
 
 <div class="card bg-base-100 shadow-lg shadow-base-300">
   <div class="card-body p-4 text-xs xl:text-sm">
-    <div class="flex gap-4">
-      <!-- Preview image or icon -->
-      {#if isImage() && fileDetail.status === FileStatus.Success && objectUrl}
-        <img src={objectUrl} alt={fileDetail.metaData.name} class="w-20 h-20 object-cover rounded-md" />
-      {:else}
-        <img src={getIconUrl(fileDetail.metaData.name)} alt={fileDetail.metaData.name} class="w-20 h-20 object-cover rounded-md" />
-      {/if}
-      <div class="flex-1">
-        <p><strong>Name:</strong> {fileDetail.metaData.name}</p>
-        <p><strong>Size:</strong> {humanFileSize(fileDetail.metaData.size)}</p>
-        {#if fileDetail.metaData.type}
-          <p><strong>Type:</strong> {fileDetail.metaData.type}</p>
+      <div class="flex gap-4">
+        <!-- Preview image or icon -->
+        {#if isImage() && fileDetail.status === FileStatus.Success && objectUrl}
+          <img src={objectUrl} alt={fileDetail.metaData.name} class="w-20 h-20 object-cover rounded-md" />
+        {:else}
+          <img src={getIconUrl(fileDetail.metaData.name)} alt={fileDetail.metaData.name} class="w-20 h-20 object-cover rounded-md" />
         {/if}
-        <div class="text-center">
-          {#if fileDetail.status === FileStatus.Processing}
-            {#if isSender}
-              Sending: {humanFileSize(fileDetail.bitrate)}/sec
-            {:else}
-              Receiving: {humanFileSize(fileDetail.bitrate)}/sec
-            {/if}
-          {:else if fileDetail.error}
-            <div class="text-error">
-              Error: {fileDetail.error.message}
-            </div>
-          {:else if fileDetail.status === FileStatus.WaitingAccept}
-            Waiting Accept
-          {:else if fileDetail.status === FileStatus.Success}
-            Success
-          {:else}
-            Pending
+        <div class="flex-1 text-gray-800 dark:text-gray-200">
+          <p><strong>Name:</strong> {fileDetail.metaData.name}</p>
+          <p><strong>Size:</strong> {humanFileSize(fileDetail.metaData.size)}</p>
+          {#if fileDetail.metaData.type}
+            <p><strong>Type:</strong> {fileDetail.metaData.type}</p>
           {/if}
-        </div>
-        <progress
-          value={isNaN(fileDetail.progress) ? 100 : fileDetail.progress}
-          max="100"
-          class="progress progress-accent"
-        ></progress>
-        <div class="flex justify-end">
-          {@render children?.()}
+          <div class="text-center">
+            {#if fileDetail.status === FileStatus.Processing}
+              {#if isSender}
+                Sending: {humanFileSize(fileDetail.bitrate)}/sec
+              {:else}
+                Receiving: {humanFileSize(fileDetail.bitrate)}/sec
+              {/if}
+            {:else if fileDetail.error}
+              <div class="text-error dark:text-error-dark">
+                Error: {fileDetail.error.message}
+              </div>
+            {:else if fileDetail.status === FileStatus.WaitingAccept}
+              Waiting Accept
+            {:else if fileDetail.status === FileStatus.Success}
+              Success
+            {:else}
+              Pending
+            {/if}
+          </div>
+          <progress
+            value={isNaN(fileDetail.progress) ? 100 : fileDetail.progress}
+            max="100"
+            class="progress progress-accent dark:progress-dark"
+          ></progress>
+          <div class="flex justify-end">
+            {@render children?.()}
+          </div>
         </div>
       </div>
-    </div>
+
   </div>
 </div>

@@ -149,8 +149,11 @@
     processOfferCode();
   }
   
+  
+  
   onMount(() => {
-    let gPressed = $state(false); // correctly create state
+    let gPressed = $state(false); 
+     let scanQrModalOpen = $state(false); 
   
     const handleShortcut = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === 'g') {
@@ -161,6 +164,28 @@
         window.location.href = '/';
         gPressed = false ; // reset after redirect
       } 
+      
+      else if(e.altKey && e.key.toLowerCase() == 'p') {
+        e.preventDefault();
+        processOfferCode()
+      }
+      
+      else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+              const inputElement = document.querySelector('input[type="password"]') as HTMLInputElement;
+              if (inputElement) {
+                inputElement.focus();
+              }
+            }
+            
+            // else if(e.altKey && e.key.toLowerCase() == 's') {
+            //       e.preventDefault();
+            //       scanQrModalOpen = true; // Open ScanQrModal on Alt + S
+            //     }
+            // 
+            else if(event.ctrlKey && event.key.toLowerCase() == 'c'){
+              event.preventDefault();
+              copyAnswerCode()
+            }
       else {
         gPressed = false ; // reset if other keys pressed
       }

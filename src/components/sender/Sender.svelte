@@ -194,7 +194,7 @@
   <DragAndDrop {onFilesPick} />
   {#if Object.keys(sendingFiles).length > 0}
     <SendingFileList {sendingFiles} {onRemove} {onSend} {onStop} {onContinue} />
-    <button class="btn btn-primary mt-2" onclick={sendAllFiles}>Send all files <RollerCoaster /></button>
+    <button class="btn btn-outline btn-secondary mt-2" onclick={sendAllFiles}>Send all files <RollerCoaster /></button>
   {:else}
     <p class="mt-4">No files selected</p>
   {/if}

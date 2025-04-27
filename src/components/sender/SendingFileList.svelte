@@ -16,7 +16,7 @@
 <div class="grid gap-4">
   {#each Object.entries(sendingFiles) as [key, sendingFile], index (key)}
     <FileCard fileDetail={sendingFile} isSender={true}>
-      <div class="flex-none">
+      <div class="flex-none my-5">
         {#if sendingFile.error}
           <button onclick={() => onSend(key)} class="btn btn-primary"> Resend <Forward /> </button>
         {:else if sendingFile.stop}
@@ -24,7 +24,7 @@
         {:else if sendingFile.status === FileStatus.Processing}
           <button onclick={() => onStop(key)} class="btn btn-secondary"> Stop <CircleStop /> </button>
         {:else if sendingFile.status !== FileStatus.Success && sendingFile.status !== FileStatus.WaitingAccept}
-          <button onclick={() => onSend(key)} class="btn btn-primary"> Send  <Send /></button>
+          <button onclick={() => onSend(key)} class="btn btn-outline btn-accent"> Send  <Send /></button>
         {/if}
         <button onclick={() => onRemove(key)} class="btn btn-error"> Remove <Shredder /> </button>
       </div>
