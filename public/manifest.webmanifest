@@ -7,11 +7,7 @@
   "background_color": "#fff",
   "theme_color": "#fff",
   "orientation": "portrait",
-  "display_override": [
-    "window-controls-overlay",
-    "standalone",
-    "browser"
-  ],
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
   "handle_links": "auto",
   "icons": [
     {

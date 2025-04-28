@@ -1,10 +1,10 @@
 window.customElements.define(
-    "custom-navbar",
-    class extends HTMLElement {
-      constructor() {
-        super();
-        const root = this.attachShadow({ mode: "open" });
-        root.innerHTML = `
+  'custom-navbar',
+  class extends HTMLElement {
+    constructor() {
+      super();
+      const root = this.attachShadow({ mode: 'open' });
+      root.innerHTML = `
       <style>
         :host {
           position: relative;
@@ -44,32 +44,32 @@ window.customElements.define(
         <div><h1 id="nav-title"></h2></div>
       </div>
       `;
-      }
-  
-      // Called on start
-      connectedCallback() {
-        const self = this;
-  
-        // Listen to our page change events
-        const body = document.querySelector("body");
-        const navTitle = self.shadowRoot.getElementById("nav-title");
-  
-        body.addEventListener("page-changed", (event) => {
-          const title = event.detail.page;
-          navTitle.innerHTML = title;
-  
-          const canGoBack = event.detail.back;
-          if (canGoBack) {
-            self.shadowRoot.getElementById("back-btn").style.display = "block";
-          } else {
-            self.shadowRoot.getElementById("back-btn").style.display = "none";
-          }
-        });
-  
-        const backBtn = self.shadowRoot.getElementById("back-btn");
-        backBtn.addEventListener("click", (event) => {
-          history.back();
-        });
-      }
     }
-  );
+
+    // Called on start
+    connectedCallback() {
+      const self = this;
+
+      // Listen to our page change events
+      const body = document.querySelector('body');
+      const navTitle = self.shadowRoot.getElementById('nav-title');
+
+      body.addEventListener('page-changed', (event) => {
+        const title = event.detail.page;
+        navTitle.innerHTML = title;
+
+        const canGoBack = event.detail.back;
+        if (canGoBack) {
+          self.shadowRoot.getElementById('back-btn').style.display = 'block';
+        } else {
+          self.shadowRoot.getElementById('back-btn').style.display = 'none';
+        }
+      });
+
+      const backBtn = self.shadowRoot.getElementById('back-btn');
+      backBtn.addEventListener('click', (event) => {
+        history.back();
+      });
+    }
+  }
+);

@@ -4,7 +4,7 @@ import { navigate, currentPath } from '../lib/router';
 
 export function initCapacitorNavigation() {
   if (!Capacitor.isNativePlatform()) return;
-  
+
   // Handle Android back button
   App.addListener('backButton', () => {
     if (window.history.length > 1) {
@@ -20,7 +20,7 @@ export function initCapacitorNavigation() {
     try {
       const url = new URL(data.url);
       const path = url.pathname;
-      
+
       // Navigate to the path
       navigate(path);
     } catch (error) {

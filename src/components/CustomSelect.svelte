@@ -1,6 +1,5 @@
 <script lang="ts">
-  
-  import {Columns3Cog } from '@lucide/svelte';
+  import { Columns3Cog } from '@lucide/svelte';
   type Props = {
     options: string[];
     customTextEnabled: boolean;
@@ -47,10 +46,10 @@
 
   {#if customTextEnabled}
     <div>
-        <button class="btn btn-secondary" onclick={toggleCustomText}>
-                {editingCustomText ? 'Select' : 'Custom'} <Columns3Cog />
-        </button>
-     
+      <button class="btn btn-secondary" onclick={toggleCustomText}>
+        {editingCustomText ? 'Select' : 'Custom'}
+        <Columns3Cog />
+      </button>
     </div>
   {/if}
 </div>

@@ -1,7 +1,7 @@
 /* eslint-disable */
-import * as _m0 from "protobufjs/minimal";
+import * as _m0 from 'protobufjs/minimal';
 
-export const protobufPackage = "";
+export const protobufPackage = '';
 
 export enum ReceiveEvent {
   /** EVENT_RECEIVER_ACCEPT - event when the reveiver got metadata and accept */
@@ -12,25 +12,25 @@ export enum ReceiveEvent {
   EVENT_RECEIVED_CHUNK = 2,
   /** EVENT_VALIDATE_ERROR - event when the reveiver got validate error */
   EVENT_VALIDATE_ERROR = 3,
-  UNRECOGNIZED = -1,
+  UNRECOGNIZED = -1
 }
 
 export function receiveEventFromJSON(object: any): ReceiveEvent {
   switch (object) {
     case 0:
-    case "EVENT_RECEIVER_ACCEPT":
+    case 'EVENT_RECEIVER_ACCEPT':
       return ReceiveEvent.EVENT_RECEIVER_ACCEPT;
     case 1:
-    case "EVENT_RECEIVER_REJECT":
+    case 'EVENT_RECEIVER_REJECT':
       return ReceiveEvent.EVENT_RECEIVER_REJECT;
     case 2:
-    case "EVENT_RECEIVED_CHUNK":
+    case 'EVENT_RECEIVED_CHUNK':
       return ReceiveEvent.EVENT_RECEIVED_CHUNK;
     case 3:
-    case "EVENT_VALIDATE_ERROR":
+    case 'EVENT_VALIDATE_ERROR':
       return ReceiveEvent.EVENT_VALIDATE_ERROR;
     case -1:
-    case "UNRECOGNIZED":
+    case 'UNRECOGNIZED':
     default:
       return ReceiveEvent.UNRECOGNIZED;
   }
@@ -39,16 +39,16 @@ export function receiveEventFromJSON(object: any): ReceiveEvent {
 export function receiveEventToJSON(object: ReceiveEvent): string {
   switch (object) {
     case ReceiveEvent.EVENT_RECEIVER_ACCEPT:
-      return "EVENT_RECEIVER_ACCEPT";
+      return 'EVENT_RECEIVER_ACCEPT';
     case ReceiveEvent.EVENT_RECEIVER_REJECT:
-      return "EVENT_RECEIVER_REJECT";
+      return 'EVENT_RECEIVER_REJECT';
     case ReceiveEvent.EVENT_RECEIVED_CHUNK:
-      return "EVENT_RECEIVED_CHUNK";
+      return 'EVENT_RECEIVED_CHUNK';
     case ReceiveEvent.EVENT_VALIDATE_ERROR:
-      return "EVENT_VALIDATE_ERROR";
+      return 'EVENT_VALIDATE_ERROR';
     case ReceiveEvent.UNRECOGNIZED:
     default:
-      return "UNRECOGNIZED";
+      return 'UNRECOGNIZED';
   }
 }
 
@@ -64,30 +64,26 @@ export interface Message {
   /** file id */
   id: string;
   /** use for sender to send file metadata */
-  metaData?:
-    | MetaData
-    | undefined;
+  metaData?: MetaData | undefined;
   /** use for sender to send file chunk */
-  chunk?:
-    | Uint8Array
-    | undefined;
+  chunk?: Uint8Array | undefined;
   /** respone event to tell the sender status */
   receiveEvent?: ReceiveEvent | undefined;
 }
 
 function createBaseMetaData(): MetaData {
-  return { name: "", size: 0, type: "", key: new Uint8Array() };
+  return { name: '', size: 0, type: '', key: new Uint8Array() };
 }
 
 export const MetaData = {
   encode(message: MetaData, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.name !== "") {
+    if (message.name !== '') {
       writer.uint32(10).string(message.name);
     }
     if (message.size !== 0) {
       writer.uint32(16).int32(message.size);
     }
-    if (message.type !== "") {
+    if (message.type !== '') {
       writer.uint32(26).string(message.type);
     }
     if (message.key.length !== 0) {
@@ -142,10 +138,10 @@ export const MetaData = {
 
   fromJSON(object: any): MetaData {
     return {
-      name: isSet(object.name) ? String(object.name) : "",
+      name: isSet(object.name) ? String(object.name) : '',
       size: isSet(object.size) ? Number(object.size) : 0,
-      type: isSet(object.type) ? String(object.type) : "",
-      key: isSet(object.key) ? bytesFromBase64(object.key) : new Uint8Array(),
+      type: isSet(object.type) ? String(object.type) : '',
+      key: isSet(object.key) ? bytesFromBase64(object.key) : new Uint8Array()
     };
   },
 
@@ -165,21 +161,21 @@ export const MetaData = {
 
   fromPartial<I extends Exact<DeepPartial<MetaData>, I>>(object: I): MetaData {
     const message = createBaseMetaData();
-    message.name = object.name ?? "";
+    message.name = object.name ?? '';
     message.size = object.size ?? 0;
-    message.type = object.type ?? "";
+    message.type = object.type ?? '';
     message.key = object.key ?? new Uint8Array();
     return message;
-  },
+  }
 };
 
 function createBaseMessage(): Message {
-  return { id: "", metaData: undefined, chunk: undefined, receiveEvent: undefined };
+  return { id: '', metaData: undefined, chunk: undefined, receiveEvent: undefined };
 }
 
 export const Message = {
   encode(message: Message, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.id !== "") {
+    if (message.id !== '') {
       writer.uint32(10).string(message.id);
     }
     if (message.metaData !== undefined) {
@@ -240,21 +236,25 @@ export const Message = {
 
   fromJSON(object: any): Message {
     return {
-      id: isSet(object.id) ? String(object.id) : "",
+      id: isSet(object.id) ? String(object.id) : '',
       metaData: isSet(object.metaData) ? MetaData.fromJSON(object.metaData) : undefined,
       chunk: isSet(object.chunk) ? bytesFromBase64(object.chunk) : undefined,
-      receiveEvent: isSet(object.receiveEvent) ? receiveEventFromJSON(object.receiveEvent) : undefined,
+      receiveEvent: isSet(object.receiveEvent)
+        ? receiveEventFromJSON(object.receiveEvent)
+        : undefined
     };
   },
 
   toJSON(message: Message): unknown {
     const obj: any = {};
     message.id !== undefined && (obj.id = message.id);
-    message.metaData !== undefined && (obj.metaData = message.metaData ? MetaData.toJSON(message.metaData) : undefined);
+    message.metaData !== undefined &&
+      (obj.metaData = message.metaData ? MetaData.toJSON(message.metaData) : undefined);
     message.chunk !== undefined &&
       (obj.chunk = message.chunk !== undefined ? base64FromBytes(message.chunk) : undefined);
     message.receiveEvent !== undefined &&
-      (obj.receiveEvent = message.receiveEvent !== undefined ? receiveEventToJSON(message.receiveEvent) : undefined);
+      (obj.receiveEvent =
+        message.receiveEvent !== undefined ? receiveEventToJSON(message.receiveEvent) : undefined);
     return obj;
   },
 
@@ -264,38 +264,39 @@ export const Message = {
 
   fromPartial<I extends Exact<DeepPartial<Message>, I>>(object: I): Message {
     const message = createBaseMessage();
-    message.id = object.id ?? "";
-    message.metaData = (object.metaData !== undefined && object.metaData !== null)
-      ? MetaData.fromPartial(object.metaData)
-      : undefined;
+    message.id = object.id ?? '';
+    message.metaData =
+      object.metaData !== undefined && object.metaData !== null
+        ? MetaData.fromPartial(object.metaData)
+        : undefined;
     message.chunk = object.chunk ?? undefined;
     message.receiveEvent = object.receiveEvent ?? undefined;
     return message;
-  },
+  }
 };
 
 declare var self: any | undefined;
 declare var window: any | undefined;
 declare var global: any | undefined;
 var tsProtoGlobalThis: any = (() => {
-  if (typeof globalThis !== "undefined") {
+  if (typeof globalThis !== 'undefined') {
     return globalThis;
   }
-  if (typeof self !== "undefined") {
+  if (typeof self !== 'undefined') {
     return self;
   }
-  if (typeof window !== "undefined") {
+  if (typeof window !== 'undefined') {
     return window;
   }
-  if (typeof global !== "undefined") {
+  if (typeof global !== 'undefined') {
     return global;
   }
-  throw "Unable to locate global object";
+  throw 'Unable to locate global object';
 })();
 
 function bytesFromBase64(b64: string): Uint8Array {
   if (tsProtoGlobalThis.Buffer) {
-    return Uint8Array.from(tsProtoGlobalThis.Buffer.from(b64, "base64"));
+    return Uint8Array.from(tsProtoGlobalThis.Buffer.from(b64, 'base64'));
   } else {
     const bin = tsProtoGlobalThis.atob(b64);
     const arr = new Uint8Array(bin.length);
@@ -308,25 +309,31 @@ function bytesFromBase64(b64: string): Uint8Array {
 
 function base64FromBytes(arr: Uint8Array): string {
   if (tsProtoGlobalThis.Buffer) {
-    return tsProtoGlobalThis.Buffer.from(arr).toString("base64");
+    return tsProtoGlobalThis.Buffer.from(arr).toString('base64');
   } else {
     const bin: string[] = [];
     arr.forEach((byte) => {
       bin.push(String.fromCharCode(byte));
     });
-    return tsProtoGlobalThis.btoa(bin.join(""));
+    return tsProtoGlobalThis.btoa(bin.join(''));
   }
 }
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
-export type DeepPartial<T> = T extends Builtin ? T
-  : T extends Array<infer U> ? Array<DeepPartial<U>> : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+export type DeepPartial<T> = T extends Builtin
+  ? T
+  : T extends Array<infer U>
+    ? Array<DeepPartial<U>>
+    : T extends ReadonlyArray<infer U>
+      ? ReadonlyArray<DeepPartial<U>>
+      : T extends {}
+        ? { [K in keyof T]?: DeepPartial<T[K]> }
+        : Partial<T>;
 
 type KeysOfUnion<T> = T extends T ? keyof T : never;
-export type Exact<P, I extends P> = P extends Builtin ? P
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
   : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
 
 function isSet(value: any): boolean {

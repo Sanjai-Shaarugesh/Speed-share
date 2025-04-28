@@ -11,14 +11,8 @@
   const id = 'eye-input';
 </script>
 
-<label class="swap bg-base-100  ml-3 mt-1" for={id}>
-  <input
-    id={id}
-    type="checkbox"
-    class="hidden"
-    bind:checked={show}
-    onchange={() => onChange(show)}
-  />
+<label class="swap bg-base-100 ml-3 mt-1" for={id}>
+  <input {id} type="checkbox" class="hidden" bind:checked={show} onchange={() => onChange(show)} />
 
   <div class="swap-on mt-1">
     <!-- Show EyeOff when show = true -->

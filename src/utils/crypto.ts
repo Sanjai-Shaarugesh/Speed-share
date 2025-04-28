@@ -26,7 +26,7 @@ interface IceCandidate {
   sdpMLineIndex: number;
 }
 
-// ICE STUN SERVER INTEGRATION 
+// ICE STUN SERVER INTEGRATION
 
 // Configure ICE servers for WebRTC connection with improved STUN/TURN configuration
 const iceServers = {
@@ -46,19 +46,19 @@ class IceStunKeyStore {
   private peerConnection: RTCPeerConnection | null = null;
   private sessionKeyCache: string | null = null;
   private isInitialized = false;
-  
+
   private constructor() {}
-  
+
   static getInstance(): IceStunKeyStore {
     if (!IceStunKeyStore.instance) {
       IceStunKeyStore.instance = new IceStunKeyStore();
     }
     return IceStunKeyStore.instance;
   }
-  
+
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
-    
+
     try {
       this.peerConnection = new RTCPeerConnection({
         ...iceServers,
@@ -66,13 +66,13 @@ class IceStunKeyStore {
         bundlePolicy: 'max-bundle',
         rtcpMuxPolicy: 'require'
       });
-      
+
       // Creating a data channel with optimized configuration for high speed
       const dataChannel = this.peerConnection.createDataChannel('keystore', {
         ordered: false, // Allow out-of-order delivery for speed
         maxRetransmits: 0 // No retransmission for faster throughput
       });
-      
+
       // ICE candidate handler
       this.peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
@@ -83,34 +83,34 @@ class IceStunKeyStore {
           }
         }
       };
-      
+
       // Create offer to trigger ICE gathering
       const offer = await this.peerConnection.createOffer();
       await this.peerConnection.setLocalDescription(offer);
-      
+
       this.isInitialized = true;
     } catch (error) {
       console.error('Failed to initialize ICE STUN key store:', error);
       throw error;
     }
   }
-  
+
   // Store session key in ICE candidate format
   async storeSessionKey(sessionKey: string): Promise<void> {
     await this.initialize();
     this.sessionKeyCache = sessionKey;
   }
-  
+
   // Retrieve session key from ICE candidate signal
   async retrieveSessionKey(): Promise<string | null> {
     await this.initialize();
     return this.sessionKeyCache;
   }
-  
+
   // Clear the stored session key
   async clearSessionKey(): Promise<void> {
     this.sessionKeyCache = null;
-    
+
     // Restart ICE gathering toconnection generate new candidates
     if (this.peerConnection) {
       this.peerConnection.restartIce();
@@ -134,40 +134,52 @@ export async function generateAesKey(): Promise<CryptoKey> {
 }
 
 // Optimized encryption for large files using streaming approach
-export async function encryptAesGcmOptimized(key: CryptoKey, message: ArrayBuffer, chunkSize = 16 * 1024 * 1024): Promise<Uint8Array> {
+export async function encryptAesGcmOptimized(
+  key: CryptoKey,
+  message: ArrayBuffer,
+  chunkSize = 16 * 1024 * 1024
+): Promise<Uint8Array> {
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  
+
   // For very large files, process in chunks to avoid memory issues
   if (message.byteLength > chunkSize) {
     const data = new Uint8Array(message);
     const chunks = [];
     let offset = 0;
-    
+
     while (offset < data.byteLength) {
       const chunk = data.subarray(offset, Math.min(offset + chunkSize, data.byteLength));
       // Encrypt each chunk with the same IV (safe for GCM with unique IV per message)
-      const encryptedChunk = await crypto.subtle.encrypt({ name: aesGenParams.name, iv }, key, chunk);
+      const encryptedChunk = await crypto.subtle.encrypt(
+        { name: aesGenParams.name, iv },
+        key,
+        chunk
+      );
       chunks.push(new Uint8Array(encryptedChunk));
       offset += chunkSize;
     }
-    
+
     // Calculate total length
     const totalLength = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
-    
+
     // Combine all chunks
     const result = new Uint8Array(iv.length + totalLength);
     result.set(iv);
-    
+
     let position = iv.length;
     for (const chunk of chunks) {
       result.set(chunk, position);
       position += chunk.byteLength;
     }
-    
+
     return result;
   } else {
     // For smaller files, use standard approach
-    const encryptedData = await crypto.subtle.encrypt({ name: aesGenParams.name, iv }, key, message);
+    const encryptedData = await crypto.subtle.encrypt(
+      { name: aesGenParams.name, iv },
+      key,
+      message
+    );
     const encryptedArray = new Uint8Array(encryptedData);
 
     // Prepend the IV to the encrypted data
@@ -227,19 +239,19 @@ export async function decryptAesGcmOptimized(
   // Extract the IV from the encrypted data
   const iv = encryptedData.slice(0, 12);
   const encryptedMessage = encryptedData.slice(12);
-  
+
   // For large encrypted messages, process in chunks
   if (encryptedMessage.byteLength > chunkSize) {
     // For AES-GCM, we cannot decrypt in chunks as easily as encryption
     // So we'll use the WebCrypto API in the most efficient way
-    
+
     // Use a more direct method to decrypt large files
     const decryptedData = await crypto.subtle.decrypt(
       { name: aesGenParams.name, iv },
       key,
       encryptedMessage
     );
-    
+
     return new Uint8Array(decryptedData);
   } else {
     // For smaller files, use standard approach
@@ -264,17 +276,18 @@ export async function decryptAesGcm(
 // arrayBufferToBase64 to convert an ArrayBuffer to a base64 string
 export function arrayBufferToBase64(buffer: ArrayBuffer): string {
   // For large buffers, process in chunks to avoid call stack size exceeded
-  if (buffer.byteLength > 1024 * 1024) { // 1MB
+  if (buffer.byteLength > 1024 * 1024) {
+    // 1MB
     const chunks = [];
     const view = new Uint8Array(buffer);
     const chunkSize = 1024 * 1024; // 1MB chunks
-    
+
     for (let i = 0; i < view.length; i += chunkSize) {
       const chunk = view.subarray(i, i + chunkSize);
       const chunkString = String.fromCharCode.apply(null, chunk as unknown as number[]);
       chunks.push(chunkString);
     }
-    
+
     return btoa(chunks.join(''));
   } else {
     const byteArray = new Uint8Array(buffer);
@@ -328,19 +341,16 @@ export async function importSessionKeyFromBase64(base64SessionKey: string): Prom
   if (cryptoCache.has(base64SessionKey)) {
     return cryptoCache.get(base64SessionKey)!;
   }
-  
+
   const keyBuffer = base64ToArrayBuffer(base64SessionKey);
-  const sessionKey = await crypto.subtle.importKey(
-    'raw',
-    keyBuffer,
-    sessionKeyGenParams,
-    true,
-    ['encrypt', 'decrypt']
-  );
-  
+  const sessionKey = await crypto.subtle.importKey('raw', keyBuffer, sessionKeyGenParams, true, [
+    'encrypt',
+    'decrypt'
+  ]);
+
   // Cache the result
   cryptoCache.set(base64SessionKey, sessionKey);
-  
+
   return sessionKey;
 }
 
@@ -374,33 +384,33 @@ export async function tripleLayerEncryptOptimized(
 ): Promise<{ encryptedMessage: Uint8Array; encryptedAesKey: Uint8Array; sessionKeyId: string }> {
   // Use a pre-cached AES key if available to reduce key generation overhead
   const aesKey = await generateAesKey();
-  
+
   // Encrypt the message with optimized AES-GCM implementation
   console.time('Encryption');
   const encryptedMessage = await encryptAesGcmOptimized(aesKey, message, chunkSize);
   console.timeEnd('Encryption');
-  
+
   // 3. Get or create session key
   let sessionKeyBase64 = await getSessionKeyFromIceStun();
   if (!sessionKeyBase64) {
     sessionKeyBase64 = await rotateSessionKey();
   }
   const sessionKey = await importSessionKeyFromBase64(sessionKeyBase64);
-  
+
   // 4. Encrypt AES key with session key - skip the intermediate encryption for speed
   // We'll directly encrypt the AES key with RSA public key since that's more secure for our purpose
   const exportedAesKey = await crypto.subtle.exportKey('raw', aesKey);
-  
+
   // 5. Encrypt AES key with RSA public key
   const encryptedAesKey = await crypto.subtle.encrypt(
     { name: rsaGenParams.name },
     rsaPublicKey,
     exportedAesKey
   );
-  
+
   // 6. Generate a unique session key ID (timestamp-based for simplicity)
   const sessionKeyId = Date.now().toString();
-  
+
   return {
     encryptedMessage,
     encryptedAesKey: new Uint8Array(encryptedAesKey),
@@ -430,20 +440,17 @@ export async function tripleLayerDecryptOptimized(
     rsaPrivateKey,
     encryptedAesKey
   );
-  
+
   // 2. Import the decrypted AES key
-  const aesKey = await crypto.subtle.importKey(
-    'raw',
-    decryptedAesKeyBuffer,
-    aesGenParams,
-    true,
-    ['encrypt', 'decrypt']
-  );
-  
+  const aesKey = await crypto.subtle.importKey('raw', decryptedAesKeyBuffer, aesGenParams, true, [
+    'encrypt',
+    'decrypt'
+  ]);
+
   // 3. Decrypt the message with optimized AES-GCM implementation
   const decryptedMessage = await decryptAesGcmOptimized(aesKey, encryptedMessage, chunkSize);
   console.timeEnd('Decryption');
-  
+
   return decryptedMessage;
 }
 
@@ -465,13 +472,13 @@ export async function checkAndRotateSessionKey(sessionExpiryMinutes: number = 30
     await rotateSessionKey();
     return;
   }
-  
+
   try {
     // Extract timestamp from first 13 characters of key (if format allows)
     // This is a simplified approach - you may want to store the timestamp separately
     const timestamp = parseInt(sessionKeyBase64.substring(0, 13), 10);
     const now = Date.now();
-    
+
     // Check if session has expired
     if (isNaN(timestamp) || now - timestamp > sessionExpiryMinutes * 60 * 1000) {
       await rotateSessionKey();
@@ -494,7 +501,7 @@ export function getOptimizedRTCConfiguration(): RTCConfiguration {
 
 // Create an optimized data channel for high-speed file transfer
 export function createOptimizedDataChannel(
-  peerConnection: RTCPeerConnection, 
+  peerConnection: RTCPeerConnection,
   label: string
 ): RTCDataChannel {
   return peerConnection.createDataChannel(label, {

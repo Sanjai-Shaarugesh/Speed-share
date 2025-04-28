@@ -7,7 +7,7 @@
   import { validateFileMetadata } from '../../utils/validator';
   import { Message, MetaData, ReceiveEvent, receiveEventToJSON } from '../../proto/message';
   import { addToastMessage } from '../../stores/toastStore';
-  import {RollerCoaster} from '@lucide/svelte'
+  import { RollerCoaster } from '@lucide/svelte';
 
   type Props = {
     dataChannel: RTCDataChannel;
@@ -194,7 +194,9 @@
   <DragAndDrop {onFilesPick} />
   {#if Object.keys(sendingFiles).length > 0}
     <SendingFileList {sendingFiles} {onRemove} {onSend} {onStop} {onContinue} />
-    <button class="btn btn-outline btn-secondary mt-2" onclick={sendAllFiles}>Send all files <RollerCoaster /></button>
+    <button class="btn btn-outline btn-secondary mt-2" onclick={sendAllFiles}
+      >Send all files <RollerCoaster /></button
+    >
   {:else}
     <p class="mt-4">No files selected</p>
   {/if}

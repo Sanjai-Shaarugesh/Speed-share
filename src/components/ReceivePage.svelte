@@ -4,8 +4,8 @@
   import Eye from '../components/icons/Eye.svelte';
   import { Message } from '../proto/message';
   import Collapse from '../components/layout/Collapse.svelte';
-   import { Cpu , CircleArrowOutUpLeft , Copy , Send , Antenna } from '@lucide/svelte';
-   import {onMount , onDestroy } from 'svelte';
+  import { Cpu, CircleArrowOutUpLeft, Copy, Send, Antenna } from '@lucide/svelte';
+  import { onMount, onDestroy } from 'svelte';
   import {
     exportRsaPublicKeyToBase64,
     generateRsaKeyPair,
@@ -148,51 +148,44 @@
     offerCode = data;
     processOfferCode();
   }
-  
-  
-  
+
   onMount(() => {
-    let gPressed = $state(false); 
-     let scanQrModalOpen = $state(false); 
-  
+    let gPressed = $state(false);
+    let scanQrModalOpen = $state(false);
+
     const handleShortcut = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === 'g') {
         gPressed = true; // use .set() to update
-      } 
-      else if (gPressed && e.key.toLowerCase() === 'o') { // call gPressed() to get the value
+      } else if (gPressed && e.key.toLowerCase() === 'o') {
+        // call gPressed() to get the value
         e.preventDefault();
         window.location.href = '/';
-        gPressed = false ; // reset after redirect
-      } 
-      
-      else if(e.altKey && e.key.toLowerCase() == 'p') {
+        gPressed = false; // reset after redirect
+      } else if (e.altKey && e.key.toLowerCase() == 'p') {
         e.preventDefault();
-        processOfferCode()
+        processOfferCode();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+        const inputElement = document.querySelector('input[type="password"]') as HTMLInputElement;
+        if (inputElement) {
+          inputElement.focus();
+        }
       }
-      
-      else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
-              const inputElement = document.querySelector('input[type="password"]') as HTMLInputElement;
-              if (inputElement) {
-                inputElement.focus();
-              }
-            }
-            
-            // else if(e.altKey && e.key.toLowerCase() == 's') {
-            //       e.preventDefault();
-            //       scanQrModalOpen = true; // Open ScanQrModal on Alt + S
-            //     }
-            // 
-            else if(event.ctrlKey && event.key.toLowerCase() == 'c'){
-              event.preventDefault();
-              copyAnswerCode()
-            }
-      else {
-        gPressed = false ; // reset if other keys pressed
+
+      // else if(e.altKey && e.key.toLowerCase() == 's') {
+      //       e.preventDefault();
+      //       scanQrModalOpen = true; // Open ScanQrModal on Alt + S
+      //     }
+      //
+      else if (event.ctrlKey && event.key.toLowerCase() == 'c') {
+        event.preventDefault();
+        copyAnswerCode();
+      } else {
+        gPressed = false; // reset if other keys pressed
       }
     };
-  
+
     window.addEventListener('keydown', handleShortcut);
-  
+
     return () => {
       window.removeEventListener('keydown', handleShortcut);
     };
@@ -221,20 +214,24 @@
         disabled={isProcessingOffer}
       />
       <div class="mt-4 flex gap-2">
-          <button class="btn btn-outline btn-accent" onclick={processOfferCode} disabled={isProcessingOffer}>{#if isProcessingOffer}
-                      
-                      Processing
-                    {:else}
-                      Process Offer <Cpu />
-                    {/if}</button>
+        <button
+          class="btn btn-outline btn-accent"
+          onclick={processOfferCode}
+          disabled={isProcessingOffer}
+          >{#if isProcessingOffer}
+            Processing
+          {:else}
+            Process Offer <Cpu />
+          {/if}</button
+        >
         <ScanQrModal onScanSuccess={scanOfferCode} />
-        
-        
-        
       </div>
       <div class="mt-4 flex gap-2">
-        <a href="/" data-navigo> <button class="btn btn-dash btn-warning" onclick={navigateToOfferPage}>Go to Offer Page <CircleArrowOutUpLeft /></button></a>
-     
+        <a href="/" data-navigo>
+          <button class="btn btn-dash btn-warning" onclick={navigateToOfferPage}
+            >Go to Offer Page <CircleArrowOutUpLeft /></button
+          ></a
+        >
       </div>
     </div>
   </Collapse>
@@ -258,7 +255,9 @@
         </div>
       </div>
       <div class="mt-4 flex gap-2">
-        <button class="btn btn-soft btn-info gap-2" onclick={copyAnswerCode}>Copy Answer <Copy /></button>
+        <button class="btn btn-soft btn-info gap-2" onclick={copyAnswerCode}
+          >Copy Answer <Copy /></button
+        >
         <QrModal bind:this={qrModal} qrData={answerCode} title="Answer QR Code" />
       </div>
     {/if}
@@ -268,16 +267,16 @@
     {#if dataChannel}
       <div class="flex w-full mb-4 mt-2 justify-center">
         <div class="join w-full">
-            <button
-              class="btn btn-dash btn-warning join-item w-1/2 text-xl py-4 min-h-[3.5rem] inline-flex items-center justify-center gap-x-2"
-              onclick={() => {
-                sendMode = true;
-              }}
-            >
-                <Send />
-                           <span class="btm-nav-label">Send</span>
-            </button>
-  
+          <button
+            class="btn btn-dash btn-warning join-item w-1/2 text-xl py-4 min-h-[3.5rem] inline-flex items-center justify-center gap-x-2"
+            onclick={() => {
+              sendMode = true;
+            }}
+          >
+            <Send />
+            <span class="btm-nav-label">Send</span>
+          </button>
+
           <div class="indicator w-1/2 join-item relative">
             <span
               class="indicator-item badge badge-success text-xs animate-bounce"
@@ -293,13 +292,13 @@
                 sendMode = false;
               }}
             >
-                <Antenna />
-                             <span class="btm-nav-label">Receive</span>
+              <Antenna />
+              <span class="btm-nav-label">Receive</span>
             </button>
           </div>
         </div>
       </div>
-  
+
       <div hidden={!sendMode}>
         <Sender
           bind:this={sender}
@@ -309,13 +308,12 @@
           chunkSize={defaultSendOptions.chunkSize}
         />
       </div>
-  
+
       <div hidden={sendMode}>
         <Receiver bind:this={receiver} {dataChannel} isEncrypt={!!rsa} {rsa} />
       </div>
     {/if}
   </Collapse>
-
 
   <Toast />
 </div>

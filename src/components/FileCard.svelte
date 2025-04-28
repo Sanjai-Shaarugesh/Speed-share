@@ -43,8 +43,8 @@
     isSender && file
       ? file
       : !isSender && fileDetail.status === FileStatus.Success && fileDetail.fileBlob
-      ? fileDetail.fileBlob
-      : null
+        ? fileDetail.fileBlob
+        : null
   );
 
   // Create and clean up object URL for image previews
@@ -63,25 +63,25 @@
 
   // Map file extensions to icon URLs
   const iconMap: Record<string, string> = {
-    'pdf': 'https://img.icons8.com/fluency/100/pdf--v2.png',
-    'docx': 'https://img.icons8.com/external-others-iconmarket/64/external-docx-file-types-others-iconmarket.png',
-    'xlsx': 'https://img.icons8.com/arcade/64/xls.png',
-    'mp4': 'https://img.icons8.com/cotton/100/video-file--v1.png',
-    'avi': 'https://img.icons8.com/dusk/100/video.png',
-    'mp3': 'https://img.icons8.com/external-bearicons-blue-bearicons/100/external-MP3-file-extension-bearicons-blue-bearicons.png',
-    'wav': 'https://img.icons8.com/external-bearicons-outline-color-bearicons/100/external-WAV-file-extension-bearicons-outline-color-bearicons.png',
-    'zip': 'https://img.icons8.com/dusk/100/zip.png',
-    'rar': "https://img.icons8.com/dusk/100/rar.png" ,
-    'default': "https://img.icons8.com/arcade/100/file.png",
-    'gif':'https://img.icons8.com/plasticine/100/gif.png',
-    'svg':'https://img.icons8.com/external-bearicons-blue-bearicons/100/external-SVG-file-extension-bearicons-blue-bearicons.png',
-    'png':'https://img.icons8.com/plasticine/100/png.png'
+    pdf: 'https://img.icons8.com/fluency/100/pdf--v2.png',
+    docx: 'https://img.icons8.com/external-others-iconmarket/64/external-docx-file-types-others-iconmarket.png',
+    xlsx: 'https://img.icons8.com/arcade/64/xls.png',
+    mp4: 'https://img.icons8.com/cotton/100/video-file--v1.png',
+    avi: 'https://img.icons8.com/dusk/100/video.png',
+    mp3: 'https://img.icons8.com/external-bearicons-blue-bearicons/100/external-MP3-file-extension-bearicons-blue-bearicons.png',
+    wav: 'https://img.icons8.com/external-bearicons-outline-color-bearicons/100/external-WAV-file-extension-bearicons-outline-color-bearicons.png',
+    zip: 'https://img.icons8.com/dusk/100/zip.png',
+    rar: 'https://img.icons8.com/dusk/100/rar.png',
+    default: 'https://img.icons8.com/arcade/100/file.png',
+    gif: 'https://img.icons8.com/plasticine/100/gif.png',
+    svg: 'https://img.icons8.com/external-bearicons-blue-bearicons/100/external-SVG-file-extension-bearicons-blue-bearicons.png',
+    png: 'https://img.icons8.com/plasticine/100/png.png'
   };
 
   // Get the icon URL based on file extension
   function getIconUrl(fileName: string): string {
-    const extension = fileName.split('.').pop()?.toLowerCase();
-    return iconMap[extension] || iconMap['default'];
+      const extension = fileName.split('.').pop()?.toLowerCase() ?? 'default';
+      return iconMap[extension] || iconMap['default'];
   }
 
   // Clean up object URL on component destruction
@@ -90,50 +90,72 @@
   });
 </script>
 
-<div class="card bg-base-100 shadow-lg shadow-base-300">
-  <div class="card-body p-4 text-xs xl:text-sm">
-      <div class="flex gap-4">
-        <!-- Preview image or icon -->
-        {#if isImage() && fileDetail.status === FileStatus.Success && objectUrl}
-          <img src={objectUrl} alt={fileDetail.metaData.name} class="w-20 h-20 object-cover rounded-md" />
-        {:else}
-          <img src={getIconUrl(fileDetail.metaData.name)} alt={fileDetail.metaData.name} class="w-20 h-20 object-cover rounded-md" />
-        {/if}
-        <div class="flex-1 text-gray-800 dark:text-gray-200">
-          <p><strong>Name:</strong> {fileDetail.metaData.name}</p>
-          <p><strong>Size:</strong> {humanFileSize(fileDetail.metaData.size)}</p>
-          {#if fileDetail.metaData.type}
-            <p><strong>Type:</strong> {fileDetail.metaData.type}</p>
-          {/if}
-          <div class="text-center">
-            {#if fileDetail.status === FileStatus.Processing}
+<div class="border rounded-lg bg-white [html[data-theme=dark]_&]:bg-gray-800 border-gray-200 [html[data-theme=dark]_&]:border-gray-700 shadow-sm transition-colors">
+  <div class="p-4 text-xs xl:text-sm">
+    <div class="flex gap-4">
+      <!-- Preview image or icon -->
+      {#if isImage() && fileDetail.status === FileStatus.Success && objectUrl}
+        <div class="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 border border-gray-200 [html[data-theme=dark]_&]:border-gray-700">
+          <img
+            src={objectUrl}
+            alt={fileDetail.metaData.name}
+            class="w-full h-full object-cover"
+          />
+        </div>
+      {:else}
+        <div class="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 flex items-center justify-center bg-gray-100 [html[data-theme=dark]_&]:bg-gray-700">
+          <img
+            src={getIconUrl(fileDetail.metaData.name)}
+            alt={fileDetail.metaData.name}
+            class="w-12 h-12 object-contain"
+          />
+        </div>
+      {/if}
+      <div class="flex-1 text-gray-800 [html[data-theme=dark]_&]:text-gray-200">
+        <p class="font-medium text-sm truncate" title={fileDetail.metaData.name}>{fileDetail.metaData.name}</p>
+        <p class="text-xs text-gray-500 [html[data-theme=dark]_&]:text-gray-400">{humanFileSize(fileDetail.metaData.size)} • {fileDetail.metaData.type || 'Unknown type'}</p>
+        
+        <div class="mt-3">
+          {#if fileDetail.status === FileStatus.Processing}
+            <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-blue-100 text-blue-700 [html[data-theme=dark]_&]:bg-blue-900 [html[data-theme=dark]_&]:text-blue-300">
               {#if isSender}
                 Sending: {humanFileSize(fileDetail.bitrate)}/sec
               {:else}
                 Receiving: {humanFileSize(fileDetail.bitrate)}/sec
               {/if}
-            {:else if fileDetail.error}
-              <div class="text-error dark:text-error-dark">
-                Error: {fileDetail.error.message}
-              </div>
-            {:else if fileDetail.status === FileStatus.WaitingAccept}
+            </span>
+          {:else if fileDetail.error}
+            <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-red-100 text-red-700 [html[data-theme=dark]_&]:bg-red-900 [html[data-theme=dark]_&]:text-red-300">
+              Error: {fileDetail.error.message}
+            </span>
+          {:else if fileDetail.status === FileStatus.WaitingAccept}
+            <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-yellow-100 text-yellow-700 [html[data-theme=dark]_&]:bg-yellow-900 [html[data-theme=dark]_&]:text-yellow-300">
               Waiting Accept
-            {:else if fileDetail.status === FileStatus.Success}
+            </span>
+          {:else if fileDetail.status === FileStatus.Success}
+            <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-green-100 text-green-700 [html[data-theme=dark]_&]:bg-green-900 [html[data-theme=dark]_&]:text-green-300">
               Success
-            {:else}
+            </span>
+          {:else}
+            <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-700 [html[data-theme=dark]_&]:bg-gray-800 [html[data-theme=dark]_&]:text-gray-300">
               Pending
-            {/if}
-          </div>
-          <progress
-            value={isNaN(fileDetail.progress) ? 100 : fileDetail.progress}
-            max="100"
-            class="progress progress-accent dark:progress-dark"
-          ></progress>
-          <div class="flex justify-end">
-            {@render children?.()}
+            </span>
+          {/if}
+        </div>
+        
+        <div class="relative mt-3">
+          <div class="overflow-hidden h-2 text-xs flex rounded bg-gray-200 [html[data-theme=dark]_&]:bg-gray-700">
+            <div
+              style="width: {isNaN(fileDetail.progress) ? 100 : fileDetail.progress}%"
+              class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 [html[data-theme=dark]_&]:bg-blue-600 transition-all duration-300 ease-in-out"
+            ></div>
           </div>
         </div>
+        
+        <div class="flex justify-end mt-3">
+          {@render children?.()}
+        </div>
       </div>
-
+    </div>
   </div>
 </div>

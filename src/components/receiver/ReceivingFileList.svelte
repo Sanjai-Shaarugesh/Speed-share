@@ -1,7 +1,7 @@
 <script lang="ts">
   import { FileStatus, type ReceivingFile } from '../../type';
   import FileCard from '../FileCard.svelte';
-  import {FileDown ,  Shredder} from '@lucide/svelte'
+  import { FileDown, Shredder } from '@lucide/svelte';
 
   type Props = {
     receivingFiles: { [key: string]: ReceivingFile };
@@ -23,7 +23,9 @@
           <button onclick={() => onDeny(key)} class="btn btn-ghost">Deny</button>
         {:else}
           {#if receivedFile.status === FileStatus.Success}
-            <button onclick={() => onDownload(key)} class="btn btn-active btn-success"> Download  <FileDown /></button>
+            <button onclick={() => onDownload(key)} class="btn btn-active btn-success">
+              Download <FileDown /></button
+            >
           {/if}
           <button onclick={() => onRemove(key)} class="btn btn-error"> Remove <Shredder /> </button>
         {/if}

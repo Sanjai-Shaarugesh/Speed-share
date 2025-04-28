@@ -16,7 +16,7 @@ export function initCapacitorNavigation() {
   App.addListener('appUrlOpen', (data) => {
     const url = new URL(data.url);
     const path = url.pathname;
-    
+
     // Navigate to the path
     navigate(path);
   });

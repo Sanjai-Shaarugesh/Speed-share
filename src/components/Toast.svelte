@@ -18,13 +18,12 @@
 
 <div class="fixed bottom-4 right-4 space-y-2 -mt-15">
   {#each toasts as toast}
-      <div
-        class="alert alert-{toast.status} "
-        style="filter: brightness(100%);"
-        in:fade|global={{ duration: 300 }}
-        out:fade|global={{ duration: 300 }}
-      >
-
+    <div
+      class="alert alert-{toast.status} "
+      style="filter: brightness(100%);"
+      in:fade|global={{ duration: 300 }}
+      out:fade|global={{ duration: 300 }}
+    >
       <div>
         <span>{toast.message}</span>
       </div>

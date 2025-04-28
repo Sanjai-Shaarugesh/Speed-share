@@ -17,12 +17,11 @@
 
   function onChange() {
     onUpdate({
-      ...defaultReceiveOptions, 
+      ...defaultReceiveOptions,
       autoAccept: getAutoAccept(),
       maxSize: Number(maxSize)
     });
   }
-
 </script>
 
 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">

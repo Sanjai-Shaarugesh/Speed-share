@@ -32,7 +32,6 @@ export interface ReceivingFile extends FileDetail {
 }
 
 export interface SendOptions {
- 
   retryStrategy: any;
   isEncrypt: boolean;
   chunkSize: number;
@@ -47,7 +46,6 @@ export interface SendOptions {
   signal: AbortSignal;
   timeout: number;
   retryAttempts: number;
-  
 }
 
 export interface ReceiveOptions {
@@ -58,8 +56,7 @@ export interface ReceiveOptions {
   decompressInBackground: boolean;
   preallocateStorage: boolean;
   progressInterval: number;
-   useBinaryMode: boolean;
-   prioritizeDownload: boolean;
-   chunkTimeout: number;
+  useBinaryMode: boolean;
+  prioritizeDownload: boolean;
+  chunkTimeout: number;
 }
-

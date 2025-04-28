@@ -5,10 +5,19 @@
   import { Message } from '../proto/message';
   import Collapse from '../components/layout/Collapse.svelte';
   import OfferOptions from '../components/OfferOptions.svelte';
-   import { Asterisk , Cog , ChevronsLeftRightEllipsis , Clipboard , LandPlot , Send , HeartHandshake , FilePlus } from '@lucide/svelte';
-   import {onMount,onDestroy} from 'svelte';
-   import { Capacitor } from '@capacitor/core';
-   
+  import {
+    Asterisk,
+    Cog,
+    ChevronsLeftRightEllipsis,
+    Clipboard,
+    LandPlot,
+    Send,
+    HeartHandshake,
+    FilePlus
+  } from '@lucide/svelte';
+  import { onMount, onDestroy } from 'svelte';
+  import { Capacitor } from '@capacitor/core';
+
   import {
     exportRsaPublicKeyToBase64,
     generateRsaKeyPair,
@@ -28,9 +37,9 @@
   let sendOptions = $state(defaultSendOptions);
   let rsa: CryptoKeyPair | undefined = $state(undefined); // private key
   let rsaPub: CryptoKey | undefined = $state(undefined); // public key from other peer
-  
-  let showPassword =  $state(false);  // State to control password visibility
-   // Value to bind with the input
+
+  let showPassword = $state(false); // State to control password visibility
+  // Value to bind with the input
 
   // webRTC
   let connection: RTCPeerConnection | undefined = $state(undefined);
@@ -72,7 +81,7 @@
       isEncrypting: sendOptions.isEncrypt,
       connectionExists: !!connection
     });
-    
+
     logWebRTCState();
   }
 
@@ -82,13 +91,13 @@
       rsa = await generateRsaKeyPair();
       publicKeyBase64 = await exportRsaPublicKeyToBase64(rsa.publicKey);
     }
-    
-  
 
     const sdp = sdpEncode(offer.sdp);
     offerCode = generateUniqueCode(sdp, {
-      iceServer: defaultSendOptions.iceServer === sendOptions.iceServer ? undefined : sendOptions.iceServer,
-      chunkSize: defaultSendOptions.chunkSize === sendOptions.chunkSize ? undefined : sendOptions.chunkSize,
+      iceServer:
+        defaultSendOptions.iceServer === sendOptions.iceServer ? undefined : sendOptions.iceServer,
+      chunkSize:
+        defaultSendOptions.chunkSize === sendOptions.chunkSize ? undefined : sendOptions.chunkSize,
       publicKey: publicKeyBase64
     });
   }
@@ -101,7 +110,7 @@
     });
 
     connection.onicecandidateerror = () => {
-      addToastMessage('ICE Candidate error', 'error'); 
+      addToastMessage('ICE Candidate error', 'error');
     };
 
     dataChannel = connection.createDataChannel('data', {
@@ -248,78 +257,64 @@
   }
 
   function navigateToAnswerPage() {
-   window.location.href = `${window.location.origin}/answer.html`;
+    window.location.href = `${window.location.origin}/answer.html`;
   }
-  
+
   const isMobile = Capacitor.isNativePlatform();
   let gPressed = false;
-  
-  onMount(()=>{
-    const handleShortcut = (event:KeyboardEvent) =>{
-      if(event.ctrlKey && event.key.toLowerCase() == 'o'){
+
+  onMount(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key.toLowerCase() == 'o') {
         event.preventDefault();
         generateOfferCode();
-      }
-      
-      else if(isMobile){
-        if(event.key == "Enter"){
+      } else if (isMobile) {
+        if (event.key == 'Enter') {
           event.preventDefault();
           acceptAnswer();
         }
-      }
-      
-      else if(event.ctrlKey && event.key.toLowerCase() == "a"){
+      } else if (event.ctrlKey && event.key.toLowerCase() == 'a') {
         event.preventDefault();
         acceptAnswer();
-      }
-      
-      else if(event.key.toLowerCase() == "g"){
+      } else if (event.key.toLowerCase() == 'g') {
         gPressed = true;
-      }
-      
-      else if(gPressed && event.key.toLowerCase() == 'a'){
+      } else if (gPressed && event.key.toLowerCase() == 'a') {
         event.preventDefault();
         window.location.href = '/answer.html';
         //gPressed = false ;
-      }
-      
-      else if(event.altKey && event.key == 's'){
+      } else if (event.altKey && event.key == 's') {
         event.preventDefault();
         showOfferOptions = true;
-        // showOfferOptions.update(v => !v); 
-      }
-     
-      else if(event.ctrlKey && event.key.toLowerCase() == 'c'){
+        // showOfferOptions.update(v => !v);
+      } else if (event.ctrlKey && event.key.toLowerCase() == 'c') {
         event.preventDefault();
-        copyOfferCode()
-      }
-      
-      else if (event.ctrlKey && event.key.toLowerCase() === 'v') {
-            event.preventDefault();
-            navigator.clipboard.readText().then((text) => {
-              answerCode = text; // Paste clipboard text into the answerCode variable
-            }).catch((error) => {
-              console.error('Failed to read clipboard contents: ', error);
-            });
-          }
-      
-      
-      else{
+        copyOfferCode();
+      } else if (event.ctrlKey && event.key.toLowerCase() === 'v') {
+        event.preventDefault();
+        navigator.clipboard
+          .readText()
+          .then((text) => {
+            answerCode = text; // Paste clipboard text into the answerCode variable
+          })
+          .catch((error) => {
+            console.error('Failed to read clipboard contents: ', error);
+          });
+      } else {
         gPressed = false;
       }
     };
-    
-    window.addEventListener('keydown' , handleShortcut);
-    
-    onDestroy(()=>{
-      window.removeEventListener('keydown',handleShortcut);
-    })
-  })
+
+    window.addEventListener('keydown', handleShortcut);
+
+    onDestroy(() => {
+      window.removeEventListener('keydown', handleShortcut);
+    });
+  });
 </script>
 
 <div class="container mx-auto p-4 max-w-3xl">
   <h1 class="text-2xl font-bold mb-4">File Transfer - Offer Page</h1>
-  
+
   <Collapse title="1. Generate Offer" isOpen={!offerCode}>
     {#if generating}
       <div class="flex flex-col items-center justify-center gap-2">
@@ -341,17 +336,21 @@
           <OfferOptions onUpdate={onOptionsUpdate} />
         {/if}
         <div class="">
-          <button class="btn btn-soft btn-secondary" onclick={generateOfferCode}>Generate Offer Code <Asterisk /></button>
-          
+          <button class="btn btn-soft btn-secondary" onclick={generateOfferCode}
+            >Generate Offer Code <Asterisk /></button
+          >
+
           {#if !showOfferOptions}
-            <button class="btn btn-secondary" onclick={() => {
-              showOfferOptions = true;
-            }}>Settings <Cog /></button>
+            <button
+              class="btn btn-secondary"
+              onclick={() => {
+                showOfferOptions = true;
+              }}>Settings <Cog /></button
+            >
           {/if}
           <button class="btn btn-dash btn-warning" onclick={navigateToAnswerPage}>
             Go to Answer Page <ChevronsLeftRightEllipsis />
           </button>
-          
         </div>
       </div>
     {/if}
@@ -359,7 +358,9 @@
 
   <Collapse title="2. Accept Answer" isOpen={offerCode !== '' && !isConnecting}>
     {#if offerCode}
-      <p class="">Share this unique offer code with your peer. They will need to enter it on the Answer page.</p>
+      <p class="">
+        Share this unique offer code with your peer. They will need to enter it on the Answer page.
+      </p>
       <div class="mt-2 relative">
         <input
           type={showOfferCode ? 'text' : 'password'}
@@ -367,7 +368,7 @@
           value={offerCode}
           readonly
         />
-      
+
         <!-- Eye icon -->
         <div class="absolute top-1/2 transform -translate-y-1/2 right-2 p-1">
           <Eye
@@ -379,7 +380,9 @@
       </div>
 
       <div class="mt-4 flex gap-2">
-          <button class="btn btn-dash btn-success" onclick={copyOfferCode}>Copy Code <Clipboard /></button>
+        <button class="btn btn-dash btn-success" onclick={copyOfferCode}
+          >Copy Code <Clipboard /></button
+        >
 
         <QrModal bind:this={qrModal} qrData={offerCode} title="Offer QR Code" />
       </div>
@@ -388,65 +391,82 @@
         <!-- Toggle the input type based on the showPassword state -->
         <input
           class="input input-bordered w-full"
-          type={showPassword ? 'text' : 'password'}  
+          type={showPassword ? 'text' : 'password'}
           bind:value={answerCode}
         />
-        
+
         <!-- Inline SVG for the eye icon to toggle visibility -->
         {#if showPassword}
-
-                <button 
-                  type="button" 
-                  class="absolute top-1/2 transform -translate-y-1/2 right-2 p-1" 
-                  onclick={() => showPassword = !showPassword}
-                  aria-label="Toggle password visibility"
-                  onkeydown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      showPassword = !showPassword;
-                    }
-                  }}
-                >
-                    <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                class="h-6 w-6 cursor-pointer"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M15 12c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3z"
-                                />
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M2.458 12C3.732 7.724 7.732 5 12 5c4.268 0 8.268 2.724 9.542 7-1.274 4.276-5.274 7-9.542 7-4.268 0-8.268-2.724-9.542-7z"
-                                />
-                              </svg>
-                </button>
-                {:else}
-                <button 
-                  type="button" 
-                  class="absolute top-1/2 transform -translate-y-1/2 right-2 p-1" 
-                  onclick={() => showPassword = !showPassword}
-                  aria-label="Toggle password visibility"
-                  onkeydown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      showPassword = !showPassword;
-                    }
-                  }}
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-off-icon lucide-eye-off"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>
-                </button>
-                {/if}
+          <button
+            type="button"
+            class="absolute top-1/2 transform -translate-y-1/2 right-2 p-1"
+            onclick={() => (showPassword = !showPassword)}
+            aria-label="Toggle password visibility"
+            onkeydown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                showPassword = !showPassword;
+              }
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              class="h-6 w-6 cursor-pointer"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 12c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M2.458 12C3.732 7.724 7.732 5 12 5c4.268 0 8.268 2.724 9.542 7-1.274 4.276-5.274 7-9.542 7-4.268 0-8.268-2.724-9.542-7z"
+              />
+            </svg>
+          </button>
+        {:else}
+          <button
+            type="button"
+            class="absolute top-1/2 transform -translate-y-1/2 right-2 p-1"
+            onclick={() => (showPassword = !showPassword)}
+            aria-label="Toggle password visibility"
+            onkeydown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                showPassword = !showPassword;
+              }
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-eye-off-icon lucide-eye-off"
+              ><path
+                d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"
+              /><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" /><path
+                d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"
+              /><path d="m2 2 20 20" /></svg
+            >
+          </button>
+        {/if}
       </div>
       <div class="mt-4 flex gap-2">
-        <button class="btn btn-soft btn-warning" onclick={acceptAnswer}>Accept Answer <LandPlot /></button>
+        <button class="btn btn-soft btn-warning" onclick={acceptAnswer}
+          >Accept Answer <LandPlot /></button
+        >
         <ScanQrModal
           onScanSuccess={(data) => {
             answerCode = data;
@@ -471,7 +491,7 @@
             <Send />
             <span class="btm-nav-label">Send</span>
           </button>
-  
+
           <!-- Receive Button with Badge -->
           <div class="relative w-1/2">
             <span
@@ -496,7 +516,7 @@
           </div>
         </div>
       </div>
-  
+
       <div hidden={!sendMode}>
         <Sender
           bind:this={sender}
@@ -506,14 +526,12 @@
           chunkSize={sendOptions.chunkSize}
         />
       </div>
-  
+
       <div hidden={sendMode}>
         <Receiver bind:this={receiver} {dataChannel} isEncrypt={sendOptions.isEncrypt} {rsa} />
       </div>
     {/if}
   </Collapse>
-
-
 
   <Toast />
 </div>

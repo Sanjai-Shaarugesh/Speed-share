@@ -8,15 +8,15 @@ export const params = writable({});
 function matchPath(path: string, pattern: string) {
   const pathSegments = path.split('/').filter(Boolean);
   const patternSegments = pattern.split('/').filter(Boolean);
-  
+
   if (pathSegments.length !== patternSegments.length) return false;
-  
+
   const extractedParams: Record<string, string> = {};
-  
+
   for (let i = 0; i < patternSegments.length; i++) {
     const patternSegment = patternSegments[i];
     const pathSegment = pathSegments[i];
-    
+
     if (patternSegment.startsWith(':')) {
       const paramName = patternSegment.slice(1);
       extractedParams[paramName] = pathSegment;
@@ -24,14 +24,14 @@ function matchPath(path: string, pattern: string) {
       return false;
     }
   }
-  
+
   return extractedParams;
 }
 
 // Navigation function
 export function navigate(path: string) {
   if (typeof window === 'undefined') return;
-  
+
   window.history.pushState({}, '', path);
   currentPath.set(path);
   window.dispatchEvent(new CustomEvent('app-navigation'));
@@ -40,11 +40,11 @@ export function navigate(path: string) {
 // Initialize router (call this in your app entry point)
 export function initRouter() {
   if (typeof window === 'undefined') return;
-  
+
   window.addEventListener('popstate', () => {
     currentPath.set(window.location.pathname);
   });
-  
+
   currentPath.set(window.location.pathname);
 }
 

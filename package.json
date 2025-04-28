@@ -61,6 +61,8 @@
     "@capacitor/ios": "^7.0.1",
     "@capacitor/preferences": "^7.0.1",
     "@capacitor/share": "^7.0.1",
+    "@capacitor/status-bar": "^7.0.1",
+    "@capacitor/toast": "^7.0.1",
     "@ionic/core": "^8.5.5",
     "@lucide/astro": "^0.503.0",
     "@lucide/svelte": "^0.503.0",

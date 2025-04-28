@@ -9,12 +9,12 @@ import { base64url } from './base64';
  * @returns A unique code that can be shared
  */
 export function generateUniqueCode(
-  sdp: string, 
+  sdp: string,
   options: {
-    iceServer?: string,
-    chunkSize?: number,
-    publicKey?: string,
-    highPerformance?: boolean
+    iceServer?: string;
+    chunkSize?: number;
+    publicKey?: string;
+    highPerformance?: boolean;
   }
 ): string {
   // Create a data object with all necessary information
@@ -26,7 +26,7 @@ export function generateUniqueCode(
     p: options.publicKey || '',
     h: options.highPerformance ? '1' : '0' // Flag for high-performance mode
   };
-  
+
   // Convert to JSON and encode as base64url
   const jsonData = JSON.stringify(data);
   return base64url.encode(jsonData);
@@ -38,19 +38,19 @@ export function generateUniqueCode(
  * @returns The decoded SDP and options
  */
 export function parseUniqueCode(code: string): {
-  sdp: string,
-  iceServer?: string,
-  chunkSize?: number,
-  publicKey?: string,
-  highPerformance?: boolean
+  sdp: string;
+  iceServer?: string;
+  chunkSize?: number;
+  publicKey?: string;
+  highPerformance?: boolean;
 } {
   try {
     const jsonData = base64url.decode(code);
     const data = JSON.parse(jsonData);
-    
+
     // Default to high performance for large files
     const highPerformance = data.h === '1' || data.c > 16777216; // > 16MB chunks means high performance
-    
+
     return {
       sdp: data.s,
       iceServer: data.i || undefined,
@@ -71,8 +71,8 @@ export function parseUniqueCode(code: string): {
 export function generateHighPerformanceCode(
   sdp: string,
   options: {
-    iceServer?: string,
-    publicKey?: string
+    iceServer?: string;
+    publicKey?: string;
   }
 ): string {
   return generateUniqueCode(sdp, {
@@ -99,11 +99,14 @@ export function shouldUseHighPerformanceMode(fileSize: number): boolean {
  * @returns Optimal chunk size in bytes
  */
 export function calculateOptimalChunkSize(fileSize: number): number {
-  if (fileSize > 10 * 1024 * 1024 * 1024) { // > 10GB
+  if (fileSize > 10 * 1024 * 1024 * 1024) {
+    // > 10GB
     return 134217728; // 128MB
-  } else if (fileSize > 1024 * 1024 * 1024) { // > 1GB
+  } else if (fileSize > 1024 * 1024 * 1024) {
+    // > 1GB
     return 67108864; // 64MB
-  } else if (fileSize > 100 * 1024 * 1024) { // > 100MB
+  } else if (fileSize > 100 * 1024 * 1024) {
+    // > 100MB
     return 16777216; // 16MB
   } else {
     return 4194304; // 4MB for smaller files
