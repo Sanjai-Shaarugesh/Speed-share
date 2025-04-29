@@ -381,8 +381,10 @@
 
       <div class="mt-4 flex gap-2">
         <button class="btn btn-dash btn-success" onclick={copyOfferCode}
-          >Copy Code <Clipboard /></button
+          >Copy Code <Clipboard /> </button
         >
+        
+       
 
         <QrModal bind:this={qrModal} qrData={offerCode} title="Offer QR Code" />
       </div>

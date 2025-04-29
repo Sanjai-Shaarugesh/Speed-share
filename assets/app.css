@@ -1,7 +1,11 @@
 @import '@ionic/core/css/core.css';
 @import '@ionic/core/css/ionic.bundle.css';
+@import "flowbite/src/themes/default";
+
 
 @import 'tailwindcss';
+@plugin "flowbite/plugin";
+@source "../../node_modules/flowbite";
 @plugin "flyonui";
 @import 'flyonui/variants.css';
 @source "../node_modules/flyonui/flyonui.js";

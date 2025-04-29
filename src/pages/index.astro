@@ -1,6 +1,6 @@
 ---
 import MainLayout from '../layouts/main.astro';
-
+import Shortcuts from '../components/Shortcuts.svelte';
 import OfferPage from '../components/OfferPage.svelte';
 
 ---
@@ -13,6 +13,7 @@ import OfferPage from '../components/OfferPage.svelte';
 
 
   <OfferPage client:load client:only="svelte" />
+    <Shortcuts client:only="svelte" />
   
 </MainLayout>
 

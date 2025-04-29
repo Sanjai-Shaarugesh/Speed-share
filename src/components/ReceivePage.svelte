@@ -161,7 +161,12 @@
         e.preventDefault();
         window.location.href = '/';
         gPressed = false; // reset after redirect
-      } else if (e.altKey && e.key.toLowerCase() == 'p') {
+      } 
+      if (e.key == 'Enter') {
+        e.preventDefault();
+        processOfferCode();
+      }
+      else if (e.altKey && e.key.toLowerCase() == 'p') {
         e.preventDefault();
         processOfferCode();
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
@@ -176,8 +181,8 @@
       //       scanQrModalOpen = true; // Open ScanQrModal on Alt + S
       //     }
       //
-      else if (event.ctrlKey && event.key.toLowerCase() == 'c') {
-        event.preventDefault();
+      else if (e.ctrlKey && e.key.toLowerCase() == 'c') {
+        e.preventDefault();
         copyAnswerCode();
       } else {
         gPressed = false; // reset if other keys pressed

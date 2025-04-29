@@ -2,6 +2,9 @@
 import Footer from '../components/layout/Footer.astro';
 import Navbar from '../components/layout/Navbar.astro';
 import "../assets/app.css";
+import shotcuts from '../components/shotcuts.svelte';
+
+
 
 import { pageDescription } from '../configs';
 
@@ -19,7 +22,8 @@ const { title, description } = Astro.props;
     <meta charset="utf-8" />
     <title>{title}</title>
     <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width" />
+    <script is:inline src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#fff" />
@@ -33,13 +37,43 @@ const { title, description } = Astro.props;
     <div class="flex flex-col min-h-screen bg-base-200">
       <Navbar />
       
-      <div class="flex-grow container mx-auto justify-items-center">
-        <p class="text-center mb-4 xl:mb-8  my-8 p-1">
+      <shotcuts  client:load client:only="svelte"/>
+
+
+      
+      <div class="flex-grow container mx-auto px-4 sm:px-6 py-6 md:py-8">
+        <p class="text-center mb-4 xl:mb-8 my-4 sm:my-8 p-1">
           {pageDescription}
         </p>
+        
         <slot />
       </div>
+      
       <Footer />
     </div>
+
+    <script is:inline>
+    
+    
+    
+    
+      document.addEventListener('DOMContentLoaded', () => {
+        const toggleBtn = document.getElementById('toggleShortcutsBtn');
+        const shortcutsTable = document.getElementById('shortcutsTable');
+        
+        if (toggleBtn && shortcutsTable) {
+          toggleBtn.addEventListener('click', () => {
+            shortcutsTable.classList.toggle('hidden');
+          });
+          
+          // Close the table when clicking outside
+          document.addEventListener('click', (event) => {
+            if (!toggleBtn.contains(event.target) && !shortcutsTable.contains(event.target)) {
+              shortcutsTable.classList.add('hidden');
+            }
+          });
+        }
+      });
+    </script>
   </body>
 </html>
