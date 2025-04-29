@@ -1,0 +1,12 @@
+{
+  "apps": [
+    {
+      "appId": "Speed-share",
+      "root": ".",
+      "dependencyInstall": {
+        "packageManager": "pnpm",
+        "command": "pnpm install --no-frozen-lockfile"
+      }
+    }
+  ]
+}
