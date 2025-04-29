@@ -275,12 +275,7 @@
                   {formatFileSize(item.file.size)} • {item.file.type || 'Unknown type'}
                 </p>
                 <div class="flex items-center mt-2">
-                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                    {item.status === 'sent' 
-                      ? 'bg-green-100 text-green-800 [html[data-theme=dark]_&]:bg-green-900 [html[data-theme=dark]_&]:text-green-300' 
-                      : 'bg-yellow-100 text-yellow-800 [html[data-theme=dark]_&]:bg-yellow-900 [html[data-theme=dark]_&]:text-yellow-300'}">
-                    {item.status === 'sent' ? 'Sent' : 'Pending'}
-                  </span>
+                  
                   <button
                     class="ml-auto inline-flex items-center p-1 rounded-full text-red-500 hover:text-red-700 [html[data-theme=dark]_&]:text-red-400 [html[data-theme=dark]_&]:hover:text-red-300 hover:bg-red-100 [html[data-theme=dark]_&]:hover:bg-red-900/30 transition-colors"
                     onclick={() => removeFile(index)}

@@ -90,12 +90,12 @@
   });
 </script>
 
-<div class="border rounded-lg bg-white [html[data-theme=dark]_&]:bg-gray-800 border-gray-200 [html[data-theme=dark]_&]:border-gray-700 shadow-sm transition-colors">
-  <div class="p-4 text-xs xl:text-sm">
-    <div class="flex gap-4">
+<div class="border rounded-lg bg-white [html[data-theme=dark]_&]:bg-gray-800 border-gray-200 [html[data-theme=dark]_&]:border-gray-700 shadow-sm transition-colors w-full max-w-full overflow-x-auto">
+  <div class="p-3 sm:p-4 text-xs xl:text-sm">
+    <div class="flex flex-col sm:flex-row sm:items-start gap-4">
       <!-- Preview image or icon -->
       {#if isImage() && fileDetail.status === FileStatus.Success && objectUrl}
-        <div class="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 border border-gray-200 [html[data-theme=dark]_&]:border-gray-700">
+        <div class="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 border border-gray-200 [html[data-theme=dark]_&]:border-gray-700 mx-auto sm:mx-0">
           <img
             src={objectUrl}
             alt={fileDetail.metaData.name}
@@ -103,7 +103,7 @@
           />
         </div>
       {:else}
-        <div class="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 flex items-center justify-center bg-gray-100 [html[data-theme=dark]_&]:bg-gray-700">
+        <div class="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 flex items-center justify-center bg-gray-100 [html[data-theme=dark]_&]:bg-gray-700 mx-auto sm:mx-0">
           <img
             src={getIconUrl(fileDetail.metaData.name)}
             alt={fileDetail.metaData.name}
@@ -111,9 +111,10 @@
           />
         </div>
       {/if}
-      <div class="flex-1 text-gray-800 [html[data-theme=dark]_&]:text-gray-200">
-        <p class="font-medium text-sm truncate" title={fileDetail.metaData.name}>{fileDetail.metaData.name}</p>
-        <p class="text-xs text-gray-500 [html[data-theme=dark]_&]:text-gray-400">{humanFileSize(fileDetail.metaData.size)} • {fileDetail.metaData.type || 'Unknown type'}</p>
+
+      <div class="flex-1 text-gray-800 [html[data-theme=dark]_&]:text-gray-200 overflow-hidden">
+        <p class="font-medium text-sm truncate break-all" title={fileDetail.metaData.name}>{fileDetail.metaData.name}</p>
+        <p class="text-xs text-gray-500 [html[data-theme=dark]_&]:text-gray-400 break-all">{humanFileSize(fileDetail.metaData.size)} • {fileDetail.metaData.type || 'Unknown type'}</p>
         
         <div class="mt-3">
           {#if fileDetail.status === FileStatus.Processing}
@@ -143,8 +144,8 @@
           {/if}
         </div>
         
-        <div class="relative mt-3">
-          <div class="overflow-hidden h-2 text-xs flex rounded bg-gray-200 [html[data-theme=dark]_&]:bg-gray-700">
+        <div class="relative mt-3 w-full max-w-full">
+          <div class="overflow-hidden h-2 text-xs flex rounded bg-gray-200 [html[data-theme=dark]_&]:bg-gray-700 w-full">
             <div
               style="width: {isNaN(fileDetail.progress) ? 100 : fileDetail.progress}%"
               class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 [html[data-theme=dark]_&]:bg-blue-600 transition-all duration-300 ease-in-out"
@@ -152,7 +153,7 @@
           </div>
         </div>
         
-        <div class="flex justify-end mt-3">
+        <div class="flex justify-end mt-3 w-full">
           {@render children?.()}
         </div>
       </div>
