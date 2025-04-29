@@ -1,11 +1,14 @@
 {
   "apps": [
     {
-      "appId": "41d1aa7a",
+      "appId": "8367af1b",
       "root": ".",
       "dependencyInstall": {
         "packageManager": "pnpm",
         "command": "pnpm install --no-frozen-lockfile"
+      },
+      "webBuildConfig": {
+        "buildCommand": "pnpm build"
       }
     }
   ]
