@@ -1,7 +1,7 @@
 {
   "apps": [
     {
-      "appId": "Speed-share",
+      "appId": "41d1aa7a",
       "root": ".",
       "dependencyInstall": {
         "packageManager": "pnpm",
