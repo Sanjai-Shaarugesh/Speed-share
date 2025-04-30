@@ -2,8 +2,8 @@
 import Footer from '../components/layout/Footer.astro';
 import Navbar from '../components/layout/Navbar.astro';
 import "../assets/app.css";
-import shotcuts from '../components/shotcuts.svelte';
 
+import Refresh from '../components/Refresh.svelte';
 
 
 import { pageDescription } from '../configs';
@@ -34,10 +34,12 @@ const { title, description } = Astro.props;
   </head>
 
   <body>
+      
     <div class="flex flex-col min-h-screen bg-base-200">
+        
       <Navbar />
       
-      <shotcuts  client:load client:only="svelte"/>
+      
 
 
       
@@ -47,6 +49,7 @@ const { title, description } = Astro.props;
         </p>
         
         <slot />
+        <Refresh client:load client:only="svelte"  />
       </div>
       
       <Footer />
