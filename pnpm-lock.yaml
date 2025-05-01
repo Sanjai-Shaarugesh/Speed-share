@@ -101,6 +101,9 @@ importers:
       melt:
         specifier: ^0.29.3
         version: 0.29.3(@floating-ui/dom@1.6.13)(svelte@5.22.6)
+      multi-device-hover:
+        specifier: ^0.1.2
+        version: 0.1.2
       navigo:
         specifier: ^8.11.1
         version: 8.11.1
@@ -131,6 +134,9 @@ importers:
       throttle-debounce:
         specifier: ^5.0.2
         version: 5.0.2
+      touch-hover:
+        specifier: ^1.0.1
+        version: 1.0.1
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
@@ -4464,6 +4470,9 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
+  multi-device-hover@0.1.2:
+    resolution: {integrity: sha512-IUoQVTMykomN2NtfHKZF0hsvphWMEfQU0jnvCRSMf7t6rbYBdOUU1R1XgNFUohh+KmJLmV2g4TWXSJlpA3zXJQ==}
+
   nanoid@3.3.9:
     resolution: {integrity: sha512-SppoicMGpZvbF1l3z4x7No3OlIjP7QJvC9XR7AhZr1kL133KHnKPztkKDc+Ir4aJ/1VhTySrtKhrsycmrMQfvg==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
@@ -5709,6 +5718,9 @@ packages:
   torrent-piece@3.0.1:
     resolution: {integrity: sha512-EvCqfOkNm3PXqgaGPVVmp0JlGC8fDpH+8Yt5uUiF4oCrAqy3htyUFxK1DJpneWfg1fFdeTKsstxLxQUrHpmocA==}
     engines: {node: '>=12.20.0'}
+
+  touch-hover@1.0.1:
+    resolution: {integrity: sha512-g/cMwrr0sjOq8NAASad3Ip4h36Uw3OmS5TJik+imZzfK8iWL6g0ZnMi9MDnAUxKYu3jLJacF02YvL0RdPEHfdg==}
 
   tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
@@ -11387,6 +11399,8 @@ snapshots:
 
   ms@2.1.3: {}
 
+  multi-device-hover@0.1.2: {}
+
   nanoid@3.3.9: {}
 
   nanoid@5.1.5: {}
@@ -12839,6 +12853,8 @@ snapshots:
   torrent-piece@3.0.1:
     dependencies:
       uint8-util: 2.2.5
+
+  touch-hover@1.0.1: {}
 
   tr46@0.0.3: {}
 
