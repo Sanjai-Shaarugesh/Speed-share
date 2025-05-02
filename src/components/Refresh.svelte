@@ -1,20 +1,39 @@
+<!-- RefreshButton.svelte -->
 <script>
   import { Capacitor } from '@capacitor/core';
+  import { onMount } from 'svelte';
+
+
+  let isNative = $state(false);
+  
+  onMount(() => {
+   
+    isNative = Capacitor.isNativePlatform();
+  });
 
   function refreshPage() {
-    location.reload(); // Works for both native and web
+    if (isNative) {
+      
+      
+      setTimeout(() => {
+        window.location.href = window.location.href;
+      }, 300);
+    } else {
+      
+      window.location.reload();
+    }
   }
 </script>
 
 <main class="flex flex-col justify-between">
-  <!-- Container with bottom-fixed button -->
+  
   <div class="fixed bottom-6 left-0 right-0 flex justify-center px-4 mb-10 mt-10 animate-bounce duration-1000">
     <button
       onclick={refreshPage}
       class="group flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-blue-700 active:scale-95 transition duration-200"
     >
       Refresh Page
-      <!-- SVG that spins on hover or active touch on mobile -->
+      
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="20"
@@ -45,23 +64,28 @@
   /* Mobile Responsive Adjustments */
   @media (max-width: 640px) {
     button {
-      padding: 10px 12px; /* Adjust padding for smaller screens */
-      font-size: 14px; /* Ensure font size is readable */
-    }
-    svg {
-      width: 16px; /* Adjust SVG size on mobile */
-      height: 16px;
+      padding: 10px 12px;
+      font-size: 14px;
     }
 
-    /* Simulate hover effect on touch devices */
-    button:active svg {
-      animation: spin 1s linear infinite;
+    svg {
+      width: 16px;
+      height: 16px;
     }
   }
-  
-  /* Custom spin animation for mobile active touch */
+
+  /* Ensure spin animation is properly defined for all contexts */
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  :global(.group-active\:animate-spin:active),
+  :global(.group-hover\:animate-spin:hover) {
+    animation: spin 1s linear infinite;
   }
 </style>
