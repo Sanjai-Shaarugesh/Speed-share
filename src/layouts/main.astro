@@ -6,7 +6,7 @@ import NavbarDemo from '../components/NavbarDemo';
 import Refresh from '../components/Refresh.svelte';
 import ContainerText from './containerText.astro';
 import Text from './text.astro';
-
+import Shortcuts from '../components/Shortcuts.svelte';
 
 import { pageDescription } from '../configs';
 
@@ -72,7 +72,7 @@ const { title, description } = Astro.props;
         <Text/>
 
       
-        
+          <Shortcuts client:load client:only="svelte" /> 
         <slot />
         <ContainerText/>
         <Refresh client:load />
