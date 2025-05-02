@@ -150,51 +150,40 @@
   }
 
   onMount(() => {
-    let gPressed = $state(false);
-    let scanQrModalOpen = $state(false);
+  let gPressed = false;
 
-    const handleShortcut = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'g') {
-        gPressed = true; // use .set() to update
-      } else if (gPressed && e.key.toLowerCase() === 'o') {
-        // call gPressed() to get the value
-        e.preventDefault();
-        window.location.href = '/';
-        gPressed = false; // reset after redirect
-      } 
-      if (e.key == 'Enter') {
-        e.preventDefault();
-        processOfferCode();
+  const handleShortcut = (e: KeyboardEvent) => {
+    if (e.key.toLowerCase() === 'g') {
+      gPressed = true;
+    } else if (gPressed && e.key.toLowerCase() === 'o') {
+      e.preventDefault();
+      window.location.href = '/'; // Redirect to home page
+      gPressed = false; // Reset after use
+    } else {
+      gPressed = false; // Reset if any other key is pressed
+    }
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      processOfferCode();
+    } else if (e.altKey && e.key.toLowerCase() === 'p') {
+      e.preventDefault();
+      processOfferCode();
+    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+      const inputElement = document.querySelector('input[type="password"]') as HTMLInputElement;
+      if (inputElement) {
+        inputElement.focus();
       }
-      else if (e.altKey && e.key.toLowerCase() == 'p') {
-        e.preventDefault();
-        processOfferCode();
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
-        const inputElement = document.querySelector('input[type="password"]') as HTMLInputElement;
-        if (inputElement) {
-          inputElement.focus();
-        }
-      }
+    } else if (e.ctrlKey && e.key.toLowerCase() === 'c') {
+      e.preventDefault();
+      copyAnswerCode();
+    }
+  };
 
-      // else if(e.altKey && e.key.toLowerCase() == 's') {
-      //       e.preventDefault();
-      //       scanQrModalOpen = true; // Open ScanQrModal on Alt + S
-      //     }
-      //
-      else if (e.ctrlKey && e.key.toLowerCase() == 'c') {
-        e.preventDefault();
-        copyAnswerCode();
-      } else {
-        gPressed = false; // reset if other keys pressed
-      }
-    };
+  window.addEventListener('keydown', handleShortcut);
+  return () => window.removeEventListener('keydown', handleShortcut);
+});
 
-    window.addEventListener('keydown', handleShortcut);
-
-    return () => {
-      window.removeEventListener('keydown', handleShortcut);
-    };
-  });
 </script>
 
 <div class="container mx-auto p-4 max-w-3xl">
