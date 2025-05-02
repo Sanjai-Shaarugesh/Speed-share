@@ -1,7 +1,6 @@
-<!-- RefreshButton.svelte -->
-<script>
+<script lang='ts'>
   import { Capacitor } from '@capacitor/core';
-  import { onMount } from 'svelte';
+  import { onMount , onDestroy } from 'svelte';
 
 
   let isNative = $state(false);
@@ -23,6 +22,20 @@
       window.location.reload();
     }
   }
+  
+  onMount(()=>{
+    const handleShorcuts = (e:KeyboardEvent) =>{
+      if(e.ctrlKey && e.key.toLowerCase() == 'r'){
+         window.location.reload();
+      }
+    }
+    
+    window.addEventListener('keydown', handleShorcuts);
+    
+    onDestroy(()=>{
+      window.removeEventListener('keydown', handleShorcuts);
+    })
+  })
 </script>
 
 <main class="flex flex-col justify-between">
@@ -32,8 +45,11 @@
       onclick={refreshPage}
       class="group flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-blue-700 active:scale-95 transition duration-200"
     >
+        {#if isNative}
+      Refresh 
+      {:else}
       Refresh Page
-      
+      {/if}
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="20"

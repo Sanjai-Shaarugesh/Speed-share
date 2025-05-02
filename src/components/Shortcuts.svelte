@@ -111,6 +111,15 @@
             </tr>
             
             <tr class="bg-white border-b dark:bg-gray-900 dark:border-gray-700">
+              <td class="px-4 py-3 font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">ctrl</kbd>
+                <span class="mx-1">+</span>
+                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">r</kbd>
+              </td>
+              <td class="px-4 py-3">refresh Page</td>
+            </tr>
+            
+            <tr class="bg-white border-b dark:bg-gray-900 dark:border-gray-700">
                                 <td class="px-4 py-3 font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
                                   <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">g</kbd>
                                   <span class="mx-1">+</span>
