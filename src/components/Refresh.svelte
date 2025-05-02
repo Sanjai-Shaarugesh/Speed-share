@@ -8,7 +8,7 @@
 
 <main class="flex flex-col justify-between">
   <!-- Container with bottom-fixed button -->
-  <div class="fixed bottom-6 left-0 right-0 flex justify-center px-4 mb-10 animate-bounce duration-1000">
+  <div class="fixed bottom-6 left-0 right-0 flex justify-center px-4 mb-10 mt-10 animate-bounce duration-1000">
     <button
       onclick={refreshPage}
       class="group flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-blue-700 active:scale-95 transition duration-200"

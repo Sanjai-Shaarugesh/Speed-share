@@ -2,8 +2,10 @@
 import Footer from '../components/layout/Footer.astro';
 import Navbar from '../components/layout/Navbar.astro';
 import "../assets/app.css";
-
+import NavbarDemo from '../components/NavbarDemo';
 import Refresh from '../components/Refresh.svelte';
+import ContainerText from './containerText.astro';
+import Text from './text.astro';
 
 
 import { pageDescription } from '../configs';
@@ -16,8 +18,28 @@ interface Props {
 const { title, description } = Astro.props;
 ---
 
+<script is:inline>
+	const getThemePreference = () => {
+		if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+			return localStorage.getItem('theme');
+		}
+		return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+	};
+	const isDark = getThemePreference() === 'dark';
+	document.documentElement.classList[isDark ? 'add' : 'remove']('dark');
+ 
+	if (typeof localStorage !== 'undefined') {
+		const observer = new MutationObserver(() => {
+			const isDark = document.documentElement.classList.contains('dark');
+			localStorage.setItem('theme', isDark ? 'dark' : 'light');
+		});
+		observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+	}
+</script>
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-warning text-warning-foreground">
+ 
   <head>
     <meta charset="utf-8" />
     <title>{title}</title>
@@ -34,9 +56,9 @@ const { title, description } = Astro.props;
   </head>
 
   <body>
-      
+   
     <div class="flex flex-col min-h-screen bg-base-200">
-        
+      
       <Navbar />
       
       
@@ -44,12 +66,16 @@ const { title, description } = Astro.props;
 
       
       <div class="flex-grow container mx-auto px-4 sm:px-6 py-6 md:py-8">
-        <p class="text-center mb-4 xl:mb-8 my-4 sm:my-8 p-1">
+         <!-- <p class="text-center mb-4 xl:mb-8 my-4 sm:my-8 p-1">
           {pageDescription}
-        </p>
+        </p>  -->
+        <Text/>
+
+      
         
         <slot />
-        <Refresh client:load client:only="svelte"  />
+        <ContainerText/>
+        <Refresh />
       </div>
       
       <Footer />

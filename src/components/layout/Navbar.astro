@@ -2,12 +2,14 @@
 import { githubLink } from '../../configs';
 import Github from '../icons/Github.astro';
 import SunMoon from '../icons/SunMoon.astro';
+import { ModeToggle } from '@/components/ModeToggle';
 ---
 
 <div class="navbar w-full items-center justify-between px-4">
   <!-- Left Side -->
   <div class="navbar-start">
-    <SunMoon />
+   <SunMoon />
+    <!-- <ModeToggle client:load /> -->
   </div>
 
   <!-- Center Title -->

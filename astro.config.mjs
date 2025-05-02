@@ -3,6 +3,8 @@ import tailwindcss from '@tailwindcss/vite';
 import svelte from '@astrojs/svelte';
 import serviceWorker from 'astrojs-service-worker';
 
+import react from '@astrojs/react';
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://github.com/Sanjai-Shaarugesh/Speed-share',
@@ -12,7 +14,7 @@ export default defineConfig({
     format: 'file' // Ensures proper paths for Capacitor
   },
   compressHTML: true,
-  integrations: [svelte(), serviceWorker()],
+  integrations: [svelte({}), serviceWorker(), react()],
   vite: {
     plugins: [tailwindcss()]
   },
