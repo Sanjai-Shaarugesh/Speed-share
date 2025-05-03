@@ -1,8 +1,17 @@
-"use client";
 import { TypewriterEffect } from "../components/ui/typewriter-effect";
-
+import { useState, useEffect } from 'react';
+ import { Capacitor } from '@capacitor/core';
+ import { pageDescription } from '../configs';
+ 
 export function TypewriterEffectDemo() {
-  const words = [  //A client-side secure P2P file sharing app optimized for low-bandwidth conditions.
+  
+  let [ isNative, setIsNative] = useState(false);
+  
+  useEffect(() => {
+    setIsNative(Capacitor.isNativePlatform());
+  });
+  
+  const words = [ 
     {
       text: "A",
     },
@@ -33,8 +42,15 @@ export function TypewriterEffectDemo() {
   return (
     <div className="flex flex-col items-center justify-center  ">
       
-      <TypewriterEffect words={words} />
+     {!isNative ? (
+        <TypewriterEffect words={words} />
+     ) : (
+       <p class="text-center mb-4 xl:mb-8 my-4 sm:my-8 p-1">
+        {pageDescription}
+       </p>
+     )}
       
     </div>
   );
 }
+

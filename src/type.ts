@@ -5,7 +5,8 @@ export enum FileStatus {
   Pending = 'Pending',
   WaitingAccept = 'WaitingAccept',
   Processing = 'Processing',
-  Success = 'Success'
+  Success = 'Success',
+  Error = "Error"
 }
 
 export interface FileDetail {
@@ -49,6 +50,8 @@ export interface SendOptions {
 }
 
 export interface ReceiveOptions {
+  shareAfterDownload: boolean;
+  autoDownload: any;
   autoAccept: boolean;
   maxSize: number;
   receiverBufferSize: number;

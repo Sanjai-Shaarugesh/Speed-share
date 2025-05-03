@@ -4,5 +4,6 @@
       "pattern": "**/source/**.ptx",
       "systemId": "/home/sanjai/.vscode-oss/extensions/oscarlevin.pretext-tools-0.25.0-universal/assets/schema/pretext.rng"
     }
-  ]
+  ],
+  "java.configuration.updateBuildConfiguration": "interactive"
 }

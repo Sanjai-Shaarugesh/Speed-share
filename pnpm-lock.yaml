@@ -56,6 +56,9 @@ importers:
       '@capacitor/toast':
         specifier: ^7.0.1
         version: 7.0.1(@capacitor/core@7.2.0)
+      '@capawesome/capacitor-file-picker':
+        specifier: ^7.0.1
+        version: 7.0.1(@capacitor/core@7.2.0)
       '@ionic/core':
         specifier: ^8.5.5
         version: 8.5.5
@@ -997,6 +1000,11 @@ packages:
 
   '@capacitor/toast@7.0.1':
     resolution: {integrity: sha512-3GFhejVwKqUjosYnpQVfq5eml7X6B97jcVpncY75lBDiTlCYJeRanj63OChZPuw1KWudkBTYZMcXdRYWguJdKw==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
+
+  '@capawesome/capacitor-file-picker@7.0.1':
+    resolution: {integrity: sha512-b+EBAWul2I0RRp+eQoHiP/ykgc8PNRP9wIMrvnqDZEg7iIl8rAd/AJsZMYzoo/ACcYJofn4bD0CXQDC2fcKw4g==}
     peerDependencies:
       '@capacitor/core': '>=7.0.0'
 
@@ -8193,6 +8201,10 @@ snapshots:
       '@capacitor/core': 7.2.0
 
   '@capacitor/toast@7.0.1(@capacitor/core@7.2.0)':
+    dependencies:
+      '@capacitor/core': 7.2.0
+
+  '@capawesome/capacitor-file-picker@7.0.1(@capacitor/core@7.2.0)':
     dependencies:
       '@capacitor/core': 7.2.0
 

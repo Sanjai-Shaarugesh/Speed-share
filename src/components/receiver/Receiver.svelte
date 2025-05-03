@@ -9,7 +9,7 @@
   import { decryptAesGcm, decryptAesKeyWithRsaPrivateKey } from '../../utils/crypto';
   import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
   import JSZip from 'jszip';
-    import { FolderArchive, FolderDown, FileDown } from '@lucide/svelte';
+  import { FolderArchive, FolderDown, FileDown } from '@lucide/svelte';
   
   type Props = {
     dataChannel: RTCDataChannel;
@@ -21,6 +21,22 @@
 
   let receiveOptions: ReceiveOptions = $state(defaultReceiveOptions);
   let receivingFiles: { [key: string]: ReceivingFile } = $state({});
+  
+  // Detect platform
+  let isMobile = $state(false);
+
+  // Check if running in Capacitor environment
+  const checkPlatform = async () => {
+    try {
+      // This is a simple check to determine if we're on mobile
+      const platform = (window as any)?.Capacitor?.getPlatform();
+      isMobile = platform === 'ios' || platform === 'android';
+    } catch (e) {
+      isMobile = false;
+    }
+  };
+  
+  checkPlatform();
 
   export async function onMetaData(id: string, metaData: MetaData) {
     let aesKey: CryptoKey | undefined;
@@ -115,9 +131,6 @@
       reader.readAsDataURL(blob);
     });
   }
-
-
-
   
   function onRemove(key: string) {
     if (receivingFiles[key].status != FileStatus.Success) {
@@ -129,55 +142,82 @@
       );
     }
     delete receivingFiles[key];
-    receivingFiles = receivingFiles; // do this to trigger update the map
+    receivingFiles = { ...receivingFiles }; // Create new reference to trigger reactivity
   }
 
-  async function onDownload(key: string) {
-    const receivedFile = receivingFiles[key];
-    const blobFile = new Blob(receivedFile.receivedChunks, {
-      type: receivedFile.metaData.type
-    });
-  
-    const base64Data = await blobToBase64(blobFile);
-  
-    const folderName = './';
-    const fileName = receivedFile.metaData.name;
-  
+  // Download file for web browsers
+  async function downloadFileWeb(fileName: string, blob: Blob) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+    
+    addToastMessage(`Downloaded ${fileName}`, 'success');
+  }
+
+  // Download file for mobile using Capacitor
+  async function downloadFileMobile(fileName: string, base64Data: string) {
     try {
-      // 1. Create the 'downloads' folder if it doesn't exist
-      await Filesystem.mkdir({
-        path: folderName,
-        directory: Directory.Documents,
-        recursive: true // ensures nested folder creation
-      });
-    } catch (err: any) {
-      if (err.message?.includes('Directory exists')) {
-        // safe to ignore
-      } else {
-        console.error('Error creating folder:', err);
-        addToastMessage(`Error creating folder: ${err.message}`, 'error');
-        return;
+      // Define download folder path
+      const downloadDir = 'Speed-share';
+      
+      // Create directory if it doesn't exist
+      try {
+        await Filesystem.mkdir({
+          path: downloadDir,
+          directory: Directory.Documents,
+          recursive: true
+        });
+      } catch (err: any) {
+        // Ignore "Directory exists" error
+        if (!err.message?.includes('Directory exists')) {
+          throw err;
+        }
       }
-    }
-  
-    try {
-      // 2. Now write the file
+      
+      // Save the file
       await Filesystem.writeFile({
-        path: `${folderName}/${fileName}`,
+        path: `${downloadDir}/${fileName}`,
         data: base64Data,
-        directory: Directory.Documents,
-        recursive: true // ensures nested folder creation
+        directory: Directory.Documents
       });
-  
-      addToastMessage(`Saved ${fileName}`, 'success');
+      
+      addToastMessage(`Saved ${fileName} to Documents/Speed-share`, 'success');
     } catch (error: any) {
       console.error('Filesystem write error:', error);
       addToastMessage(`Error saving file: ${error.message}`, 'error');
     }
   }
 
-
-
+  async function onDownload(key: string) {
+    try {
+      const receivedFile = receivingFiles[key];
+      const blobFile = new Blob(receivedFile.receivedChunks, {
+        type: receivedFile.metaData.type
+      });
+      const fileName = receivedFile.metaData.name;
+      
+      if (isMobile) {
+        // Mobile path using Capacitor
+        const base64Data = await blobToBase64(blobFile);
+        await downloadFileMobile(fileName, base64Data);
+      } else {
+        // Web browser path
+        await downloadFileWeb(fileName, blobFile);
+      }
+    } catch (error: any) {
+      console.error('Download error:', error);
+      addToastMessage(`Download failed: ${error.message}`, 'error');
+    }
+  }
 
   function onAccept(key: string) {
     dataChannel.send(
@@ -199,75 +239,56 @@
       }).finish()
     );
     delete receivingFiles[key];
-    receivingFiles = receivingFiles; // do this to trigger update the map
+    receivingFiles = { ...receivingFiles }; // Create new reference to trigger reactivity
   }
 
- 
   async function downloadAllFiles() {
-    const zip = new JSZip();
-    const folder = zip.folder('received-files');
-  
-    for (const key of Object.keys(receivingFiles)) {
-      const file = receivingFiles[key];
-      if (file.status !== FileStatus.Success || file.error) continue;
-  
-      const blob = new Blob(file.receivedChunks, {
-        type: file.metaData.type
-      });
-  
-      const base64 = await blobToBase64(blob);
-      folder?.file(file.metaData.name, base64, { base64: true });
-    }
-  
     try {
-      const content = await zip.generateAsync({ type: 'base64' });
-  
+      const zip = new JSZip();
+      const folder = zip.folder('received-files');
       const zipFileName = `received_files_${Date.now()}.zip`;
-      const folderName = 'downloads';
-  
-      // Ensure the folder exists
-      try {
-        await Filesystem.mkdir({
-          path: "./",
-          directory: Directory.Documents,
-          recursive: true
+      
+      // Add each file to the zip
+      for (const key of Object.keys(receivingFiles)) {
+        const file = receivingFiles[key];
+        if (file.status !== FileStatus.Success || file.error) continue;
+        
+        const blob = new Blob(file.receivedChunks, {
+          type: file.metaData.type
         });
-      } catch (err: any) {
-        if (!err.message?.includes('Directory exists')) {
-          console.error('Failed to create folder:', err);
-          addToastMessage('Failed to create folder', 'error');
-          return;
-        }
+        
+        folder?.file(file.metaData.name, blob);
       }
-  
-      // Write the zip file
-      await Filesystem.writeFile({
-        path: `${folderName}/${zipFileName}`,
-        data: content,
-        directory: Directory.Documents,
-        recursive: true
-      });
-  
-      addToastMessage(`Saved ZIP file as ${zipFileName}`, 'success');
+      
+      if (isMobile) {
+        // Mobile path using Capacitor
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        const base64Data = await blobToBase64(zipBlob);
+        
+        await downloadFileMobile(zipFileName, base64Data);
+      } else {
+        // Web browser path
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        await downloadFileWeb(zipFileName, zipBlob);
+      }
     } catch (error: any) {
       console.error('Failed to save ZIP:', error);
       addToastMessage(`Error saving ZIP: ${error.message}`, 'error');
     }
   }
 
-
-
   function onOptionsUpdate(options: ReceiveOptions) {
     receiveOptions = options;
   }
 </script>
-<div class="grid gap-4">
+
+<div class="grid gap-4">  
   <ReceiverOptions onUpdate={onOptionsUpdate} />
   {#if Object.keys(receivingFiles).length > 0}
     <ReceivingFileList {receivingFiles} {onRemove} {onDownload} {onAccept} {onDeny} />
-    <button class="btn btn-dash btn-success mt-2" onclick={downloadAllFiles}
-      >Download <FolderDown /> all files (zip) <FolderArchive /></button
-    >
+    <button class="btn btn-dash btn-success mt-2" onclick={downloadAllFiles}>
+      Download <FolderDown /> all files (zip) <FolderArchive />
+    </button>
   {:else}
     <p class="mt-4">Connected, Waiting for files...</p>
   {/if}
