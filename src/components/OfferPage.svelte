@@ -156,8 +156,8 @@
     }
 
     connection.onicecandidate = async (event) => {
-      if (!event.candidate && connection.localDescription) {
-        await createOfferCode(connection.localDescription);
+      if (!event.candidate && connection!.localDescription) {
+        await createOfferCode(connection!.localDescription);
         generating = false;
       }
     };
@@ -294,7 +294,7 @@
         navigator.clipboard
           .readText()
           .then((text) => {
-            answerCode = text; // Paste clipboard text into the answerCode variable
+            answerCode = text; 
           })
           .catch((error) => {
             console.error('Failed to read clipboard contents: ', error);
@@ -326,7 +326,7 @@
         Generate a unique offer code to establish a connection. See
         <a
           class="link"
-          href={githubLink + '#how-does-it-work'}
+          href={'https://speed-share-web.vercel.app/' + '#how-does-it-work'}
           target="_blank"
           rel="noopener noreferrer">How does it work?</a
         >

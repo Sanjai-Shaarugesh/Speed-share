@@ -9,9 +9,9 @@ import {
   MobileNavToggle,
   MobileNavMenu,
 } from "@/components/ui/resizable-navbar";
+import '../assets/app.css';
 import { useState } from "react";
 
-import 'src/assets/app.css'
 
 export default function NavbarDemo() {
   const navItems = [
@@ -87,7 +87,7 @@ export default function NavbarDemo() {
           </MobileNavMenu>
         </MobileNav>
       </Navbar>
-       <DummyContent /> 
+      <DummyContent />
 
       {/* Navbar */}
     </div>

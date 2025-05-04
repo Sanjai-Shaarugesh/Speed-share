@@ -194,7 +194,7 @@
       Enter the offer code provided by your peer to establish a connection. See
       <a
         class="link"
-        href={githubLink + '#how-does-it-work'}
+        href={'https://speed-share-web.vercel.app/' + '#how-does-it-work'}
         target="_blank"
         rel="noopener noreferrer">How does it work?</a
       >

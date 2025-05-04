@@ -1,4 +1,3 @@
-"use client";
 import { cn } from "src/utils.ts";
 import { IconMenu2, IconX } from "@tabler/icons-react";
 import {
@@ -7,6 +6,7 @@ import {
   useScroll,
   useMotionValueEvent,
 } from "motion/react";
+import '../../assets/app.css';
 
 import React, { useRef, useState } from "react";
 
