@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">Speed-share</string>
     <string name="title_activity_main">Speed-share</string>
-    <string name="package_name">com.Speed-share.app</string>
-    <string name="custom_url_scheme">com.Speed-share.app</string>
+    <string name="package_name">com.speed_share.app</string>
+    <string name="custom_url_scheme">com.speed_share.app</string>
 </resources>

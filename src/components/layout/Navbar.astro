@@ -1,14 +1,22 @@
 ---
+// File: Navbar.astro
 import { githubLink } from '../../configs';
 import Github from '../icons/Github.astro';
 import SunMoon from '../icons/SunMoon.astro';
 import { ModeToggle } from '@/components/ModeToggle';
 ---
 
-<div class="navbar w-full items-center justify-between px-4">
+<div
+  class="navbar w-full items-center justify-between px-4"
+  style="
+    padding-top: max(env(safe-area-inset-top), 3rem);
+    padding-left: max(env(safe-area-inset-left), 1.5rem);
+    padding-right: max(env(safe-area-inset-right), 1.5rem);
+  "
+>
   <!-- Left Side -->
   <div class="navbar-start">
-   <SunMoon />
+    <SunMoon />
     <!-- <ModeToggle client:load /> -->
   </div>
 

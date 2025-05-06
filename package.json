@@ -70,6 +70,7 @@
     "@capacitor/ios": "^7.0.1",
     "@capacitor/preferences": "^7.0.1",
     "@capacitor/share": "^7.0.1",
+    "@capacitor/splash-screen": "^7.0.1",
     "@capacitor/status-bar": "^7.0.1",
     "@capacitor/toast": "^7.0.1",
     "@capawesome/capacitor-file-picker": "^7.0.1",
