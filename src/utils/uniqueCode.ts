@@ -1,10 +1,39 @@
 // utils/uniqueCode.ts
 
+const CODE_LENGTH = 5;
+const MAX_TRIES = 1000;
+
 /**
- * Generates a 5-digit unique code from SDP information and other parameters
- * @param sdp The SDP string to encode
- * @param options Additional options to include in the code
- * @returns A 5-digit unique code that can be shared
+ * Generates a secure random alphanumeric character (A–Z, a–z, 0–9)
+ */
+function getRandomAlphanumericChar(): string {
+  while (true) {
+    const byte = crypto.getRandomValues(new Uint8Array(1))[0];
+    const charCode = byte % 75 + 48; // Covers '0'–'z'
+
+    if (
+      (charCode >= 48 && charCode <= 57) ||   // 0–9
+      (charCode >= 65 && charCode <= 90) ||   // A–Z
+      (charCode >= 97 && charCode <= 122)     // a–z
+    ) {
+      return String.fromCharCode(charCode);
+    }
+  }
+}
+
+/**
+ * Generates a secure random 5-character code
+ */
+function generateSecureCode(): string {
+  let code = '';
+  for (let i = 0; i < CODE_LENGTH; i++) {
+    code += getRandomAlphanumericChar();
+  }
+  return code;
+}
+
+/**
+ * Generates a unique, secure 5-character code and stores data in localStorage
  */
 export function generateUniqueCode(
   sdp: string,
@@ -15,42 +44,39 @@ export function generateUniqueCode(
     highPerformance?: boolean;
   }
 ): string {
-  // Create a data object with all necessary information
-  const data = {
+  const payload = {
     s: sdp,
     i: options.iceServer || '',
-    c: options.chunkSize ? options.chunkSize.toString() : '67108864',
+    c: options.chunkSize?.toString() || '67108864',
     p: options.publicKey || '',
     h: options.highPerformance ? '1' : '0'
   };
 
-  // Convert to JSON string
-  const jsonData = JSON.stringify(data);
-  
-  // Create a simple hash to generate 5-digit code
-  let hash = 0;
-  for (let i = 0; i < jsonData.length; i++) {
-    const char = jsonData.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
+  const json = JSON.stringify(payload);
+
+  let code = '';
+  for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
+    code = generateSecureCode();
+    if (typeof window === 'undefined') break;
+
+    const key = `code_${code}`;
+    if (!window.localStorage.getItem(key)) {
+      window.localStorage.setItem(key, json);
+      return code;
+    }
   }
-  
-  // Convert to positive 5-digit number (10000-99999)
-  const code = Math.abs(hash) % 90000 + 10000;
-  
-  // Store the mapping temporarily (in a real app, this would be in a database)
+
+  // Fallback if collisions somehow persist
+  code = generateSecureCode();
   if (typeof window !== 'undefined') {
-    const storage = window.localStorage || {};
-    storage[`code_${code}`] = jsonData;
+    window.localStorage.setItem(`code_${code}`, json);
   }
-  
-  return code.toString();
+
+  return code;
 }
 
 /**
- * Parses a 5-digit unique code back into SDP and options
- * @param code The 5-digit unique code to parse
- * @returns The decoded SDP and options
+ * Parses a secure 5-character code and retrieves stored info
  */
 export function parseUniqueCode(code: string): {
   sdp: string;
@@ -60,78 +86,27 @@ export function parseUniqueCode(code: string): {
   highPerformance?: boolean;
 } {
   try {
-    // Validate 5-digit format
-    if (!/^\d{5}$/.test(code)) {
-      throw new Error('Code must be exactly 5 digits');
+    if (!/^[A-Za-z0-9]{5}$/.test(code)) {
+      throw new Error('Invalid code format');
     }
 
-    // Retrieve the stored data (in a real app, this would be from a database)
-    let jsonData: string;
-    if (typeof window !== 'undefined') {
-      const storage = window.localStorage || {};
-      jsonData = storage[`code_${code}`];
-    } else {
-      // Fallback for server-side or when localStorage is not available
-      throw new Error('Code not found');
+    if (typeof window === 'undefined') {
+      throw new Error('localStorage not available');
     }
 
-    if (!jsonData) {
-      throw new Error('Code not found or expired');
-    }
+    const json = window.localStorage.getItem(`code_${code}`);
+    if (!json) throw new Error('Code not found');
 
-    const data = JSON.parse(jsonData);
-    
-    // Default to high performance for large files
-    const highPerformance = data.h === '1' || parseInt(data.c) > 16777216;
-
+    const data = JSON.parse(json);
     return {
       sdp: data.s,
       iceServer: data.i || undefined,
-      chunkSize: data.c ? parseInt(data.c) : 67108864,
+      chunkSize: parseInt(data.c) || 67108864,
       publicKey: data.p || undefined,
-      highPerformance
+      highPerformance: data.h === '1' || parseInt(data.c) > 16777216
     };
-  } catch (error) {
-    console.error('Failed to parse unique code:', error);
+  } catch (err) {
+    console.error('Failed to parse unique code:', err);
     throw new Error('Invalid or expired code');
-  }
-}
-
-/**
- * Enhanced 5-digit code generator optimized for ultra-high-speed transfers
- */
-export function generateHighPerformanceCode(
-  sdp: string,
-  options: {
-    iceServer?: string;
-    publicKey?: string;
-  }
-): string {
-  return generateUniqueCode(sdp, {
-    ...options,
-    chunkSize: 134217728, // 128MB chunks
-    highPerformance: true
-  });
-}
-
-/**
- * Determines if a file is large enough to warrant high-performance mode
- */
-export function shouldUseHighPerformanceMode(fileSize: number): boolean {
-  return fileSize > 1024 * 1024 * 1024; // > 1GB
-}
-
-/**
- * Calculates optimal chunk size based on file size
- */
-export function calculateOptimalChunkSize(fileSize: number): number {
-  if (fileSize > 10 * 1024 * 1024 * 1024) {
-    return 134217728; // 128MB for > 10GB
-  } else if (fileSize > 1024 * 1024 * 1024) {
-    return 67108864; // 64MB for > 1GB
-  } else if (fileSize > 100 * 1024 * 1024) {
-    return 16777216; // 16MB for > 100MB
-  } else {
-    return 4194304; // 4MB for smaller files
   }
 }

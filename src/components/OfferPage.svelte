@@ -65,22 +65,22 @@
       return;
     }
 
-    console.log('WebRTC Connection Details:', {
-      signalingState: connection.signalingState,
-      iceConnectionState: connection.iceConnectionState,
-      connectionState: connection.connectionState,
-      hasLocalDescription: !!connection.localDescription,
-      hasRemoteDescription: !!connection.remoteDescription
-    });
+    // console.log('WebRTC Connection Details:', {
+    //   signalingState: connection.signalingState,
+    //   iceConnectionState: connection.iceConnectionState,
+    //   connectionState: connection.connectionState,
+    //   hasLocalDescription: !!connection.localDescription,
+    //   hasRemoteDescription: !!connection.remoteDescription
+    // });
   }
 
   function debugAcceptAnswer() {
-    console.log('Debug Accept Answer:', {
-      answerCode,
-      sendOptions,
-      isEncrypting: sendOptions.isEncrypt,
-      connectionExists: !!connection
-    });
+    // console.log('Debug Accept Answer:', {
+    //   answerCode,
+    //   sendOptions,
+    //   isEncrypting: sendOptions.isEncrypt,
+    //   connectionExists: !!connection
+    // });
 
     logWebRTCState();
   }
@@ -386,7 +386,7 @@
         
        
 
-        <QrModal bind:this={qrModal} qrData={offerCode} title="Offer QR Code" />
+        <!-- <QrModal bind:this={qrModal} qrData={offerCode} title="Offer QR Code" /> -->
       </div>
       <p class="mt-4">Enter the Answer Code from your peer to establish connection.</p>
       <div class="relative mt-4">

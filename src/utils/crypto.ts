@@ -144,6 +144,8 @@ export async function encryptAesGcmOptimized(
   // For very large files, process in chunks to avoid memory issues
   if (message.byteLength > chunkSize) {
     const data = new Uint8Array(message);
+
+    
     const chunks = [];
     let offset = 0;
 
