@@ -234,28 +234,34 @@ function handlePaste(event: ClipboardEvent) {
 <div class="mt-4 flex items-center justify-center gap-2 relative">
   {#each Array(5) as _, i}
     <div class="flex items-center">
-      <input
-        type={showOfferCode ? 'text' : 'password'}
-        maxlength="1"
-        class="w-12 h-12 text-center text-xl border rounded-md shadow-sm bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
-        value={offerCode[i] || ''}
-        oninput={(e) => handleOfferInput(i, e)}
-        onpaste={handlePaste}
-        disabled={isProcessingOffer}
-      />
-      {#if i < 4}
-        <span class="mx-1 text-gray-500 dark:text-gray-400 select-none">‒</span>
-      {/if}
-    </div>
+  <input
+    type={showOfferCode ? 'text' : 'password'}
+    maxlength="1"
+    class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-center text-sm sm:text-base md:text-xl border rounded-md shadow-sm transition-colors duration-200 bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:focus:border-blue-400 dark:focus:ring-blue-800 dark:disabled:bg-gray-700 dark:disabled:text-gray-500 dark:disabled:border-gray-600"
+    value={offerCode[i] || ''}
+    oninput={(e) => handleOfferInput(i, e)}
+    onpaste={handlePaste}
+    disabled={isProcessingOffer}
+  />
+  {#if i < 4}
+    <span class="mx-1 sm:mx-2 text-gray-500 dark:text-gray-400 select-none text-sm sm:text-base md:text-lg">‒</span>
+  {/if}
+</div>
   {/each}
 
   <!-- Toggle visibility -->
-  <button
-    type="button"
-    class="absolute top-1/2 right-2 transform -translate-y-1/2 p-1"
-    onclick={() => (showOfferCode = !showOfferCode)}
-    aria-label="Toggle offer code visibility"
-  >
+ <button
+  type="button"
+  class="absolute top-1/2 right-1 sm:right-2 transform -translate-y-1/2 p-1 sm:p-1.5 rounded-md transition-colors duration-200 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-200 active:bg-gray-200 dark:hover:bg-gray-700 dark:focus:bg-gray-700 dark:focus:ring-blue-800 dark:active:bg-gray-600 touch-manipulation"
+  onclick={() => (showOfferCode = !showOfferCode)}
+  aria-label="Toggle offer code visibility"
+  onkeydown={(event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      showOfferCode = !showOfferCode;
+    }
+  }}
+>
     {#if showOfferCode}
       <!-- Eye Open -->
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -310,30 +316,30 @@ function handlePaste(event: ClipboardEvent) {
       <p>Share this answer code with your peer to complete the connection.</p>
      <div class="relative mt-4 flex items-center justify-center gap-2">
   {#each Array(5) as _, i}
-    <div class="flex items-center">
-      <input
-        type={showAnswerCode ? 'text' : 'password'}
-        maxlength="1"
-        class="w-12 h-12 text-center text-xl border rounded-md shadow-sm bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
-        value={answerCode[i] || ''}
-        oninput={(e) => handleAnswerInput(i, e)}
-        onpaste={handleAnswerPaste}
-        readonly={false}
-      />
-      {#if i < 4}
-        <span class="mx-1 text-gray-500 dark:text-gray-400 select-none">‒</span>
-      {/if}
-    </div>
+   <div class="flex items-center">
+  <input
+    type={showAnswerCode ? 'text' : 'password'}
+    maxlength="1"
+    class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-center text-sm sm:text-base md:text-xl border rounded-md shadow-sm transition-colors duration-200 bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:focus:border-blue-400 dark:focus:ring-blue-800"
+    value={answerCode[i] || ''}
+    oninput={(e) => handleAnswerInput(i, e)}
+    onpaste={handleAnswerPaste}
+    readonly={false}
+  />
+  {#if i < 4}
+    <span class="mx-1 sm:mx-2 text-gray-500 dark:text-gray-400 select-none text-sm sm:text-base md:text-lg">‒</span>
+  {/if}
+</div>
   {/each}
 
   <!-- Eye toggle -->
-  <div class="absolute top-0 right-0 p-1">
-    <Eye
-      onChange={(show) => {
-        showAnswerCode = show;
-      }}
-    />
-  </div>
+ <div class="absolute top-0 right-0 p-0.5 sm:p-1">
+  <Eye
+    onChange={(show) => {
+      showAnswerCode = show;
+    }}
+  />
+</div>
 </div>
       <div class="mt-4 flex gap-2">
         <button class="btn btn-soft btn-info gap-2" onclick={copyAnswerCode}

@@ -368,27 +368,27 @@
       </p>
       <div class="mt-2 flex items-center justify-center gap-2 relative">
   {#each offerCode.padEnd(5, ' ').split('').slice(0, 5) as char, i}
-    <div class="flex items-center">
-      <input
-        type={showOfferCode ? 'text' : 'password'}
-        class="w-12 h-12 text-center text-xl border rounded-md shadow-sm bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
-        value={char}
-        readonly
-      />
-      {#if i < 4}
-        <span class="mx-1 text-gray-500 dark:text-gray-400 select-none">‒</span>
-      {/if}
-    </div>
+   <div class="flex items-center">
+  <input 
+    type={showOfferCode ? 'text' : 'password'} 
+    class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-center text-sm sm:text-base md:text-xl border rounded-md shadow-sm transition-colors duration-200 bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:focus:border-blue-400 dark:focus:ring-blue-800" 
+    value={char} 
+    readonly 
+  />
+  {#if i < 4}
+    <span class="mx-1 sm:mx-2 text-gray-500 dark:text-gray-400 select-none text-sm sm:text-base md:text-lg">‒</span>
+  {/if}
+</div>
   {/each}
 
   <!-- Eye icon -->
-  <div class="absolute top-1/2 right-2 transform -translate-y-1/2 p-1">
-    <Eye
-      onChange={(show) => {
-        showOfferCode = show;
-      }}
-    />
-  </div>
+ <div class="absolute top-1/2 right-1 sm:right-2 transform -translate-y-1/2 p-0.5 sm:p-1">
+  <Eye
+    onChange={(show) => {
+      showOfferCode = show;
+    }}
+  />
+</div>
 </div>
 
 
@@ -399,38 +399,39 @@
         
        
 
-        <!-- <QrModal bind:this={qrModal} qrData={offerCode} title="Offer QR Code" /> -->
+        <QrModal bind:this={qrModal} qrData={offerCode} title="Offer QR Code" />
       </div>
       <p class="mt-4">Enter the Answer Code from your peer to establish connection.</p>
    
 <div class="relative mt-4 flex items-center justify-center gap-2">
   {#each Array(5) as _, i}
     <div class="flex items-center">
-      <input
-        type={showPassword ? 'text' : 'password'}
-        maxlength="1"
-        class="w-12 h-12 text-center text-xl border rounded-md shadow-sm bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
-        value={answerCode[i] || ''}
-        oninput={(e) => handleInput(i, e)}
-      />
-      {#if i < 4}
-        <span class="mx-1 text-gray-500 dark:text-gray-400 select-none">‒</span>
-      {/if}
-    </div>
+  <input
+    type={showPassword ? 'text' : 'password'}
+    maxlength="1"
+    class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-center text-sm sm:text-base md:text-xl border rounded-md shadow-sm transition-colors duration-200 bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:focus:border-blue-400 dark:focus:ring-blue-800"
+    value={answerCode[i] || ''}
+    oninput={(e) => handleInput(i, e)}
+  />
+  {#if i < 4}
+    <span class="mx-1 sm:mx-2 text-gray-500 dark:text-gray-400 select-none text-sm sm:text-base md:text-lg">‒</span>
+  {/if}
+</div>
   {/each}
 
-  <!-- Toggle eye icon -->
-  <button
-    type="button"
-    class="absolute top-1/2 transform -translate-y-1/2 right-2 p-1"
-    onclick={() => (showPassword = !showPassword)}
-    aria-label="Toggle password visibility"
-    onkeydown={(event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        showPassword = !showPassword;
-      }
-    }}
+ <!-- Toggle eye icon -->
+<button
+  type="button"
+  class="absolute top-1/2 transform -translate-y-1/2 right-1 sm:right-2 p-1 sm:p-1.5 rounded-md transition-colors duration-200 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-200 active:bg-gray-200 dark:hover:bg-gray-700 dark:focus:bg-gray-700 dark:focus:ring-blue-800 dark:active:bg-gray-600 touch-manipulation"
+  onclick={() => (showPassword = !showPassword)}
+  aria-label="Toggle password visibility"
+  onkeydown={(event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      showPassword = !showPassword;
+    }
+  }}
+
   >
     {#if showPassword}
       <!-- Eye Open -->
