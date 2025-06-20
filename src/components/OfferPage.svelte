@@ -259,7 +259,12 @@
   function navigateToAnswerPage() {
     window.location.href = `${window.location.origin}/answer.html`;
   }
+ 
 
+  function handleInput(index: number, event: Event) {
+    const input = (event.target as HTMLInputElement).value.slice(-1); // only last char
+    answerCode = answerCode.padEnd(5, ' ').split('').map((c, i) => (i === index ? input : c)).join('');
+  }
   const isMobile = Capacitor.isNativePlatform();
   let gPressed = false;
 
@@ -361,23 +366,31 @@
       <p class="">
         Share this unique offer code with your peer. They will need to enter it on the Answer page.
       </p>
-      <div class="mt-2 relative">
-        <input
-          type={showOfferCode ? 'text' : 'password'}
-          class="input input-bordered w-full pr-12"
-          value={offerCode}
-          readonly
-        />
+      <div class="mt-2 flex items-center justify-center gap-2 relative">
+  {#each offerCode.padEnd(5, ' ').split('').slice(0, 5) as char, i}
+    <div class="flex items-center">
+      <input
+        type={showOfferCode ? 'text' : 'password'}
+        class="w-12 h-12 text-center text-xl border rounded-md shadow-sm bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
+        value={char}
+        readonly
+      />
+      {#if i < 4}
+        <span class="mx-1 text-gray-500 dark:text-gray-400 select-none">‒</span>
+      {/if}
+    </div>
+  {/each}
 
-        <!-- Eye icon -->
-        <div class="absolute top-1/2 transform -translate-y-1/2 right-2 p-1">
-          <Eye
-            onChange={(show) => {
-              showOfferCode = show;
-            }}
-          />
-        </div>
-      </div>
+  <!-- Eye icon -->
+  <div class="absolute top-1/2 right-2 transform -translate-y-1/2 p-1">
+    <Eye
+      onChange={(show) => {
+        showOfferCode = show;
+      }}
+    />
+  </div>
+</div>
+
 
       <div class="mt-4 flex gap-2">
         <button class="btn btn-dash btn-success" onclick={copyOfferCode}
@@ -389,82 +402,67 @@
         <!-- <QrModal bind:this={qrModal} qrData={offerCode} title="Offer QR Code" /> -->
       </div>
       <p class="mt-4">Enter the Answer Code from your peer to establish connection.</p>
-      <div class="relative mt-4">
-        <!-- Toggle the input type based on the showPassword state -->
-        <input
-          class="input input-bordered w-full"
-          type={showPassword ? 'text' : 'password'}
-          bind:value={answerCode}
-        />
+   
+<div class="relative mt-4 flex items-center justify-center gap-2">
+  {#each Array(5) as _, i}
+    <div class="flex items-center">
+      <input
+        type={showPassword ? 'text' : 'password'}
+        maxlength="1"
+        class="w-12 h-12 text-center text-xl border rounded-md shadow-sm bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600"
+        value={answerCode[i] || ''}
+        oninput={(e) => handleInput(i, e)}
+      />
+      {#if i < 4}
+        <span class="mx-1 text-gray-500 dark:text-gray-400 select-none">‒</span>
+      {/if}
+    </div>
+  {/each}
 
-        <!-- Inline SVG for the eye icon to toggle visibility -->
-        {#if showPassword}
-          <button
-            type="button"
-            class="absolute top-1/2 transform -translate-y-1/2 right-2 p-1"
-            onclick={() => (showPassword = !showPassword)}
-            aria-label="Toggle password visibility"
-            onkeydown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                showPassword = !showPassword;
-              }
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              class="h-6 w-6 cursor-pointer"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 12c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3z"
-              />
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M2.458 12C3.732 7.724 7.732 5 12 5c4.268 0 8.268 2.724 9.542 7-1.274 4.276-5.274 7-9.542 7-4.268 0-8.268-2.724-9.542-7z"
-              />
-            </svg>
-          </button>
-        {:else}
-          <button
-            type="button"
-            class="absolute top-1/2 transform -translate-y-1/2 right-2 p-1"
-            onclick={() => (showPassword = !showPassword)}
-            aria-label="Toggle password visibility"
-            onkeydown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                showPassword = !showPassword;
-              }
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="lucide lucide-eye-off-icon lucide-eye-off"
-              ><path
-                d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"
-              /><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" /><path
-                d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"
-              /><path d="m2 2 20 20" /></svg
-            >
-          </button>
-        {/if}
-      </div>
+  <!-- Toggle eye icon -->
+  <button
+    type="button"
+    class="absolute top-1/2 transform -translate-y-1/2 right-2 p-1"
+    onclick={() => (showPassword = !showPassword)}
+    aria-label="Toggle password visibility"
+    onkeydown={(event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        showPassword = !showPassword;
+      }
+    }}
+  >
+    {#if showPassword}
+      <!-- Eye Open -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M15 12c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M2.458 12C3.732 7.724 7.732 5 12 5c4.268 0 8.268 2.724 9.542 7-1.274 4.276-5.274 7-9.542 7-4.268 0-8.268-2.724-9.542-7z" />
+      </svg>
+    {:else}
+      <!-- Eye Closed -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path d="M17.94 17.94A10.944 10.944 0 0 1 12 19c-4.418 0-8.268-2.724-9.542-7a10.947 10.947 0 0 1 4.138-5.21" />
+        <path d="M1 1l22 22" />
+        <path d="M9.88 9.88a3 3 0 0 0 4.24 4.24" />
+        <path d="M21.54 12.53A10.944 10.944 0 0 0 12 5c-.706 0-1.394.07-2.053.203" />
+      </svg>
+    {/if}
+  </button>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
       <div class="mt-4 flex gap-2">
         <button class="btn btn-soft btn-warning" onclick={acceptAnswer}
           >Accept Answer <LandPlot /></button

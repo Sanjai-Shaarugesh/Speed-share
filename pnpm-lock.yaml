@@ -188,9 +188,15 @@ importers:
       svelte-filepond:
         specifier: ^0.2.2
         version: 0.2.2(filepond@4.32.7)
+      svelte-sonner:
+        specifier: ^1.0.5
+        version: 1.0.5(svelte@5.28.2)
       svelte-spa-router:
         specifier: ^4.0.1
         version: 4.0.1
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@4.1.5)
       theme-change:
         specifier: ^2.5.0
         version: 2.5.0
@@ -7014,6 +7020,11 @@ packages:
     peerDependencies:
       svelte: ^5.7.0
 
+  runed@0.28.0:
+    resolution: {integrity: sha512-k2xx7RuO9hWcdd9f+8JoBeqWtYrm5CALfgpkg2YDB80ds/QE4w0qqu34A7fqiAwiBBSBQOid7TLxwxVC27ymWQ==}
+    peerDependencies:
+      svelte: ^5.7.0
+
   rx-lite-aggregates@4.0.8:
     resolution: {integrity: sha512-3xPNZGW93oCjiO7PtKxRK6iOVYBWBvtf9QHDfU23Oc+dLIQmAV//UnyXV/yihv81VS/UqoQPk4NegS8EFi55Hg==}
 
@@ -7503,6 +7514,11 @@ packages:
     peerDependencies:
       svelte: ^3.19.0 || ^4.0.0
 
+  svelte-sonner@1.0.5:
+    resolution: {integrity: sha512-9dpGPFqKb/QWudYqGnEz93vuY+NgCEvyNvxoCLMVGw6sDN/3oVeKV1xiEirW2E1N3vJEyj5imSBNOGltQHA7mg==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   svelte-spa-router@4.0.1:
     resolution: {integrity: sha512-2JkmUQ2f9jRluijL58LtdQBIpynSbem2eBGp4zXdi7aDY1znbR6yjw0KsonD0aq2QLwf4Yx4tBJQjxIjgjXHKg==}
 
@@ -7569,6 +7585,11 @@ packages:
     engines: {node: '>=16.x', pnpm: '>=7.x'}
     peerDependencies:
       tailwindcss: '*'
+
+  tailwindcss-animate@1.0.7:
+    resolution: {integrity: sha512-bl6mpH3T7I3UFxuvDEXLxy/VuFxBk5bbzplh7tXI68mwMokNYd1t9qPBHlnyTwfa4JGC4zP516I1hYYtQ/vspA==}
+    peerDependencies:
+      tailwindcss: '>=3.0.0 || insiders'
 
   tailwindcss@4.1.5:
     resolution: {integrity: sha512-nYtSPfWGDiWgCkwQG/m+aX83XCwf62sBgg3bIlNiiOcggnS1x3uVRDAuyelBFL+vJdOPPCGElxv9DjHJjRHiVA==}
@@ -16594,6 +16615,11 @@ snapshots:
       esm-env: 1.2.2
       svelte: 5.28.2
 
+  runed@0.28.0(svelte@5.28.2):
+    dependencies:
+      esm-env: 1.2.2
+      svelte: 5.28.2
+
   rx-lite-aggregates@4.0.8:
     dependencies:
       rx-lite: 4.0.8
@@ -17174,6 +17200,11 @@ snapshots:
     dependencies:
       svelte: 5.28.2
 
+  svelte-sonner@1.0.5(svelte@5.28.2):
+    dependencies:
+      runed: 0.28.0(svelte@5.28.2)
+      svelte: 5.28.2
+
   svelte-spa-router@4.0.1:
     dependencies:
       regexparam: 2.0.2
@@ -17257,6 +17288,10 @@ snapshots:
   tailwind-variants@1.0.0(tailwindcss@4.1.5):
     dependencies:
       tailwind-merge: 3.0.2
+      tailwindcss: 4.1.5
+
+  tailwindcss-animate@1.0.7(tailwindcss@4.1.5):
+    dependencies:
       tailwindcss: 4.1.5
 
   tailwindcss@4.1.5: {}
