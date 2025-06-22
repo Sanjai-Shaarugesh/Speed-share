@@ -371,7 +371,7 @@
    <div class="flex items-center">
   <input 
     type={showOfferCode ? 'text' : 'password'} 
-    class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-center text-sm sm:text-base md:text-xl border rounded-md shadow-sm transition-colors duration-200 bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:focus:border-blue-400 dark:focus:ring-blue-800" 
+    class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-center text-sm sm:text-base md:text-xl border rounded-md shadow-sm transition-colors duration-200 bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:focus:border-blue-400 dark:focus:ring-blue-800 dark:disabled:bg-gray-700 dark:disabled:text-gray-500 dark:disabled:border-gray-600" 
     value={char} 
     readonly 
   />
