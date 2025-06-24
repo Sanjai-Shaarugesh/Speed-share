@@ -233,18 +233,18 @@ function handlePaste(event: ClipboardEvent) {
 
 <div class="mt-4 flex items-center justify-center gap-2 relative">
   {#each Array(5) as _, i}
-    <div class="flex items-center">
+  <div class="flex items-center">
   <input
     type={showOfferCode ? 'text' : 'password'}
     maxlength="1"
-    class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-center text-sm sm:text-base md:text-xl border rounded-md shadow-sm transition-colors duration-200 bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:focus:border-blue-400 dark:focus:ring-blue-800 dark:disabled:bg-gray-700 dark:disabled:text-gray-500 dark:disabled:border-gray-600"
+    class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-center text-sm sm:text-base md:text-xl border rounded-md shadow-sm transition-colors duration-200 input input-bordered focus:input-primary disabled:input-disabled"
     value={offerCode[i] || ''}
     oninput={(e) => handleOfferInput(i, e)}
     onpaste={handlePaste}
     disabled={isProcessingOffer}
   />
   {#if i < 4}
-    <span class="mx-1 sm:mx-2 text-gray-500 dark:text-gray-400 select-none text-sm sm:text-base md:text-lg">‒</span>
+    <span class="mx-1 sm:mx-2 opacity-60 select-none text-sm sm:text-base md:text-lg">‒</span>
   {/if}
 </div>
   {/each}
@@ -316,18 +316,18 @@ function handlePaste(event: ClipboardEvent) {
       <p>Share this answer code with your peer to complete the connection.</p>
      <div class="relative mt-4 flex items-center justify-center gap-2">
   {#each Array(5) as _, i}
-   <div class="flex items-center">
+<div class="flex items-center">
   <input
     type={showAnswerCode ? 'text' : 'password'}
     maxlength="1"
-    class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-center text-sm sm:text-base md:text-xl border rounded-md shadow-sm transition-colors duration-200 bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:focus:border-blue-400 dark:focus:ring-blue-800"
+    class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-center text-sm sm:text-base md:text-xl border rounded-md shadow-sm transition-colors duration-200 input input-bordered focus:input-primary"
     value={answerCode[i] || ''}
     oninput={(e) => handleAnswerInput(i, e)}
     onpaste={handleAnswerPaste}
     readonly={false}
   />
   {#if i < 4}
-    <span class="mx-1 sm:mx-2 text-gray-500 dark:text-gray-400 select-none text-sm sm:text-base md:text-lg">‒</span>
+    <span class="mx-1 sm:mx-2 opacity-60 select-none text-sm sm:text-base md:text-lg">‒</span>
   {/if}
 </div>
   {/each}

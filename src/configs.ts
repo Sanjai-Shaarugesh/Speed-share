@@ -214,10 +214,11 @@ export async function sendFile(file: File, peerConnection: RTCPeerConnection) {
   };
 }
 
-// Example usage
-async function example() {
-  const peerConnection = new RTCPeerConnection({ iceServers: [{ urls: stunServers }] });
-  const file = new File([new ArrayBuffer(10 * 1024 * 1024 * 1024)], 'example.bin'); // 10GB dummy file
-  await sendFile(file, peerConnection);
-}
-example().catch(console.error);
+// example usange by sanjai 👻
+// // Example usage
+// async function example() {
+//   const peerConnection = new RTCPeerConnection({ iceServers: [{ urls: stunServers }] });
+//   const file = new File([new ArrayBuffer(10 * 1024 * 1024 * 1024)], 'example.bin'); // 10GB dummy file
+//   await sendFile(file, peerConnection);
+// }
+// example().catch(console.error);
