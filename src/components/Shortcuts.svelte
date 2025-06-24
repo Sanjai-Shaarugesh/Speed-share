@@ -17,9 +17,9 @@
     <button 
       id="toggleShortcutsBtn"
       aria-label="Toggle keyboard shortcuts" 
-      class="flex items-center justify-center p-2 bg-gray-100 dark:bg-gray-700 rounded-full shadow-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+      class="btn btn-circle btn-ghost shadow-lg"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-800 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
       </svg>
@@ -29,118 +29,120 @@
     <div
       id="popover-default"
       role="tooltip"
-      class="absolute bottom-12 right-0 z-20 w-96 text-sm text-gray-500 transition-opacity duration-200 bg-white border border-gray-200 rounded-lg shadow-xl dark:text-gray-400 dark:border-gray-600 dark:bg-gray-800 opacity-0 invisible group-hover:visible group-hover:opacity-100"
+      class="absolute bottom-12 right-0 z-20 w-96 text-sm transition-opacity duration-200 card bg-base-100 shadow-xl border border-base-300 opacity-0 invisible group-hover:visible group-hover:opacity-100"
     >
       <!-- Title -->
-      <div class="px-3 py-2 bg-gray-100 border-b border-gray-200 rounded-t-lg dark:border-gray-600 dark:bg-gray-700">
-        <h3 class="font-semibold text-gray-900 dark:text-white">Keyboard Shortcuts</h3>
-      </div>
+      <div class="card-body p-0">
+        <div class="px-3 py-2 bg-base-200 border-b border-base-300 rounded-t-lg">
+          <h3 class="font-semibold text-base-content">Keyboard Shortcuts</h3>
+        </div>
 
-      <!-- Content with scroll if too large -->
-      <div class="px-4 py-3 max-h-96 overflow-y-auto">
-        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-          <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400 sticky top-0 z-10">
-            <tr>
-              <th scope="col" class="px-4 py-3">Key</th>
-              <th scope="col" class="px-4 py-3">Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            
-            <tr class="bg-white border-b dark:bg-gray-900 dark:border-gray-700">
-              <td class="px-4 py-3 font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">ctrl</kbd>
-                <span class="mx-1">+</span>
-                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">c</kbd>
-              </td>
-              <td class="px-4 py-3">Copy the offer code</td>
-            </tr>
-            
-            <tr class="bg-white border-b dark:bg-gray-900 dark:border-gray-700">
-              <td class="px-4 py-3 font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">ctrl</kbd>
-                <span class="mx-1">+</span>
-                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">p</kbd>
-              </td>
-              <td class="px-4 py-3">Paste code</td>
-            </tr>
-            
-            <tr class="bg-white border-b dark:bg-gray-900 dark:border-gray-700">
-              <td class="px-4 py-3 font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">ctrl</kbd>
-                <span class="mx-1">+</span>
-                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">o</kbd>
-              </td>
-              <td class="px-4 py-3">generate offer code</td>
-            </tr>
-            
-            <tr class="bg-white border-b dark:bg-gray-900 dark:border-gray-700">
-              <td class="px-4 py-3 font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">ctrl</kbd>
-                <span class="mx-1">+</span>
-                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">a</kbd>
-              </td>
-              <td class="px-4 py-3">accept offer code</td>
-            </tr>
-            
-            <tr class="bg-white border-b dark:bg-gray-900 dark:border-gray-700">
-              <td class="px-4 py-3 font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">alt</kbd>
-                <span class="mx-1">+</span>
-                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">s</kbd>
-              </td>
-              <td class="px-4 py-3">open settings</td>
-            </tr>
-            
-            <tr class="bg-white border-b dark:bg-gray-900 dark:border-gray-700">
-              <td class="px-4 py-3 font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">alt</kbd>
-                <span class="mx-1">+</span>
-                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">s</kbd>
-              </td>
-              <td class="px-4 py-3">open QR scanner</td>
-            </tr>
-            
-            <tr class="bg-white border-b dark:bg-gray-900 dark:border-gray-700">
-              <td class="px-4 py-3 font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">ctrl</kbd>
-                <span class="mx-1">+</span>
-                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">Q</kbd>
-              </td>
-              <td class="px-4 py-3">show QR code</td>
-            </tr>
-            
-            <tr class="bg-white border-b dark:bg-gray-900 dark:border-gray-700">
-              <td class="px-4 py-3 font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">ctrl</kbd>
-                <span class="mx-1">+</span>
-                <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">r</kbd>
-              </td>
-              <td class="px-4 py-3">refresh Page</td>
-            </tr>
-            
-            <tr class="bg-white border-b dark:bg-gray-900 dark:border-gray-700">
-                                <td class="px-4 py-3 font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                                  <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">g</kbd>
-                                  <span class="mx-1">+</span>
-                                  <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">o</kbd>
-                                </td>
-                                
-                                <td class="px-4 py-3">go to offer page</td>
-                              </tr>
-                              <tr class="bg-white border-b dark:bg-gray-900 dark:border-gray-700">
-                                                  <td class="px-4 py-3 font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                                                    <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">g</kbd>
-                                                    <span class="mx-1">+</span>
-                                                    <kbd class="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">a</kbd>
-                                                  </td>
-                                                  
-                                                  <td class="px-4 py-3">go to answer page</td>
-                                                </tr>             
-          </tbody>
-          
-          
-        </table>
+        <!-- Content with scroll if too large -->
+        <div class="px-4 py-3 max-h-96 overflow-y-auto">
+          <div class="overflow-x-auto">
+            <table class="table table-sm w-full">
+              <thead class="sticky top-0 z-10">
+                <tr>
+                  <th class="bg-base-200">Key</th>
+                  <th class="bg-base-200">Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                <tr class="hover">
+                  <td class="font-medium whitespace-nowrap">
+                    <kbd class="kbd kbd-sm">ctrl</kbd>
+                    <span class="mx-1">+</span>
+                    <kbd class="kbd kbd-sm">c</kbd>
+                  </td>
+                  <td>Copy the offer code</td>
+                </tr>
+                
+                <tr class="hover">
+                  <td class="font-medium whitespace-nowrap">
+                    <kbd class="kbd kbd-sm">ctrl</kbd>
+                    <span class="mx-1">+</span>
+                    <kbd class="kbd kbd-sm">p</kbd>
+                  </td>
+                  <td>Paste code</td>
+                </tr>
+                
+                <tr class="hover">
+                  <td class="font-medium whitespace-nowrap">
+                    <kbd class="kbd kbd-sm">ctrl</kbd>
+                    <span class="mx-1">+</span>
+                    <kbd class="kbd kbd-sm">o</kbd>
+                  </td>
+                  <td>generate offer code</td>
+                </tr>
+                
+                <tr class="hover">
+                  <td class="font-medium whitespace-nowrap">
+                    <kbd class="kbd kbd-sm">ctrl</kbd>
+                    <span class="mx-1">+</span>
+                    <kbd class="kbd kbd-sm">a</kbd>
+                  </td>
+                  <td>accept offer code</td>
+                </tr>
+                
+                <tr class="hover">
+                  <td class="font-medium whitespace-nowrap">
+                    <kbd class="kbd kbd-sm">alt</kbd>
+                    <span class="mx-1">+</span>
+                    <kbd class="kbd kbd-sm">s</kbd>
+                  </td>
+                  <td>open settings</td>
+                </tr>
+                
+                <tr class="hover">
+                  <td class="font-medium whitespace-nowrap">
+                    <kbd class="kbd kbd-sm">alt</kbd>
+                    <span class="mx-1">+</span>
+                    <kbd class="kbd kbd-sm">s</kbd>
+                  </td>
+                  <td>open QR scanner</td>
+                </tr>
+                
+                <tr class="hover">
+                  <td class="font-medium whitespace-nowrap">
+                    <kbd class="kbd kbd-sm">ctrl</kbd>
+                    <span class="mx-1">+</span>
+                    <kbd class="kbd kbd-sm">Q</kbd>
+                  </td>
+                  <td>show QR code</td>
+                </tr>
+                
+                <tr class="hover">
+                  <td class="font-medium whitespace-nowrap">
+                    <kbd class="kbd kbd-sm">ctrl</kbd>
+                    <span class="mx-1">+</span>
+                    <kbd class="kbd kbd-sm">r</kbd>
+                  </td>
+                  <td>refresh Page</td>
+                </tr>
+                
+                <tr class="hover">
+                  <td class="font-medium whitespace-nowrap">
+                    <kbd class="kbd kbd-sm">g</kbd>
+                    <span class="mx-1">+</span>
+                    <kbd class="kbd kbd-sm">o</kbd>
+                  </td>
+                  <td>go to offer page</td>
+                </tr>
+                
+                <tr class="hover">
+                  <td class="font-medium whitespace-nowrap">
+                    <kbd class="kbd kbd-sm">g</kbd>
+                    <span class="mx-1">+</span>
+                    <kbd class="kbd kbd-sm">a</kbd>
+                  </td>
+                  <td>go to answer page</td>
+                </tr>
+                
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
       <div data-popper-arrow></div>
     </div>

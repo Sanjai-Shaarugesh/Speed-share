@@ -149,6 +149,36 @@
     processOfferCode();
   }
 
+   let showOfferCode = $state(false);
+
+   function handleOfferInput(index: number, event: Event) {
+    const input = (event.target as HTMLInputElement).value.slice(-1); // only 1 char
+    offerCode = offerCode.padEnd(5, ' ').split('').map((c, i) => (i === index ? input : c)).join('');
+  }
+
+function handlePaste(event: ClipboardEvent) {
+    const pasted = event.clipboardData?.getData('text')?.trim().slice(0, 5) ?? '';
+    if (pasted) {
+      event.preventDefault();
+      offerCode = pasted.padEnd(5, ' ');
+    }
+  }
+
+ 
+
+  function handleAnswerInput(index: number, event: Event) {
+    const input = (event.target as HTMLInputElement).value.slice(-1); // only last char
+    answerCode = answerCode.padEnd(5, ' ').split('').map((c, i) => (i === index ? input : c)).join('');
+  }
+
+  function handleAnswerPaste(event: ClipboardEvent) {
+    const pasted = event.clipboardData?.getData('text')?.trim().slice(0, 5) ?? '';
+    if (pasted) {
+      event.preventDefault();
+      answerCode = pasted.padEnd(5, ' ');
+    }
+  }
+
   onMount(() => {
   let gPressed = false;
 
@@ -199,55 +229,118 @@
         rel="noopener noreferrer">How does it work?</a
       >
     </p>
-    <div class="mt-4">
-      <input
-        type="password"
-        class="input input-bordered w-full"
-        placeholder="Enter offer code"
-        bind:value={offerCode}
-        disabled={isProcessingOffer}
-      />
-      <div class="mt-4 flex gap-2">
-        <button
-          class="btn btn-outline btn-accent"
-          onclick={processOfferCode}
-          disabled={isProcessingOffer}
-          >{#if isProcessingOffer}
-            Processing
-          {:else}
-            Process Offer <Cpu />
-          {/if}</button
-        >
-        <ScanQrModal onScanSuccess={scanOfferCode} />
-      </div>
-      <div class="mt-4 flex gap-2">
-        <a href="/" data-navigo>
-          <button class="btn btn-dash btn-warning" onclick={navigateToOfferPage}
-            >Go to Offer Page <CircleArrowOutUpLeft /></button
-          ></a
-        >
-      </div>
-    </div>
+   
+
+<div class="mt-4 flex items-center justify-center gap-2 relative">
+  {#each Array(5) as _, i}
+  <div class="flex items-center">
+  <input
+    type={showOfferCode ? 'text' : 'password'}
+    maxlength="1"
+    class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-center text-sm sm:text-base md:text-xl border rounded-md shadow-sm transition-colors duration-200 input input-bordered focus:input-primary disabled:input-disabled"
+    value={offerCode[i] || ''}
+    oninput={(e) => handleOfferInput(i, e)}
+    onpaste={handlePaste}
+    disabled={isProcessingOffer}
+  />
+  {#if i < 4}
+    <span class="mx-1 sm:mx-2 opacity-60 select-none text-sm sm:text-base md:text-lg">‒</span>
+  {/if}
+</div>
+  {/each}
+
+  <!-- Toggle visibility -->
+ <button
+  type="button"
+  class="absolute top-1/2 right-1 sm:right-2 transform -translate-y-1/2 p-1 sm:p-1.5 rounded-md transition-colors duration-200 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-200 active:bg-gray-200 dark:hover:bg-gray-700 dark:focus:bg-gray-700 dark:focus:ring-blue-800 dark:active:bg-gray-600 touch-manipulation"
+  onclick={() => (showOfferCode = !showOfferCode)}
+  aria-label="Toggle offer code visibility"
+  onkeydown={(event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      showOfferCode = !showOfferCode;
+    }
+  }}
+>
+    {#if showOfferCode}
+      <!-- Eye Open -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M15 12c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M2.458 12C3.732 7.724 7.732 5 12 5c4.268 0 8.268 2.724 9.542 7-1.274 4.276-5.274 7-9.542 7-4.268 0-8.268-2.724-9.542-7z" />
+      </svg>
+    {:else}
+      <!-- Eye Closed -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path d="M17.94 17.94A10.944 10.944 0 0 1 12 19c-4.418 0-8.268-2.724-9.542-7a10.947 10.947 0 0 1 4.138-5.21" />
+        <path d="M1 1l22 22" />
+        <path d="M9.88 9.88a3 3 0 0 0 4.24 4.24" />
+        <path d="M21.54 12.53A10.944 10.944 0 0 0 12 5c-.706 0-1.394.07-2.053.203" />
+      </svg>
+    {/if}
+  </button>
+</div>
+
+
+
+
+
+<div class="mt-4 flex gap-2">
+  <button
+    class="btn btn-outline btn-accent"
+    onclick={processOfferCode}
+    disabled={isProcessingOffer}
+  >
+    {#if isProcessingOffer}
+      Processing
+    {:else}
+      Process Offer <Cpu />
+    {/if}
+  </button>
+
+  <ScanQrModal onScanSuccess={scanOfferCode} />
+</div>
+
+<div class="mt-4 flex gap-2">
+  <a href="/" data-navigo>
+    <button class="btn btn-dash btn-warning" onclick={navigateToOfferPage}>
+      Go to Offer Page <CircleArrowOutUpLeft />
+    </button>
+  </a>
+</div>
   </Collapse>
 
   <Collapse title="2. Share Answer Code" isOpen={answerCode !== '' && !isConnecting}>
     {#if answerCode}
       <p>Share this answer code with your peer to complete the connection.</p>
-      <div class="relative mt-4">
-        <input
-          type={showAnswerCode ? 'text' : 'password'}
-          class="input input-bordered w-full"
-          value={answerCode}
-          readonly
-        />
-        <div class="absolute top-0 right-0 p-1">
-          <Eye
-            onChange={(show) => {
-              showAnswerCode = show;
-            }}
-          />
-        </div>
-      </div>
+     <div class="relative mt-4 flex items-center justify-center gap-2">
+  {#each Array(5) as _, i}
+<div class="flex items-center">
+  <input
+    type={showAnswerCode ? 'text' : 'password'}
+    maxlength="1"
+    class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-center text-sm sm:text-base md:text-xl border rounded-md shadow-sm transition-colors duration-200 input input-bordered focus:input-primary"
+    value={answerCode[i] || ''}
+    oninput={(e) => handleAnswerInput(i, e)}
+    onpaste={handleAnswerPaste}
+    readonly={false}
+  />
+  {#if i < 4}
+    <span class="mx-1 sm:mx-2 opacity-60 select-none text-sm sm:text-base md:text-lg">‒</span>
+  {/if}
+</div>
+  {/each}
+
+  <!-- Eye toggle -->
+ <div class="absolute top-0 right-0 p-0.5 sm:p-1">
+  <Eye
+    onChange={(show) => {
+      showAnswerCode = show;
+    }}
+  />
+</div>
+</div>
       <div class="mt-4 flex gap-2">
         <button class="btn btn-soft btn-info gap-2" onclick={copyAnswerCode}
           >Copy Answer <Copy /></button
