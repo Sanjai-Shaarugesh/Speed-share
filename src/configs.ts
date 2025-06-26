@@ -1,5 +1,8 @@
 import type { ReceiveOptions, SendOptions } from './type';
 
+// Environment detection
+const isElectron = typeof window !== 'undefined' && typeof (window as any).require === 'function';
+
 // Diverse STUN and TURN servers for robust connectivity
 export const stunServers: string[] = [
   'stun:stun.l.google.com:19302',
@@ -58,21 +61,105 @@ let wasmModule: WebAssembly.Module | null = null;
 let wasmInstance: WebAssembly.Instance | null = null;
 let wasmMemory: WebAssembly.Memory | null = null;
 
+// Offer code processing interface
+interface OfferCodeProcessor {
+  processOfferCode(code: string): Promise<RTCSessionDescriptionInit>;
+  generateOfferCode(offer: RTCSessionDescriptionInit): Promise<string>;
+}
+
+// Web implementation of offer code processing
+class WebOfferCodeProcessor implements OfferCodeProcessor {
+  async processOfferCode(code: string): Promise<RTCSessionDescriptionInit> {
+    try {
+      if (code.startsWith('offer:')) {
+        code = code.substring(6);
+      }
+      const decoded = atob(code);
+      return JSON.parse(decoded) as RTCSessionDescriptionInit;
+    } catch (error) {
+      console.error('Failed to process offer code:', error);
+      throw new Error('Invalid offer code');
+    }
+  }
+
+  async generateOfferCode(offer: RTCSessionDescriptionInit): Promise<string> {
+    const json = JSON.stringify(offer);
+    return 'offer:' + btoa(json);
+  }
+}
+
+// Electron implementation of offer code processing
+class ElectronOfferCodeProcessor implements OfferCodeProcessor {
+  private ipcRenderer?: any;
+
+  constructor() {
+    if (isElectron) {
+      try {
+        this.ipcRenderer = (window as any).require('electron').ipcRenderer;
+      } catch (error) {
+        console.error('Failed to load Electron IPC:', error);
+      }
+    }
+  }
+
+  async processOfferCode(code: string): Promise<RTCSessionDescriptionInit> {
+    if (!this.ipcRenderer) {
+      throw new Error('Electron IPC not available');
+    }
+
+    try {
+      const response = await this.ipcRenderer.invoke('process-offer-code', code);
+      return JSON.parse(response) as RTCSessionDescriptionInit;
+    } catch (error) {
+      console.error('Failed to process offer code in Electron:', error);
+      throw new Error('Invalid offer code');
+    }
+  }
+
+  async generateOfferCode(offer: RTCSessionDescriptionInit): Promise<string> {
+    if (!this.ipcRenderer) {
+      throw new Error('Electron IPC not available');
+    }
+
+    const json = JSON.stringify(offer);
+    return await this.ipcRenderer.invoke('generate-offer-code', json);
+  }
+}
+
+// Factory to get the appropriate offer code processor
+export function getOfferCodeProcessor(): OfferCodeProcessor {
+  if (isElectron) {
+    return new ElectronOfferCodeProcessor();
+  }
+  return new WebOfferCodeProcessor();
+}
+
 // Load WebAssembly module for efficient compression
 async function loadWasm() {
   if (!wasmModule) {
     try {
-      const cache = await caches.open('wasm-cache');
-      let response = await cache.match('/wasm/fileProcessor.wasm');
+      let response: Response;
+      if (isElectron) {
+        // In Electron, use file system or http server for WASM
+        const { readFileSync } = (window as any).require('fs');
+        const path = (window as any).require('path');
+        const wasmPath = path.join(__dirname, 'wasm', 'fileProcessor.wasm');
+        const buffer = readFileSync(wasmPath);
+        wasmModule = await WebAssembly.compile(buffer);
+      } else {
+        // Web environment: use cache storage
+        const cache = await caches.open('wasm-cache');
+        response = await cache.match('/wasm/fileProcessor.wasm');
 
-      if (!response) {
-        response = await fetch('/wasm/fileProcessor.wasm');
-        const clonedResponse = response.clone();
-        await cache.put('/wasm/fileProcessor.wasm', clonedResponse);
+        if (!response) {
+          response = await fetch('/wasm/fileProcessor.wasm');
+          const clonedResponse = response.clone();
+          await cache.put('/wasm/fileProcessor.wasm', clonedResponse);
+        }
+
+        const buffer = await response.arrayBuffer();
+        wasmModule = await WebAssembly.compile(buffer);
       }
-
-      const buffer = await response.arrayBuffer();
-      wasmModule = await WebAssembly.compile(buffer);
     } catch (error) {
       console.error('WASM loading failed, falling back to JS', error);
       return null;
@@ -124,7 +211,21 @@ function processFileChunkFallback(chunk: Uint8Array): Uint8Array {
 export async function detectNetworkQuality(): Promise<{ bandwidth: number; latency: number; reliability: number }> {
   try {
     const startTime = performance.now();
-    const response = await fetch('https://www.cloudflare.com/cdn-cgi/trace', { method: 'GET', cache: 'no-store' });
+    let response: Response;
+    if (isElectron) {
+      // In Electron, use http module for network requests
+      const { get } = (window as any).require('https');
+      response = await new Promise<Response>((resolve, reject) => {
+        get('https://www.cloudflare.com/cdn-cgi/trace', (res: any) => {
+          let data = '';
+          res.on('data', (chunk: string) => data += chunk);
+          res.on('end', () => resolve({ text: async () => data } as Response));
+          res.on('error', reject);
+        });
+      });
+    } else {
+      response = await fetch('https://www.cloudflare.com/cdn-cgi/trace', { method: 'GET', cache: 'no-store' });
+    }
     const endTime = performance.now();
     const latency = endTime - startTime;
     const text = await response.text();
@@ -191,9 +292,17 @@ export async function createReliableDataChannel(peerConnection: RTCPeerConnectio
   throw new Error('Failed to create data channel');
 }
 
-// Main file transfer function
-export async function sendFile(file: File, peerConnection: RTCPeerConnection) {
+// Main file transfer function with offer code support
+export async function sendFile(file: File, peerConnection: RTCPeerConnection, offerCode?: string) {
   const options = await optimizeTransferSettings(defaultSendOptions);
+  
+  // If offer code is provided, process it to set remote description
+  if (offerCode) {
+    const processor = getOfferCodeProcessor();
+    const offer = await processor.processOfferCode(offerCode);
+    await peerConnection.setRemoteDescription(offer);
+  }
+
   const dataChannel = await createReliableDataChannel(peerConnection, 'fileTransfer');
   let offset = 0;
   const fileSize = file.size;
@@ -213,12 +322,3 @@ export async function sendFile(file: File, peerConnection: RTCPeerConnection) {
     dataChannel.close();
   };
 }
-
-// example usange by sanjai 👻
-// // Example usage
-// async function example() {
-//   const peerConnection = new RTCPeerConnection({ iceServers: [{ urls: stunServers }] });
-//   const file = new File([new ArrayBuffer(10 * 1024 * 1024 * 1024)], 'example.bin'); // 10GB dummy file
-//   await sendFile(file, peerConnection);
-// }
-// example().catch(console.error);
