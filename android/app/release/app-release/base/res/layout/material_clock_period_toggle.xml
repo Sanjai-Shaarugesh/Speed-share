@@ -1,0 +1,37 @@
+
+‹
+;
+android*http://schemas.android.com/apk/res/android
+4
+app'http://schemas.android.com/apk/res-auto<com.google.android.material.button.MaterialButtonToggleGroup"M
+*http://schemas.android.com/apk/res/android
+visibilitygone"(Ü„2:0"º
+*http://schemas.android.com/apk/res/androidcontentDescription1@string/material_clock_toggle_content_description"(ó„„2<
+:Ô€Àø0string/material_clock_toggle_content_description0"P
+'http://schemas.android.com/apk/res-autosingleSelectiontrue"(•‡Œø2:@"¦
+*http://schemas.android.com/apk/res/androidlayout_width)@dimen/material_clock_period_toggle_width"(ô„26
+4®„˜ø(dimen/material_clock_period_toggle_width0À€"©
+*http://schemas.android.com/apk/res/androidlayout_height*@dimen/material_clock_period_toggle_height"(õ„27
+5«„˜ø)dimen/material_clock_period_toggle_height0À€"R
+*http://schemas.android.com/apk/res/androidorientationvertical"(Ä„2:0"R
+'http://schemas.android.com/apk/res-autoselectionRequiredtrue"(ô†Œø2:@"—
+'http://schemas.android.com/apk/res-autocheckedButton#@id/material_clock_period_am_button"(¢Œø2.
+,Þ ø"id/material_clock_period_am_button0"‰
+*http://schemas.android.com/apk/res/androidid!@+id/material_clock_period_toggle"(Ð„2+
+)à øid/material_clock_period_toggle0*è
+ß1com.google.android.material.button.MaterialButton"`
+*http://schemas.android.com/apk/res/androidlayout_widthwrap_content"$(ô„2:0þÿÿÿÿÿÿÿÿ"K
+*http://schemas.android.com/apk/res/androidinsetTop8dp"$(¹ƒ„2:h"`style!?attr/materialButtonOutlinedStyle"$20
+.±…Œø attr/materialButtonOutlinedStyle0ÿÿ"
+*http://schemas.android.com/apk/res/androidid$@+id/material_clock_period_am_button"$(Ð„2.
+,Þ ø"id/material_clock_period_am_button0"†
+*http://schemas.android.com/apk/res/androidtext@string/material_timepicker_am"$(Ï‚„2)
+'â€Àøstring/material_timepicker_am0$4*ë
+â1com.google.android.material.button.MaterialButton"`
+*http://schemas.android.com/apk/res/androidlayout_widthwrap_content"*(ô„2:0þÿÿÿÿÿÿÿÿ"N
+*http://schemas.android.com/apk/res/androidinsetBottom8dp"*(ºƒ„2:h"`style!?attr/materialButtonOutlinedStyle"*20
+.±…Œø attr/materialButtonOutlinedStyle0ÿÿ"
+*http://schemas.android.com/apk/res/androidid$@+id/material_clock_period_pm_button"*(Ð„2.
+,ß ø"id/material_clock_period_pm_button0"†
+*http://schemas.android.com/apk/res/androidtext@string/material_timepicker_pm"*(Ï‚„2)
+'æ€Àøstring/material_timepicker_pm0*4
