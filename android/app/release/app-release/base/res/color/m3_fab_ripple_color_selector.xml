@@ -1,27 +1,0 @@
-
-¤
-;
-android*http://schemas.android.com/apk/res/androidFselector*—
-item"y
-*http://schemas.android.com/apk/res/androidcolor?attr/colorOnContainer"(¥ƒ„2#
-!æŒøattr/colorOnContainer0"P
-*http://schemas.android.com/apk/res/androidstate_pressedtrue"(§„2:@"·
-*http://schemas.android.com/apk/res/androidalpha6@dimen/m3_comp_fab_primary_pressed_state_layer_opacity"(Ÿ†„2A
-?‚˜ø5dimen/m3_comp_fab_primary_pressed_state_layer_opacity0 •*“
-‰item"y
-*http://schemas.android.com/apk/res/androidcolor?attr/colorOnContainer"(¥ƒ„2#
-!æŒøattr/colorOnContainer0"³
-*http://schemas.android.com/apk/res/androidalpha4@dimen/m3_comp_fab_primary_focus_state_layer_opacity"(Ÿ†„2?
-=—‚˜ø3dimen/m3_comp_fab_primary_focus_state_layer_opacity0 "P
-*http://schemas.android.com/apk/res/androidstate_focusedtrue"(œ„2:@“*“
-‰item"y
-*http://schemas.android.com/apk/res/androidcolor?attr/colorOnContainer"(¥ƒ„2#
-!æŒøattr/colorOnContainer0"P
-*http://schemas.android.com/apk/res/androidstate_hoveredtrue"(ç†„2:@"³
-*http://schemas.android.com/apk/res/androidalpha4@dimen/m3_comp_fab_primary_hover_state_layer_opacity"(Ÿ†„2?
-=™‚˜ø3dimen/m3_comp_fab_primary_hover_state_layer_opacity0 “*”
-‹item"y
-*http://schemas.android.com/apk/res/androidcolor?attr/colorOnContainer"(¥ƒ„2#
-!æŒøattr/colorOnContainer0"‡
-*http://schemas.android.com/apk/res/androidalpha@dimen/m3_ripple_default_alpha"(Ÿ†„2)
-'Õƒ˜ødimen/m3_ripple_default_alpha0 `F
