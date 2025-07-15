@@ -4,6 +4,7 @@ import { compactSDP, decompactSDP } from 'sdp-compact';
 // replace `/` with `_`
 // replace `+` with `~`
 export function sdpEncode(s: string): string {
+
   return compactSDP(s).replace(/\//g, '_').replace(/\+/g, '~').replace(/=/g, '-');
 }
 

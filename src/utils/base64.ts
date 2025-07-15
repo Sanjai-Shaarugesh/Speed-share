@@ -11,6 +11,7 @@ export const base64url = {
   encode: (str: string): string => {
     // Standard base64 encoding
     const base64 = btoa(str);
+    console.log();
     // Make base64 URL-safe: replace '+' with '-', '/' with '_', and remove padding '='
     return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   },

@@ -8,6 +8,24 @@ import { base64url } from './base64';
  * @param options Additional options to include in the code
  * @returns A unique code that can be shared
  */
+
+
+ export function generateFiveDigitCode(sdp: string): string {
+   // Simple hash function to convert SDP to a five-digit code
+   let hash = 0;
+   for (let i = 0; i < sdp.length; i++) {
+     hash = (hash << 5) - hash + sdp.charCodeAt(i);
+     hash |= 0; // Convert to 32bit integer
+   }
+
+   // Convert to 5-digit base36 (alphanumeric) code
+   const code = Math.abs(hash).toString(36).substring(0, 5);
+
+   // Pad with zeros if necessary
+   return code.padEnd(5, '0');
+ }
+
+
 export function generateUniqueCode(
   sdp: string,
   options: {
@@ -29,6 +47,7 @@ export function generateUniqueCode(
 
   // Convert to JSON and encode as base64url
   const jsonData = JSON.stringify(data);
+
   return base64url.encode(jsonData);
 }
 
