@@ -283,6 +283,7 @@ export async function detectNetworkQuality(): Promise<{ bandwidth: number; laten
           break;
       }
 
+
       return {
         bandwidth: estimatedBandwidth,
         latency: estimatedLatency,
