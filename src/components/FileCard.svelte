@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { FileStatus, type FileDetail } from '../../../type';
-  import { humanFileSize } from '../../../utils/humanFIleSize';
+  import { FileStatus, type FileDetail } from '../type';
+    import { humanFileSize } from '../utils/humanFIleSize';
   import { onDestroy } from 'svelte';
 
   // Props and reactive variables
