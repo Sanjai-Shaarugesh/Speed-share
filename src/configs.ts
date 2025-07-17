@@ -27,9 +27,9 @@ export const defaultSendOptions: SendOptions = {
   isEncrypt: true,
   iceServer: stunServers[0],
   wasmBufferSize: 10 * 1024 * 1024, // Reduced for mobile efficiency
-  parallelChunks: 10000,
+  parallelChunks: 500,
   useStreaming: true,
-  compressionLevel:10000, // Balanced for speed and ratio
+  compressionLevel:1, // Balanced for speed and ratio
   adaptiveChunking: true,
   retryAttempts: 3,
   priorityQueueing: true,
