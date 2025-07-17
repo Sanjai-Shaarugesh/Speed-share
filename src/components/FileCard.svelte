@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { FileStatus, type FileDetail } from '../type';
-   import { humanFileSize } from '../utils/humanFIleSize';
-   import { onDestroy } from 'svelte';
+  import { FileStatus, type FileDetail } from '../../../type';
+  import { humanFileSize } from '../../../utils/humanFIleSize';
+  import { onDestroy } from 'svelte';
 
   // Props and reactive variables
   let file: File | null = null;
@@ -115,63 +115,172 @@
     switch (extension) {
       case 'pdf':
         bgColorOverride = '#dc2626';
-        iconPath = `<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="white"/>
-                   <path d="M14 2v6h6" fill="none" stroke="white" stroke-width="2"/>
-                   <text x="12" y="16" text-anchor="middle" fill="white" font-size="6" font-weight="bold">PDF</text>`;
+        iconPath = `
+          <defs>
+            <linearGradient id="pdfGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#f3f4f6;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="url(#pdfGradient)" stroke="#dc2626" stroke-width="0.5"/>
+          <path d="M14 2v6h6" fill="none" stroke="#dc2626" stroke-width="2"/>
+          <path d="M14 2l6 6" fill="none" stroke="#dc2626" stroke-width="0.5"/>
+          <rect x="7" y="10" width="10" height="1" fill="#dc2626" opacity="0.3"/>
+          <rect x="7" y="12" width="8" height="1" fill="#dc2626" opacity="0.3"/>
+          <rect x="7" y="14" width="9" height="1" fill="#dc2626" opacity="0.3"/>
+          <text x="12" y="18" text-anchor="middle" fill="#dc2626" font-size="4" font-weight="bold">PDF</text>`;
         break;
+
       case 'docx':
       case 'doc':
         bgColorOverride = '#2563eb';
-        iconPath = `<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="white"/>
-                   <path d="M14 2v6h6" fill="none" stroke="white" stroke-width="2"/>
-                   <text x="12" y="16" text-anchor="middle" fill="white" font-size="5" font-weight="bold">DOC</text>`;
+        iconPath = `
+          <defs>
+            <linearGradient id="docGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#f3f4f6;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="url(#docGradient)" stroke="#2563eb" stroke-width="0.5"/>
+          <path d="M14 2v6h6" fill="none" stroke="#2563eb" stroke-width="2"/>
+          <path d="M14 2l6 6" fill="none" stroke="#2563eb" stroke-width="0.5"/>
+          <rect x="7" y="10" width="10" height="1.5" fill="#2563eb" opacity="0.3"/>
+          <rect x="7" y="12.5" width="8" height="1.5" fill="#2563eb" opacity="0.3"/>
+          <rect x="7" y="15" width="6" height="1.5" fill="#2563eb" opacity="0.3"/>
+          <circle cx="8" cy="11" r="0.5" fill="#2563eb"/>
+          <circle cx="8" cy="13.5" r="0.5" fill="#2563eb"/>
+          <circle cx="8" cy="16" r="0.5" fill="#2563eb"/>
+          <text x="12" y="19" text-anchor="middle" fill="#2563eb" font-size="3.5" font-weight="bold">DOC</text>`;
         break;
+
       case 'xlsx':
       case 'xls':
         bgColorOverride = '#16a34a';
-        iconPath = `<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="white"/>
-                   <path d="M14 2v6h6" fill="none" stroke="white" stroke-width="2"/>
-                   <text x="12" y="16" text-anchor="middle" fill="white" font-size="5" font-weight="bold">XLS</text>`;
+        iconPath = `
+          <defs>
+            <linearGradient id="xlsGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#f3f4f6;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="url(#xlsGradient)" stroke="#16a34a" stroke-width="0.5"/>
+          <path d="M14 2v6h6" fill="none" stroke="#16a34a" stroke-width="2"/>
+          <path d="M14 2l6 6" fill="none" stroke="#16a34a" stroke-width="0.5"/>
+          <rect x="7" y="10" width="4" height="2" fill="none" stroke="#16a34a" stroke-width="0.5"/>
+          <rect x="11" y="10" width="4" height="2" fill="none" stroke="#16a34a" stroke-width="0.5"/>
+          <rect x="15" y="10" width="2" height="2" fill="none" stroke="#16a34a" stroke-width="0.5"/>
+          <rect x="7" y="12" width="4" height="2" fill="none" stroke="#16a34a" stroke-width="0.5"/>
+          <rect x="11" y="12" width="4" height="2" fill="none" stroke="#16a34a" stroke-width="0.5"/>
+          <rect x="15" y="12" width="2" height="2" fill="none" stroke="#16a34a" stroke-width="0.5"/>
+          <rect x="7" y="14" width="4" height="2" fill="none" stroke="#16a34a" stroke-width="0.5"/>
+          <rect x="11" y="14" width="4" height="2" fill="none" stroke="#16a34a" stroke-width="0.5"/>
+          <rect x="15" y="14" width="2" height="2" fill="none" stroke="#16a34a" stroke-width="0.5"/>
+          <text x="12" y="19" text-anchor="middle" fill="#16a34a" font-size="3.5" font-weight="bold">XLS</text>`;
         break;
+
       case 'mp4':
       case 'avi':
       case 'mov':
         bgColorOverride = '#7c3aed';
-        iconPath = `<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="white"/>
-                   <path d="M14 2v6h6" fill="none" stroke="white" stroke-width="2"/>
-                   <polygon points="10,10 10,16 16,13" fill="white"/>`;
+        iconPath = `
+          <defs>
+            <linearGradient id="videoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#f3f4f6;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="url(#videoGradient)" stroke="#7c3aed" stroke-width="0.5"/>
+          <path d="M14 2v6h6" fill="none" stroke="#7c3aed" stroke-width="2"/>
+          <path d="M14 2l6 6" fill="none" stroke="#7c3aed" stroke-width="0.5"/>
+          <rect x="7" y="10" width="10" height="6" rx="1" fill="none" stroke="#7c3aed" stroke-width="0.8"/>
+          <polygon points="10,12 10,15 14,13.5" fill="#7c3aed"/>
+          <circle cx="15" cy="12" r="0.5" fill="#7c3aed"/>
+          <text x="12" y="19" text-anchor="middle" fill="#7c3aed" font-size="3.5" font-weight="bold">MP4</text>`;
         break;
+
       case 'mp3':
       case 'wav':
       case 'flac':
         bgColorOverride = '#ea580c';
-        iconPath = `<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="white"/>
-                   <path d="M14 2v6h6" fill="none" stroke="white" stroke-width="2"/>
-                   <path d="M8 14c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2z" fill="white"/>
-                   <path d="M12 12v-2l4-1v3" fill="none" stroke="white" stroke-width="1"/>`;
+        iconPath = `
+          <defs>
+            <linearGradient id="audioGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#f3f4f6;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="url(#audioGradient)" stroke="#ea580c" stroke-width="0.5"/>
+          <path d="M14 2v6h6" fill="none" stroke="#ea580c" stroke-width="2"/>
+          <path d="M14 2l6 6" fill="none" stroke="#ea580c" stroke-width="0.5"/>
+          <circle cx="10" cy="13" r="1.5" fill="none" stroke="#ea580c" stroke-width="1"/>
+          <circle cx="10" cy="13" r="0.5" fill="#ea580c"/>
+          <path d="M12 11.5v3l3-0.5v-2z" fill="#ea580c"/>
+          <path d="M8 11c0.5-0.5 1.5-0.5 2 0" fill="none" stroke="#ea580c" stroke-width="0.5"/>
+          <path d="M7 10c1-1 3-1 4 0" fill="none" stroke="#ea580c" stroke-width="0.5"/>
+          <path d="M13 15c0.5-0.5 1.5-0.5 2 0" fill="none" stroke="#ea580c" stroke-width="0.5"/>
+          <path d="M14 16c1-1 3-1 4 0" fill="none" stroke="#ea580c" stroke-width="0.5"/>
+          <text x="12" y="19" text-anchor="middle" fill="#ea580c" font-size="3.5" font-weight="bold">MP3</text>`;
         break;
+
       case 'zip':
       case 'rar':
       case '7z':
         bgColorOverride = '#ca8a04';
-        iconPath = `<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="white"/>
-                   <path d="M14 2v6h6" fill="none" stroke="white" stroke-width="2"/>
-                   <text x="12" y="16" text-anchor="middle" fill="white" font-size="5" font-weight="bold">ZIP</text>`;
+        iconPath = `
+          <defs>
+            <linearGradient id="zipGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#f3f4f6;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="url(#zipGradient)" stroke="#ca8a04" stroke-width="0.5"/>
+          <path d="M14 2v6h6" fill="none" stroke="#ca8a04" stroke-width="2"/>
+          <path d="M14 2l6 6" fill="none" stroke="#ca8a04" stroke-width="0.5"/>
+          <rect x="8" y="10" width="8" height="6" rx="0.5" fill="none" stroke="#ca8a04" stroke-width="1"/>
+          <rect x="11" y="8" width="2" height="2" fill="none" stroke="#ca8a04" stroke-width="1"/>
+          <circle cx="12" cy="13" r="0.5" fill="#ca8a04"/>
+          <path d="M12 13.5v1.5" stroke="#ca8a04" stroke-width="0.5"/>
+          <text x="12" y="19" text-anchor="middle" fill="#ca8a04" font-size="3.5" font-weight="bold">ZIP</text>`;
         break;
+
       case 'png':
       case 'jpg':
       case 'jpeg':
       case 'gif':
       case 'svg':
         bgColorOverride = '#059669';
-        iconPath = `<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="white"/>
-                   <path d="M14 2v6h6" fill="none" stroke="white" stroke-width="2"/>
-                   <circle cx="9" cy="11" r="1" fill="white"/>
-                   <path d="M4 18l4-4 3 3 5-5" fill="none" stroke="white" stroke-width="1"/>`;
+        iconPath = `
+          <defs>
+            <linearGradient id="imgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#f3f4f6;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="url(#imgGradient)" stroke="#059669" stroke-width="0.5"/>
+          <path d="M14 2v6h6" fill="none" stroke="#059669" stroke-width="2"/>
+          <path d="M14 2l6 6" fill="none" stroke="#059669" stroke-width="0.5"/>
+          <rect x="7" y="10" width="10" height="6" rx="0.5" fill="none" stroke="#059669" stroke-width="0.8"/>
+          <circle cx="9" cy="12" r="0.8" fill="#059669"/>
+          <path d="M7 15l2-2 2 2 3-3 3 2" fill="none" stroke="#059669" stroke-width="1"/>
+          <circle cx="14" cy="12" r="0.3" fill="#059669"/>
+          <circle cx="15.5" cy="12.5" r="0.3" fill="#059669"/>
+          <text x="12" y="19" text-anchor="middle" fill="#059669" font-size="3.5" font-weight="bold">IMG</text>`;
         break;
+
       default:
-        iconPath = `<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="${iconColor}"/>
-                   <path d="M14 2v6h6" fill="none" stroke="${iconColor}" stroke-width="2"/>`;
+        iconPath = `
+          <defs>
+            <linearGradient id="defaultGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#f3f4f6;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="url(#defaultGradient)" stroke="${iconColor}" stroke-width="0.5"/>
+          <path d="M14 2v6h6" fill="none" stroke="${iconColor}" stroke-width="2"/>
+          <path d="M14 2l6 6" fill="none" stroke="${iconColor}" stroke-width="0.5"/>
+          <rect x="7" y="10" width="10" height="1" fill="${iconColor}" opacity="0.3"/>
+          <rect x="7" y="12" width="8" height="1" fill="${iconColor}" opacity="0.3"/>
+          <rect x="7" y="14" width="9" height="1" fill="${iconColor}" opacity="0.3"/>`;
     }
 
     return `data:image/svg+xml;base64,${btoa(`
