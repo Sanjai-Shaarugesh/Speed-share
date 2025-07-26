@@ -8,24 +8,42 @@ message MetaData {
 }
 
 enum ReceiveEvent {
-    // event when the reveiver got metadata and accept
+    // event when the receiver got metadata and accept
     EVENT_RECEIVER_ACCEPT = 0;
-    // event when the reveiver rejected the file
+    // event when the receiver rejected the file
     EVENT_RECEIVER_REJECT = 1;
-    // event when the reveiver got file chunk
+    // event when the receiver got file chunk
     EVENT_RECEIVED_CHUNK = 2;
-    // event when the reveiver got validate error
+    // event when the receiver got validate error
     EVENT_VALIDATE_ERROR = 3;
 }
 
+enum ConnectionEvent {
+    // event when receiver requests connection
+    EVENT_CONNECTION_REQUEST = 0;
+    // event when sender accepts connection
+    EVENT_CONNECTION_ACCEPTED = 1;
+    // event when sender rejects connection
+    EVENT_CONNECTION_REJECTED = 2;
+}
+
+message ConnectionRequest {
+    string deviceName = 1; // Name of the requesting device
+    string timestamp = 2;  // Timestamp of the request
+}
+
 message Message {
-    string id = 1; // file id
+    string id = 1; // file id or connection id
     oneof data {
         // use for sender to send file metadata
-        MetaData metaData = 2; 
+        MetaData metaData = 2;
         // use for sender to send file chunk
         bytes chunk = 3;
-        // respone event to tell the sender status
+        // response event to tell the sender status
         ReceiveEvent receiveEvent = 4;
+        // connection request from receiver
+        ConnectionRequest connectionRequest = 5;
+        // connection response from sender
+        ConnectionEvent connectionEvent = 6;
     }
 }

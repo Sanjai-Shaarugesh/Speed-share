@@ -26,6 +26,60 @@ interface IceCandidate {
   sdpMLineIndex: number;
 }
 
+// ========== 5-DIGIT CODE GENERATION ==========
+
+// Generate a cryptographically secure 5-digit code
+export function generateSecure5DigitCode(): string {
+  const randomBytes = crypto.getRandomValues(new Uint32Array(1));
+  const code = (randomBytes[0] % 90000) + 10000; // Ensures 5 digits (10000-99999)
+  return code.toString();
+}
+
+// Generate a simple 5-digit code (less secure but faster)
+export function generateSimple5DigitCode(): string {
+  return Math.floor(10000 + Math.random() * 90000).toString();
+}
+
+// Generate a 5-digit code with custom validation
+export function generateValidated5DigitCode(excludePatterns: string[] = []): string {
+  let code: string;
+  let attempts = 0;
+  const maxAttempts = 100;
+
+  do {
+    code = generateSecure5DigitCode();
+    attempts++;
+
+    // Avoid infinite loops
+    if (attempts >= maxAttempts) {
+      break;
+    }
+
+    // Check if code matches any excluded patterns
+    const isExcluded = excludePatterns.some(pattern => {
+      if (pattern === 'sequential') {
+        // Check for sequential numbers like 12345, 54321
+        const digits = code.split('').map(Number);
+        const isAscending = digits.every((digit, i) => i === 0 || digit === digits[i-1] + 1);
+        const isDescending = digits.every((digit, i) => i === 0 || digit === digits[i-1] - 1);
+        return isAscending || isDescending;
+      }
+      if (pattern === 'repeated') {
+        // Check for repeated digits like 11111, 22222
+        return /^(\d)\1{4}$/.test(code);
+      }
+      if (pattern === 'palindrome') {
+        // Check for palindromes like 12321, 54345
+        return code === code.split('').reverse().join('');
+      }
+      return false;
+    });
+
+  } while (isExcluded);
+
+  return code;
+}
+
 // ICE STUN SERVER INTEGRATION
 
 // Configure ICE servers for WebRTC connection with improved STUN/TURN configuration
@@ -45,6 +99,7 @@ class IceStunKeyStore {
   private static instance: IceStunKeyStore;
   private peerConnection: RTCPeerConnection | null = null;
   private sessionKeyCache: string | null = null;
+  private sessionCodeCache: string | null = null;
   private isInitialized = false;
 
   private constructor() {}
@@ -101,17 +156,30 @@ class IceStunKeyStore {
     this.sessionKeyCache = sessionKey;
   }
 
+  // Store 5-digit session code
+  async storeSessionCode(code: string): Promise<void> {
+    await this.initialize();
+    this.sessionCodeCache = code;
+  }
+
   // Retrieve session key from ICE candidate signal
   async retrieveSessionKey(): Promise<string | null> {
     await this.initialize();
     return this.sessionKeyCache;
   }
 
-  // Clear the stored session key
+  // Retrieve 5-digit session code
+  async retrieveSessionCode(): Promise<string | null> {
+    await this.initialize();
+    return this.sessionCodeCache;
+  }
+
+  // Clear the stored session key and code
   async clearSessionKey(): Promise<void> {
     this.sessionKeyCache = null;
+    this.sessionCodeCache = null;
 
-    // Restart ICE gathering toconnection generate new candidates
+    // Restart ICE gathering to generate new candidates
     if (this.peerConnection) {
       this.peerConnection.restartIce();
     }
@@ -144,8 +212,6 @@ export async function encryptAesGcmOptimized(
   // For very large files, process in chunks to avoid memory issues
   if (message.byteLength > chunkSize) {
     const data = new Uint8Array(message);
-
-    
     const chunks = [];
     let offset = 0;
 
@@ -362,18 +428,37 @@ export async function getSessionKeyFromIceStun(): Promise<string | null> {
   return await keyStore.retrieveSessionKey();
 }
 
+// Get 5-digit session code from ICE STUN server
+export async function getSessionCodeFromIceStun(): Promise<string | null> {
+  const keyStore = IceStunKeyStore.getInstance();
+  return await keyStore.retrieveSessionCode();
+}
+
 // Set session key in ICE STUN server
 export async function setSessionKeyInIceStun(base64SessionKey: string): Promise<void> {
   const keyStore = IceStunKeyStore.getInstance();
   await keyStore.storeSessionKey(base64SessionKey);
 }
 
-// Generate and set a new random session key
-export async function rotateSessionKey(): Promise<string> {
+// Set 5-digit session code in ICE STUN server
+export async function setSessionCodeInIceStun(code: string): Promise<void> {
+  const keyStore = IceStunKeyStore.getInstance();
+  await keyStore.storeSessionCode(code);
+}
+
+// Generate and set a new random session key with 5-digit code
+export async function rotateSessionKey(): Promise<{ key: string; code: string }> {
   const newSessionKey = await generateSessionKey();
   const base64SessionKey = await exportSessionKeyToBase64(newSessionKey);
+  const sessionCode = generateValidated5DigitCode(['sequential', 'repeated']);
+
   await setSessionKeyInIceStun(base64SessionKey);
-  return base64SessionKey;
+  await setSessionCodeInIceStun(sessionCode);
+
+  return {
+    key: base64SessionKey,
+    code: sessionCode
+  };
 }
 
 // ========== HIGH-PERFORMANCE ENCRYPTION/DECRYPTION WORKFLOW ==========
@@ -383,7 +468,7 @@ export async function tripleLayerEncryptOptimized(
   message: ArrayBuffer,
   rsaPublicKey: CryptoKey,
   chunkSize = 64 * 1024 * 1024 // Default to 64MB chunks for high performance
-): Promise<{ encryptedMessage: Uint8Array; encryptedAesKey: Uint8Array; sessionKeyId: string }> {
+): Promise<{ encryptedMessage: Uint8Array; encryptedAesKey: Uint8Array; sessionCode: string }> {
   // Use a pre-cached AES key if available to reduce key generation overhead
   const aesKey = await generateAesKey();
 
@@ -392,31 +477,28 @@ export async function tripleLayerEncryptOptimized(
   const encryptedMessage = await encryptAesGcmOptimized(aesKey, message, chunkSize);
   console.timeEnd('Encryption');
 
-  // 3. Get or create session key
-  let sessionKeyBase64 = await getSessionKeyFromIceStun();
-  if (!sessionKeyBase64) {
-    sessionKeyBase64 = await rotateSessionKey();
+  // Get or create session key and code
+  let sessionData = await getSessionKeyFromIceStun();
+  let sessionCode = await getSessionCodeFromIceStun();
+
+  if (!sessionData || !sessionCode) {
+    const newSession = await rotateSessionKey();
+    sessionData = newSession.key;
+    sessionCode = newSession.code;
   }
-  const sessionKey = await importSessionKeyFromBase64(sessionKeyBase64);
 
-  // 4. Encrypt AES key with session key - skip the intermediate encryption for speed
-  // We'll directly encrypt the AES key with RSA public key since that's more secure for our purpose
+  // Encrypt AES key with RSA public key
   const exportedAesKey = await crypto.subtle.exportKey('raw', aesKey);
-
-  // 5. Encrypt AES key with RSA public key
   const encryptedAesKey = await crypto.subtle.encrypt(
     { name: rsaGenParams.name },
     rsaPublicKey,
     exportedAesKey
   );
 
-  // 6. Generate a unique session key ID (timestamp-based for simplicity)
-  const sessionKeyId = Date.now().toString();
-
   return {
     encryptedMessage,
     encryptedAesKey: new Uint8Array(encryptedAesKey),
-    sessionKeyId
+    sessionCode: sessionCode
   };
 }
 
@@ -424,7 +506,7 @@ export async function tripleLayerEncryptOptimized(
 export async function tripleLayerEncrypt(
   message: ArrayBuffer,
   rsaPublicKey: CryptoKey
-): Promise<{ encryptedMessage: Uint8Array; encryptedAesKey: Uint8Array; sessionKeyId: string }> {
+): Promise<{ encryptedMessage: Uint8Array; encryptedAesKey: Uint8Array; sessionCode: string }> {
   return tripleLayerEncryptOptimized(message, rsaPublicKey);
 }
 
@@ -433,9 +515,16 @@ export async function tripleLayerDecryptOptimized(
   encryptedMessage: Uint8Array,
   encryptedAesKey: Uint8Array,
   rsaPrivateKey: CryptoKey,
+  sessionCode: string,
   chunkSize = 64 * 1024 * 1024 // Default to 64MB chunks for high performance
 ): Promise<Uint8Array> {
-  // 1. Decrypt the AES key with RSA private key
+  // Verify session code
+  const storedSessionCode = await getSessionCodeFromIceStun();
+  if (storedSessionCode !== sessionCode) {
+    throw new Error('Invalid session code');
+  }
+
+  // Decrypt the AES key with RSA private key
   console.time('Decryption');
   const decryptedAesKeyBuffer = await crypto.subtle.decrypt(
     { name: 'RSA-OAEP' },
@@ -443,13 +532,13 @@ export async function tripleLayerDecryptOptimized(
     encryptedAesKey
   );
 
-  // 2. Import the decrypted AES key
+  // Import the decrypted AES key
   const aesKey = await crypto.subtle.importKey('raw', decryptedAesKeyBuffer, aesGenParams, true, [
     'encrypt',
     'decrypt'
   ]);
 
-  // 3. Decrypt the message with optimized AES-GCM implementation
+  // Decrypt the message with optimized AES-GCM implementation
   const decryptedMessage = await decryptAesGcmOptimized(aesKey, encryptedMessage, chunkSize);
   console.timeEnd('Decryption');
 
@@ -460,9 +549,10 @@ export async function tripleLayerDecryptOptimized(
 export async function tripleLayerDecrypt(
   encryptedMessage: Uint8Array,
   encryptedAesKey: Uint8Array,
-  rsaPrivateKey: CryptoKey
+  rsaPrivateKey: CryptoKey,
+  sessionCode: string
 ): Promise<Uint8Array> {
-  return tripleLayerDecryptOptimized(encryptedMessage, encryptedAesKey, rsaPrivateKey);
+  return tripleLayerDecryptOptimized(encryptedMessage, encryptedAesKey, rsaPrivateKey, sessionCode);
 }
 
 // Function to check if session has ended and rotate session key if needed
@@ -476,19 +566,31 @@ export async function checkAndRotateSessionKey(sessionExpiryMinutes: number = 30
   }
 
   try {
-    // Extract timestamp from first 13 characters of key (if format allows)
-    // This is a simplified approach - you may want to store the timestamp separately
-    const timestamp = parseInt(sessionKeyBase64.substring(0, 13), 10);
+    // For simplicity, we'll use a timestamp-based approach
+    // In a real implementation, you might want to store timestamps separately
+    const sessionCode = await getSessionCodeFromIceStun();
+    if (!sessionCode) {
+      await rotateSessionKey();
+      return;
+    }
+
+    // Simple time-based rotation (you can implement more sophisticated logic)
+    const sessionStartTime = parseInt(sessionCode) * 1000; // Convert to milliseconds if needed
     const now = Date.now();
 
-    // Check if session has expired
-    if (isNaN(timestamp) || now - timestamp > sessionExpiryMinutes * 60 * 1000) {
+    // Check if session has expired (this is a simplified approach)
+    if (now - sessionStartTime > sessionExpiryMinutes * 60 * 1000) {
       await rotateSessionKey();
     }
   } catch (error) {
     // If any error occurs, rotate the key for safety
     await rotateSessionKey();
   }
+}
+
+// Utility function to validate 5-digit codes
+export function validateSessionCode(code: string): boolean {
+  return /^\d{5}$/.test(code) && parseInt(code) >= 10000 && parseInt(code) <= 99999;
 }
 
 // Configure WebRTC with optimized settings for high-speed file transfer

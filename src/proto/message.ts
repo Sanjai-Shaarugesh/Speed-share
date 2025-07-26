@@ -4,14 +4,24 @@ import * as _m0 from 'protobufjs/minimal';
 export const protobufPackage = '';
 
 export enum ReceiveEvent {
-  /** EVENT_RECEIVER_ACCEPT - event when the reveiver got metadata and accept */
+  /** EVENT_RECEIVER_ACCEPT - event when the receiver got metadata and accept */
   EVENT_RECEIVER_ACCEPT = 0,
-  /** EVENT_RECEIVER_REJECT - event when the reveiver rejected the file */
+  /** EVENT_RECEIVER_REJECT - event when the receiver rejected the file */
   EVENT_RECEIVER_REJECT = 1,
-  /** EVENT_RECEIVED_CHUNK - event when the reveiver got file chunk */
+  /** EVENT_RECEIVED_CHUNK - event when the receiver got file chunk */
   EVENT_RECEIVED_CHUNK = 2,
-  /** EVENT_VALIDATE_ERROR - event when the reveiver got validate error */
+  /** EVENT_VALIDATE_ERROR - event when the receiver got validate error */
   EVENT_VALIDATE_ERROR = 3,
+  UNRECOGNIZED = -1
+}
+
+export enum ConnectionEvent {
+  /** EVENT_CONNECTION_REQUEST - event when receiver requests connection */
+  EVENT_CONNECTION_REQUEST = 0,
+  /** EVENT_CONNECTION_ACCEPTED - event when sender accepts connection */
+  EVENT_CONNECTION_ACCEPTED = 1,
+  /** EVENT_CONNECTION_REJECTED - event when sender rejects connection */
+  EVENT_CONNECTION_REJECTED = 2,
   UNRECOGNIZED = -1
 }
 
@@ -52,6 +62,38 @@ export function receiveEventToJSON(object: ReceiveEvent): string {
   }
 }
 
+export function connectionEventFromJSON(object: any): ConnectionEvent {
+  switch (object) {
+    case 0:
+    case 'EVENT_CONNECTION_REQUEST':
+      return ConnectionEvent.EVENT_CONNECTION_REQUEST;
+    case 1:
+    case 'EVENT_CONNECTION_ACCEPTED':
+      return ConnectionEvent.EVENT_CONNECTION_ACCEPTED;
+    case 2:
+    case 'EVENT_CONNECTION_REJECTED':
+      return ConnectionEvent.EVENT_CONNECTION_REJECTED;
+    case -1:
+    case 'UNRECOGNIZED':
+    default:
+      return ConnectionEvent.UNRECOGNIZED;
+  }
+}
+
+export function connectionEventToJSON(object: ConnectionEvent): string {
+  switch (object) {
+    case ConnectionEvent.EVENT_CONNECTION_REQUEST:
+      return 'EVENT_CONNECTION_REQUEST';
+    case ConnectionEvent.EVENT_CONNECTION_ACCEPTED:
+      return 'EVENT_CONNECTION_ACCEPTED';
+    case ConnectionEvent.EVENT_CONNECTION_REJECTED:
+      return 'EVENT_CONNECTION_REJECTED';
+    case ConnectionEvent.UNRECOGNIZED:
+    default:
+      return 'UNRECOGNIZED';
+  }
+}
+
 export interface MetaData {
   name: string;
   size: number;
@@ -60,15 +102,24 @@ export interface MetaData {
   key: Uint8Array;
 }
 
+export interface ConnectionRequest {
+  deviceName: string;
+  timestamp: string;
+}
+
 export interface Message {
-  /** file id */
+  /** file id or connection id */
   id: string;
   /** use for sender to send file metadata */
   metaData?: MetaData | undefined;
   /** use for sender to send file chunk */
   chunk?: Uint8Array | undefined;
-  /** respone event to tell the sender status */
+  /** response event to tell the sender status */
   receiveEvent?: ReceiveEvent | undefined;
+  /** connection request from receiver */
+  connectionRequest?: ConnectionRequest | undefined;
+  /** connection response from sender */
+  connectionEvent?: ConnectionEvent | undefined;
 }
 
 function createBaseMetaData(): MetaData {
@@ -169,8 +220,86 @@ export const MetaData = {
   }
 };
 
+function createBaseConnectionRequest(): ConnectionRequest {
+  return { deviceName: '', timestamp: '' };
+}
+
+export const ConnectionRequest = {
+  encode(message: ConnectionRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.deviceName !== '') {
+      writer.uint32(10).string(message.deviceName);
+    }
+    if (message.timestamp !== '') {
+      writer.uint32(18).string(message.timestamp);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ConnectionRequest {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseConnectionRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag != 10) {
+            break;
+          }
+
+          message.deviceName = reader.string();
+          continue;
+        case 2:
+          if (tag != 18) {
+            break;
+          }
+
+          message.timestamp = reader.string();
+          continue;
+      }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ConnectionRequest {
+    return {
+      deviceName: isSet(object.deviceName) ? String(object.deviceName) : '',
+      timestamp: isSet(object.timestamp) ? String(object.timestamp) : ''
+    };
+  },
+
+  toJSON(message: ConnectionRequest): unknown {
+    const obj: any = {};
+    message.deviceName !== undefined && (obj.deviceName = message.deviceName);
+    message.timestamp !== undefined && (obj.timestamp = message.timestamp);
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ConnectionRequest>, I>>(base?: I): ConnectionRequest {
+    return ConnectionRequest.fromPartial(base ?? {});
+  },
+
+  fromPartial<I extends Exact<DeepPartial<ConnectionRequest>, I>>(object: I): ConnectionRequest {
+    const message = createBaseConnectionRequest();
+    message.deviceName = object.deviceName ?? '';
+    message.timestamp = object.timestamp ?? '';
+    return message;
+  }
+};
+
 function createBaseMessage(): Message {
-  return { id: '', metaData: undefined, chunk: undefined, receiveEvent: undefined };
+  return {
+    id: '',
+    metaData: undefined,
+    chunk: undefined,
+    receiveEvent: undefined,
+    connectionRequest: undefined,
+    connectionEvent: undefined
+  };
 }
 
 export const Message = {
@@ -186,6 +315,12 @@ export const Message = {
     }
     if (message.receiveEvent !== undefined) {
       writer.uint32(32).int32(message.receiveEvent);
+    }
+    if (message.connectionRequest !== undefined) {
+      ConnectionRequest.encode(message.connectionRequest, writer.uint32(42).fork()).ldelim();
+    }
+    if (message.connectionEvent !== undefined) {
+      writer.uint32(48).int32(message.connectionEvent);
     }
     return writer;
   },
@@ -225,6 +360,20 @@ export const Message = {
 
           message.receiveEvent = reader.int32() as any;
           continue;
+        case 5:
+          if (tag != 42) {
+            break;
+          }
+
+          message.connectionRequest = ConnectionRequest.decode(reader, reader.uint32());
+          continue;
+        case 6:
+          if (tag != 48) {
+            break;
+          }
+
+          message.connectionEvent = reader.int32() as any;
+          continue;
       }
       if ((tag & 7) == 4 || tag == 0) {
         break;
@@ -241,6 +390,12 @@ export const Message = {
       chunk: isSet(object.chunk) ? bytesFromBase64(object.chunk) : undefined,
       receiveEvent: isSet(object.receiveEvent)
         ? receiveEventFromJSON(object.receiveEvent)
+        : undefined,
+      connectionRequest: isSet(object.connectionRequest)
+        ? ConnectionRequest.fromJSON(object.connectionRequest)
+        : undefined,
+      connectionEvent: isSet(object.connectionEvent)
+        ? connectionEventFromJSON(object.connectionEvent)
         : undefined
     };
   },
@@ -255,6 +410,15 @@ export const Message = {
     message.receiveEvent !== undefined &&
       (obj.receiveEvent =
         message.receiveEvent !== undefined ? receiveEventToJSON(message.receiveEvent) : undefined);
+    message.connectionRequest !== undefined &&
+      (obj.connectionRequest = message.connectionRequest
+        ? ConnectionRequest.toJSON(message.connectionRequest)
+        : undefined);
+    message.connectionEvent !== undefined &&
+      (obj.connectionEvent =
+        message.connectionEvent !== undefined
+          ? connectionEventToJSON(message.connectionEvent)
+          : undefined);
     return obj;
   },
 
@@ -271,6 +435,11 @@ export const Message = {
         : undefined;
     message.chunk = object.chunk ?? undefined;
     message.receiveEvent = object.receiveEvent ?? undefined;
+    message.connectionRequest =
+      object.connectionRequest !== undefined && object.connectionRequest !== null
+        ? ConnectionRequest.fromPartial(object.connectionRequest)
+        : undefined;
+    message.connectionEvent = object.connectionEvent ?? undefined;
     return message;
   }
 };

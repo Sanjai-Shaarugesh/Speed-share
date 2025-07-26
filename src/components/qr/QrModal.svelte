@@ -306,7 +306,7 @@
       border-width: 2px;
       border-color: currentColor;
     }
-    
+
     .exit-button {
       border-width: 2px;
       border-color: currentColor;
@@ -315,12 +315,12 @@
 </style>
 
 <!-- Open Modal Button -->
-<button 
+<button
   onclick={openModal}
   class="button-hover inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold bg-transparent border-2 border-yellow-500 dark:border-yellow-400 text-yellow-600 dark:text-yellow-400 rounded-lg hover:bg-yellow-500 hover:dark:bg-yellow-400 hover:text-white hover:dark:text-gray-900 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
   aria-label="Show QR Code"
 >
-  <QrCode class="w-3 h-3 sm:w-4 sm:h-4" /> 
+  <QrCode class="w-3 h-3 sm:w-4 sm:h-4" />
   <span class="hidden xs:inline">Show QR</span>
   <span class="xs:hidden">QR</span>
 </button>
@@ -329,37 +329,37 @@
 {#if isModalOpen}
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
     <!-- Backdrop -->
-    <div 
+    <div
       class="absolute inset-0 bg-black/40 dark:bg-black/60 {isClosing ? 'backdrop-exit' : 'backdrop-enter'}"
       onclick={handleBackdropClick}
     ></div>
-    
+
     <!-- Modal Box -->
     <div
-      class="modal-content relative z-10 w-full max-w-sm sm:max-w-md lg:max-w-xl 
-             bg-white/95 dark:bg-gray-900/95 
-             text-gray-900 dark:text-gray-100 
-             shadow-2xl backdrop-blur-xl 
-             border border-gray-200/80 dark:border-gray-700/80 
-             rounded-2xl sm:rounded-3xl 
-             p-4 sm:p-6 lg:p-8 
+      class="modal-content relative z-10 w-full max-w-sm sm:max-w-md lg:max-w-xl
+             bg-white/95 dark:bg-gray-900/95
+             text-gray-900 dark:text-gray-100
+             shadow-2xl backdrop-blur-xl
+             border border-gray-200/80 dark:border-gray-700/80
+             rounded-2xl sm:rounded-3xl
+             p-4 sm:p-6 lg:p-8
              {isClosing ? 'modal-exit' : 'modal-enter'}
              max-h-[90vh] overflow-y-auto"
       onclick={(e) => e.stopPropagation()}
     >
       <!-- Exit Button - Round -->
-      <button 
+      <button
         onclick={closeModal}
-        class="exit-button absolute top-3 right-3 sm:top-4 sm:right-4 
-               w-8 h-8 sm:w-10 sm:h-10 
-               rounded-full 
-               bg-gradient-to-br from-gray-100 to-gray-200 
-               dark:from-gray-700 dark:to-gray-800 
-               hover:from-red-100 hover:to-red-200 
+        class="exit-button absolute top-3 right-3 sm:top-4 sm:right-4
+               w-8 h-8 sm:w-10 sm:h-10
+               rounded-full
+               bg-gradient-to-br from-gray-100 to-gray-200
+               dark:from-gray-700 dark:to-gray-800
+               hover:from-red-100 hover:to-red-200
                dark:hover:from-red-800 dark:hover:to-red-900
-               text-gray-600 dark:text-gray-300 
+               text-gray-600 dark:text-gray-300
                hover:text-red-600 dark:hover:text-red-300
-               flex items-center justify-center 
+               flex items-center justify-center
                shadow-lg border border-gray-300 dark:border-gray-600
                hover:border-red-300 dark:hover:border-red-600
                focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2
@@ -370,9 +370,9 @@
       </button>
 
       <!-- Title with 3D effect -->
-      <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-4 sm:mb-6 text-center 
-                 bg-gradient-to-r from-gray-800 to-gray-600 
-                 dark:from-gray-100 dark:to-gray-300 
+      <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-4 sm:mb-6 text-center
+                 bg-gradient-to-r from-gray-800 to-gray-600
+                 dark:from-gray-100 dark:to-gray-300
                  bg-clip-text text-transparent pr-12">
         {title}
       </h3>
@@ -380,10 +380,10 @@
       <!-- QR Code Image with 3D animations -->
       {#if qrcode}
         <div class="flex justify-center items-center mb-4 sm:mb-6">
-          <div class="qr-container rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden 
-                      border-2 sm:border-4 border-yellow-400/60 dark:border-yellow-500/60 
-                      p-1 sm:p-2 
-                      bg-gradient-to-br from-yellow-50 to-yellow-100 
+          <div class="qr-container rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden
+                      border-2 sm:border-4 border-yellow-400/60 dark:border-yellow-500/60
+                      p-1 sm:p-2
+                      bg-gradient-to-br from-yellow-50 to-yellow-100
                       dark:from-yellow-900/20 dark:to-yellow-800/20
                       hover:border-yellow-500/80 dark:hover:border-yellow-400/80
                       transition-colors duration-300">
@@ -395,7 +395,7 @@
             />
           </div>
         </div>
-        
+
         <!-- Floating instruction text -->
         <div class="text-center space-y-2">
           <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
@@ -412,8 +412,8 @@
       {:else}
         <div class="flex justify-center items-center h-48 sm:h-64 lg:h-80">
           <div class="flex flex-col items-center space-y-3 sm:space-y-4">
-            <div class="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 
-                        border-2 sm:border-4 border-yellow-400 dark:border-yellow-500 
+            <div class="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12
+                        border-2 sm:border-4 border-yellow-400 dark:border-yellow-500
                         border-t-transparent"></div>
             <div class="text-sm sm:text-base text-gray-500 dark:text-gray-400">
               Generating QR code...
