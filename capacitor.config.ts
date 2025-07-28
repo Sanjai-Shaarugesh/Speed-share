@@ -6,13 +6,13 @@ const config: CapacitorConfig = {
   webDir: './build',
   server: {
     androidScheme: 'https',
-    allowNavigation: ['*'] // allow all internal routes like /offer, /answer
+    allowNavigation: ['/','/answer']
   },
   plugins: {
       SplashScreen: {
-        launchShowDuration: 1000,
+        launchShowDuration: 100,
         launchAutoHide: true,
-        launchFadeOutDuration: 3000,
+        launchFadeOutDuration: 300,
         backgroundColor: "#00000000",
         androidSplashResourceName: "splash",
         androidScaleType: "CENTER_CROP",
@@ -25,6 +25,12 @@ const config: CapacitorConfig = {
         layoutName: "launch_screen",
         useDialog: true,
       },
+      LiveUpdates: {
+            appId: '042a1261',
+            channel: 'Production',
+            autoUpdateMethod: 'background',
+            maxVersions: 2
+          }
     },
     android: {
       allowMixedContent: true
