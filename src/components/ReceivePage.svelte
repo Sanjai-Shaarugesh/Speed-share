@@ -2,9 +2,9 @@
   import { defaultSendOptions, githubLink, waitIceCandidatesTimeout } from '../configs';
   import { addToastMessage } from '../stores/toastStore';
   import Eye from '../components/icons/Eye.svelte';
-  import { Message, ConnectionEvent, ConnectionRequest } from '../proto/message';
+  import { Message } from '../proto/message';
   import Collapse from '../components/layout/Collapse.svelte';
-  import { Cpu, CircleArrowOutUpLeft, Copy, Send, Antenna, Clock } from '@lucide/svelte';
+  import { Cpu, CircleArrowOutUpLeft, Copy, Send, Antenna } from '@lucide/svelte';
   import { onMount, onDestroy } from 'svelte';
   import {
     exportRsaPublicKeyToBase64,
@@ -26,13 +26,8 @@
   let showAnswerCode = $state(false);
   let isConnecting = $state(false);
   let dataChannel: RTCDataChannel | undefined = $state(undefined);
-  let rsa: CryptoKeyPair | undefined = $state(undefined);
-  let rsaPub: CryptoKey | undefined = $state(undefined);
-
-  // Connection approval state
-  let waitingForApproval = $state(false);
-  let connectionRejected = $state(false);
-  let isConnectionEstablished = $state(false);
+  let rsa: CryptoKeyPair | undefined = $state(undefined); // private key
+  let rsaPub: CryptoKey | undefined = $state(undefined); // public key from other peer
 
   // components
   let receiver: Receiver | undefined = $state(undefined);
@@ -44,57 +39,6 @@
   // connection object - will be initialized when processing offer
   let connection: RTCPeerConnection;
 
-  function getDeviceName(): string {
-    // Try to get a meaningful device name
-    const userAgent = navigator.userAgent;
-    let deviceName = 'Unknown Device';
-
-    if (userAgent.includes('Android')) {
-      deviceName = 'Android Device';
-    } else if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
-      deviceName = 'iOS Device';
-    } else if (userAgent.includes('Windows')) {
-      deviceName = 'Windows Device';
-    } else if (userAgent.includes('Mac')) {
-      deviceName = 'Mac Device';
-    } else if (userAgent.includes('Linux')) {
-      deviceName = 'Linux Device';
-    }
-
-    // Add browser info
-    if (userAgent.includes('Chrome')) {
-      deviceName += ' (Chrome)';
-    } else if (userAgent.includes('Firefox')) {
-      deviceName += ' (Firefox)';
-    } else if (userAgent.includes('Safari')) {
-      deviceName += ' (Safari)';
-    } else if (userAgent.includes('Edge')) {
-      deviceName += ' (Edge)';
-    }
-
-    return deviceName;
-  }
-
-  async function sendConnectionRequest() {
-    if (!dataChannel) return;
-
-    const connectionRequest: ConnectionRequest = {
-      deviceName: getDeviceName(),
-      timestamp: new Date().toISOString()
-    };
-
-    const requestMessage = Message.create({
-      id: 'connection-request',
-      connectionRequest: connectionRequest
-    });
-
-    const encoded = Message.encode(requestMessage).finish();
-    dataChannel.send(encoded);
-
-    waitingForApproval = true;
-    addToastMessage('Connection request sent, waiting for approval...', 'info');
-  }
-
   async function processOfferCode() {
     if (!offerCode) {
       addToastMessage('Please enter an offer code', 'error');
@@ -102,7 +46,6 @@
     }
 
     isProcessingOffer = true;
-    connectionRejected = false;
 
     try {
       const { sdp, iceServer, chunkSize, publicKey } = parseUniqueCode(offerCode);
@@ -116,38 +59,12 @@
         dataChannel = event.channel;
 
         dataChannel.onopen = () => {
-          // Send connection request immediately when channel opens
-          sendConnectionRequest();
+          addToastMessage('Connected', 'success');
+          isConnecting = true;
+          qrModal?.close();
         };
-
         dataChannel.onmessage = (event) => {
           const message = Message.decode(new Uint8Array(event.data));
-
-          // Handle connection approval/rejection
-          if (message.connectionEvent !== undefined) {
-            if (message.connectionEvent === ConnectionEvent.EVENT_CONNECTION_ACCEPTED) {
-              waitingForApproval = false;
-              isConnectionEstablished = true;
-              isConnecting = true;
-              addToastMessage('Connection approved! You can now transfer files.', 'success');
-              qrModal?.close();
-            } else if (message.connectionEvent === ConnectionEvent.EVENT_CONNECTION_REJECTED) {
-              waitingForApproval = false;
-              connectionRejected = true;
-              isConnectionEstablished = false;
-              addToastMessage('Connection rejected by the sender.', 'error');
-              // Close the connection
-              if (connection) {
-                connection.close();
-              }
-            }
-            return;
-          }
-
-          // Handle other message types only if connection is established
-          if (!isConnectionEstablished) {
-            return;
-          }
 
           if (message.metaData !== undefined && receiver) {
             receiver.onMetaData(message.id, message.metaData);
@@ -158,19 +75,13 @@
             sender.onReceiveEvent(message.id, message.receiveEvent);
           }
         };
-
         dataChannel.onerror = () => {
           addToastMessage('WebRTC error', 'error');
           isConnecting = false;
-          isConnectionEstablished = false;
-          waitingForApproval = false;
         };
-
         dataChannel.onclose = () => {
           addToastMessage('Disconnected', 'error');
           isConnecting = false;
-          isConnectionEstablished = false;
-          waitingForApproval = false;
         };
       };
 
@@ -196,7 +107,6 @@
       isProcessingOffer = false;
     }
   }
-
   async function generateAnswerCode(isEncrypt: boolean, chunkSize?: number) {
     let publicKeyBase64 = '';
     if (isEncrypt) {
@@ -239,80 +149,47 @@
     processOfferCode();
   }
 
-  function resetConnection() {
-    connectionRejected = false;
-    waitingForApproval = false;
-    isConnectionEstablished = false;
-    isConnecting = false;
-    answerCode = '';
-    offerCode = '';
-    dataChannel = undefined;
-    if (connection) {
-      connection.close();
-    }
-  }
-
   onMount(() => {
-    let gPressed = false;
+  let gPressed = false;
 
-    const handleShortcut = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'g') {
-        gPressed = true;
-      } else if (gPressed && e.key.toLowerCase() === 'o') {
-        e.preventDefault();
-        window.location.href = '/';
-        gPressed = false;
-      } else {
-        gPressed = false;
+  const handleShortcut = (e: KeyboardEvent) => {
+    if (e.key.toLowerCase() === 'g') {
+      gPressed = true;
+    } else if (gPressed && e.key.toLowerCase() === 'o') {
+      e.preventDefault();
+      window.location.href = '/'; // Redirect to home page
+      gPressed = false; // Reset after use
+    } else {
+      gPressed = false; // Reset if any other key is pressed
+    }
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      processOfferCode();
+    } else if (e.altKey && e.key.toLowerCase() === 'p') {
+      e.preventDefault();
+      processOfferCode();
+    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+      const inputElement = document.querySelector('input[type="password"]') as HTMLInputElement;
+      if (inputElement) {
+        inputElement.focus();
       }
+    } else if (e.ctrlKey && e.key.toLowerCase() === 'c') {
+      e.preventDefault();
+      copyAnswerCode();
+    }
+  };
 
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        processOfferCode();
-      } else if (e.altKey && e.key.toLowerCase() === 'p') {
-        e.preventDefault();
-        processOfferCode();
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
-        const inputElement = document.querySelector('input[type="password"]') as HTMLInputElement;
-        if (inputElement) {
-          inputElement.focus();
-        }
-      } else if (e.ctrlKey && e.key.toLowerCase() === 'c') {
-        e.preventDefault();
-        copyAnswerCode();
-      }
-    };
+  window.addEventListener('keydown', handleShortcut);
+  return () => window.removeEventListener('keydown', handleShortcut);
+});
 
-    window.addEventListener('keydown', handleShortcut);
-    return () => window.removeEventListener('keydown', handleShortcut);
-  });
 </script>
 
 <div class="container mx-auto p-4 max-w-3xl">
   <h1 class="text-2xl font-bold mb-4">File Transfer - Answer Page</h1>
 
-  <!-- Connection Status Messages -->
-  {#if waitingForApproval}
-    <div class="alert alert-info mb-4">
-      <Clock class="w-6 h-6" />
-      <div>
-        <h3 class="font-bold">Waiting for Approval</h3>
-        <div class="text-sm">Your connection request has been sent. Please wait for the sender to approve your request.</div>
-      </div>
-    </div>
-  {/if}
-
-  {#if connectionRejected}
-    <div class="alert alert-error mb-4">
-      <div>
-        <h3 class="font-bold">Connection Rejected</h3>
-        <div class="text-sm">The sender has rejected your connection request. You can try again with a new offer code.</div>
-      </div>
-      <button class="btn btn-sm" onclick={resetConnection}>Try Again</button>
-    </div>
-  {/if}
-
-  <Collapse title="1. Enter Offer Code" isOpen={!answerCode && !isConnecting && !waitingForApproval}>
+  <Collapse title="1. Enter Offer Code" isOpen={!answerCode && !isConnecting}>
     <p>
       Enter the offer code provided by your peer to establish a connection. See
       <a
@@ -328,13 +205,13 @@
         class="input input-bordered w-full"
         placeholder="Enter offer code"
         bind:value={offerCode}
-        disabled={isProcessingOffer || waitingForApproval}
+        disabled={isProcessingOffer}
       />
       <div class="mt-4 flex gap-2">
         <button
           class="btn btn-outline btn-accent"
           onclick={processOfferCode}
-          disabled={isProcessingOffer || waitingForApproval}
+          disabled={isProcessingOffer}
           >{#if isProcessingOffer}
             Processing
           {:else}
@@ -353,14 +230,9 @@
     </div>
   </Collapse>
 
-  <Collapse title="2. Share Answer Code" isOpen={answerCode !== '' && !isConnecting && !waitingForApproval}>
+  <Collapse title="2. Share Answer Code" isOpen={answerCode !== '' && !isConnecting}>
     {#if answerCode}
-      <p>Share this answer code with your peer to complete the connection setup.</p>
-      <div class="alert alert-warning mb-4">
-        <div>
-          <div class="text-sm">After sharing this code, you'll need to wait for the sender to approve your connection request.</div>
-        </div>
-      </div>
+      <p>Share this answer code with your peer to complete the connection.</p>
       <div class="relative mt-4">
         <input
           type={showAnswerCode ? 'text' : 'password'}
@@ -385,8 +257,8 @@
     {/if}
   </Collapse>
 
-  <Collapse title="3. Transfer Files" isOpen={isConnecting && isConnectionEstablished}>
-    {#if dataChannel && isConnectionEstablished}
+  <Collapse title="3. Transfer Files" isOpen={isConnecting}>
+    {#if dataChannel}
       <div class="flex w-full mb-4 mt-2 justify-center">
         <div class="join w-full">
           <button

@@ -2,7 +2,7 @@
   import { addToastMessage } from '../stores/toastStore';
   import { defaultSendOptions, githubLink, waitIceCandidatesTimeout } from '../configs';
   import Eye from '../components/icons/Eye.svelte';
-  import { Message, ConnectionEvent, ConnectionRequest } from '../proto/message';
+  import { Message } from '../proto/message';
   import Collapse from '../components/layout/Collapse.svelte';
   import OfferOptions from '../components/OfferOptions.svelte';
   import {
@@ -13,10 +13,7 @@
     LandPlot,
     Send,
     HeartHandshake,
-    FilePlus,
-    Check,
-    X,
-    UserCheck
+    FilePlus
   } from '@lucide/svelte';
   import { onMount, onDestroy } from 'svelte';
   import { Capacitor } from '@capacitor/core';
@@ -34,13 +31,15 @@
   import QrModal from '../components/qr/QrModal.svelte';
   import ScanQrModal from '../components/qr/ScanQrModal.svelte';
   import Toast from '../components/Toast.svelte';
+  import { navigate } from '../stores/navigationStore';
 
   // options
   let sendOptions = $state(defaultSendOptions);
-  let rsa: CryptoKeyPair | undefined = $state(undefined);
-  let rsaPub: CryptoKey | undefined = $state(undefined);
+  let rsa: CryptoKeyPair | undefined = $state(undefined); // private key
+  let rsaPub: CryptoKey | undefined = $state(undefined); // public key from other peer
 
-  let showPassword = $state(false);
+  let showPassword = $state(false); // State to control password visibility
+  // Value to bind with the input
 
   // webRTC
   let connection: RTCPeerConnection | undefined = $state(undefined);
@@ -51,11 +50,6 @@
   let showOfferCode = $state(false);
   let answerCode = $state('');
 
-  // Connection approval state
-  let pendingConnection: ConnectionRequest | undefined = $state(undefined);
-  let connectionApprovalVisible = $state(false);
-  let isConnectionEstablished = $state(false);
-
   // components
   let receiver: Receiver | undefined = $state(undefined);
   let sender: Sender | undefined = $state(undefined);
@@ -64,6 +58,7 @@
   let showOfferOptions = $state(false);
   let qrModal: QrModal | undefined = $state(undefined);
 
+  // Debug logging functions
   function logWebRTCState() {
     if (!connection) {
       console.error('WebRTC Connection: Not initialized');
@@ -77,6 +72,17 @@
       hasLocalDescription: !!connection.localDescription,
       hasRemoteDescription: !!connection.remoteDescription
     });
+  }
+
+  function debugAcceptAnswer() {
+    console.log('Debug Accept Answer:', {
+      answerCode,
+      sendOptions,
+      isEncrypting: sendOptions.isEncrypt,
+      connectionExists: !!connection
+    });
+
+    logWebRTCState();
   }
 
   async function createOfferCode(offer: RTCSessionDescription) {
@@ -96,7 +102,7 @@
     });
   }
 
-  async function createPeerAndDataChannel() {
+  async function createPeerAndDataCannel() {
     connection = new RTCPeerConnection({
       iceServers: [{ urls: sendOptions.iceServer }],
       bundlePolicy: 'balanced',
@@ -108,32 +114,15 @@
     };
 
     dataChannel = connection.createDataChannel('data', {
-      ordered: false
+      ordered: false // we handle the order by response status
     });
-
     dataChannel.onopen = () => {
-      if (isConnectionEstablished) {
-        addToastMessage('Connected', 'success');
-        isConnecting = true;
-        qrModal?.close();
-      }
+      addToastMessage('Connected', 'success');
+      isConnecting = true;
+      qrModal?.close();
     };
-
     dataChannel.onmessage = (event) => {
       const message = Message.decode(new Uint8Array(event.data));
-
-      // Handle connection request
-      if (message.connectionRequest !== undefined) {
-        pendingConnection = message.connectionRequest;
-        connectionApprovalVisible = true;
-        addToastMessage(`Connection request from ${message.connectionRequest.deviceName}`, 'info');
-        return;
-      }
-
-      // Handle other message types only if connection is established
-      if (!isConnectionEstablished) {
-        return;
-      }
 
       if (message.metaData !== undefined && receiver) {
         receiver.onMetaData(message.id, message.metaData);
@@ -144,71 +133,21 @@
         sender.onReceiveEvent(message.id, message.receiveEvent);
       }
     };
-
     dataChannel.onerror = () => {
       addToastMessage('WebRTC error', 'error');
       isConnecting = false;
-      isConnectionEstablished = false;
       offerCode = '';
     };
-
     dataChannel.onclose = () => {
       addToastMessage('Disconnected', 'error');
       isConnecting = false;
-      isConnectionEstablished = false;
       offerCode = '';
     };
-  }
-
-  async function approveConnection() {
-    if (!dataChannel || !pendingConnection) return;
-
-    // Send approval message
-    const approvalMessage = Message.create({
-      id: 'connection-approval',
-      connectionEvent: ConnectionEvent.EVENT_CONNECTION_ACCEPTED
-    });
-
-    const encoded = Message.encode(approvalMessage).finish();
-    dataChannel.send(encoded);
-
-    // Mark connection as established
-    isConnectionEstablished = true;
-    connectionApprovalVisible = false;
-    isConnecting = true;
-
-    addToastMessage(`Connection approved for ${pendingConnection.deviceName}`, 'success');
-    pendingConnection = undefined;
-  }
-
-  async function rejectConnection() {
-    if (!dataChannel || !pendingConnection) return;
-
-    // Send rejection message
-    const rejectionMessage = Message.create({
-      id: 'connection-rejection',
-      connectionEvent: ConnectionEvent.EVENT_CONNECTION_REJECTED
-    });
-
-    const encoded = Message.encode(rejectionMessage).finish();
-    dataChannel.send(encoded);
-
-    connectionApprovalVisible = false;
-    addToastMessage(`Connection rejected for ${pendingConnection.deviceName}`, 'info');
-    pendingConnection = undefined;
-
-    // Close the connection
-    if (connection) {
-      connection.close();
-    }
-    isConnecting = false;
-    isConnectionEstablished = false;
-    offerCode = '';
   }
 
   async function generateOfferCode() {
     generating = true;
-    await createPeerAndDataChannel();
+    await createPeerAndDataCannel();
 
     if (!connection) {
       addToastMessage('Failed to create WebRTC connection', 'error');
@@ -230,6 +169,7 @@
       });
       await connection.setLocalDescription(offer);
 
+      // stop waiting for ice candidates if longer than timeout
       setTimeout(async () => {
         if (!connection?.localDescription || !generating) return;
         addToastMessage('timeout waiting ICE candidates');
@@ -254,12 +194,16 @@
   }
 
   async function acceptAnswer() {
+    // Debugging log
+    debugAcceptAnswer();
+
     if (!answerCode.trim()) {
       addToastMessage('Please enter an answer code', 'error');
       return;
     }
 
     try {
+      // Validate the answer code structure first
       let parsedCode;
       try {
         parsedCode = parseUniqueCode(answerCode);
@@ -271,11 +215,13 @@
 
       const { sdp, publicKey } = parsedCode;
 
+      // Ensure we have a valid connection before setting remote description
       if (!connection) {
         addToastMessage('WebRTC connection not established', 'error');
         return;
       }
 
+      // Handle encryption key if needed
       if (sendOptions.isEncrypt && publicKey) {
         try {
           rsaPub = await importRsaPublicKeyFromBase64(publicKey);
@@ -286,14 +232,16 @@
         }
       }
 
+      // Decode and set remote description
       const remoteDesc: RTCSessionDescriptionInit = {
         type: 'answer',
         sdp: sdpDecode(sdp, false)
       };
 
+      // Add error handling for setRemoteDescription
       try {
         await connection.setRemoteDescription(remoteDesc);
-        addToastMessage('Answer code accepted - waiting for connection approval', 'success');
+        addToastMessage('Answer code accepted', 'success');
       } catch (setDescError) {
         addToastMessage('Failed to set remote description', 'error');
         console.error('Set remote description error:', setDescError);
@@ -333,9 +281,11 @@
       } else if (gPressed && event.key.toLowerCase() == 'a') {
         event.preventDefault();
         window.location.href = '/answer.html';
+        //gPressed = false ;
       } else if (event.altKey && event.key == 's') {
         event.preventDefault();
         showOfferOptions = true;
+        // showOfferOptions.update(v => !v);
       } else if (event.ctrlKey && event.key.toLowerCase() == 'c') {
         event.preventDefault();
         copyOfferCode();
@@ -364,33 +314,6 @@
 
 <div class="container mx-auto p-4 max-w-3xl">
   <h1 class="text-2xl font-bold mb-4">File Transfer - Offer Page</h1>
-
-  <!-- Connection Approval Modal -->
-  {#if connectionApprovalVisible && pendingConnection}
-    <div class="modal modal-open">
-      <div class="modal-box">
-        <h3 class="font-bold text-lg flex items-center gap-2">
-          <UserCheck class="w-6 h-6" />
-          Connection Request
-        </h3>
-        <p class="py-4">
-          <strong>{pendingConnection.deviceName}</strong> wants to connect to your device.
-          <br />
-          <small class="text-gray-500">Requested at: {new Date(pendingConnection.timestamp).toLocaleString()}</small>
-        </p>
-        <div class="modal-action">
-          <button class="btn btn-success" onclick={approveConnection}>
-            <Check class="w-4 h-4" />
-            Accept
-          </button>
-          <button class="btn btn-error" onclick={rejectConnection}>
-            <X class="w-4 h-4" />
-            Reject
-          </button>
-        </div>
-      </div>
-    </div>
-  {/if}
 
   <Collapse title="1. Generate Offer" isOpen={!offerCode}>
     {#if generating}
@@ -446,6 +369,7 @@
           readonly
         />
 
+        <!-- Eye icon -->
         <div class="absolute top-1/2 transform -translate-y-1/2 right-2 p-1">
           <Eye
             onChange={(show) => {
@@ -459,22 +383,33 @@
         <button class="btn btn-dash btn-success" onclick={copyOfferCode}
           >Copy Code <Clipboard /> </button
         >
+
+
+
         <QrModal bind:this={qrModal} qrData={offerCode} title="Offer QR Code" />
       </div>
       <p class="mt-4">Enter the Answer Code from your peer to establish connection.</p>
       <div class="relative mt-4">
+        <!-- Toggle the input type based on the showPassword state -->
         <input
           class="input input-bordered w-full"
           type={showPassword ? 'text' : 'password'}
           bind:value={answerCode}
         />
 
+        <!-- Inline SVG for the eye icon to toggle visibility -->
         {#if showPassword}
           <button
             type="button"
             class="absolute top-1/2 transform -translate-y-1/2 right-2 p-1"
             onclick={() => (showPassword = !showPassword)}
             aria-label="Toggle password visibility"
+            onkeydown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                showPassword = !showPassword;
+              }
+            }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -503,6 +438,12 @@
             class="absolute top-1/2 transform -translate-y-1/2 right-2 p-1"
             onclick={() => (showPassword = !showPassword)}
             aria-label="Toggle password visibility"
+            onkeydown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                showPassword = !showPassword;
+              }
+            }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -538,10 +479,11 @@
     {/if}
   </Collapse>
 
-  <Collapse title="3. Transfer Files" isOpen={isConnecting && isConnectionEstablished}>
-    {#if dataChannel && isConnectionEstablished}
+  <Collapse title="3. Transfer Files" isOpen={isConnecting}>
+    {#if dataChannel}
       <div class="flex w-full mb-4 mt-2 justify-center">
         <div class="join w-full">
+          <!-- Send Button -->
           <button
             class="btn btn-dash btn-secondary join-item w-1/2 text-xl py-4 min-h-[3.5rem] inline-flex items-center justify-center gap-x-2"
             onclick={() => {
@@ -552,6 +494,7 @@
             <span class="btm-nav-label">Send</span>
           </button>
 
+          <!-- Receive Button with Badge -->
           <div class="relative w-1/2">
             <span
               class="indicator-item badge badge-success text-xs animate-bounce absolute"

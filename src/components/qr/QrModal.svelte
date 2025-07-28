@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { QRByte, Encoder, ErrorCorrectionLevel } from '@nuintun/qrcode';
-  import { QrCode, X } from '@lucide/svelte';
+  import { QrCode, X, Share2, Download, Copy, Check } from '@lucide/svelte';
 
   type Props = {
     title: string;
@@ -13,6 +13,8 @@
   let isModalOpen = $state(false);
   let qrcode = $state<Encoder | null>(null);
   let isClosing = $state(false);
+  let isSharing = $state(false);
+  let copySuccess = $state(false);
 
   // Export function to close modal
   export function close() {
@@ -53,6 +55,87 @@
     }, 300);
   }
 
+  // Convert data URL to blob
+  function dataURLToBlob(dataURL: string): Blob {
+    const arr = dataURL.split(',');
+    const mime = arr[0].match(/:(.*?);/)![1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+  }
+
+  // Share QR code using Web Share API or fallback
+  async function shareQRCode() {
+    if (!qrcode) return;
+
+    isSharing = true;
+
+    try {
+      const dataURL = qrcode.toDataURL(8);
+      const blob = dataURLToBlob(dataURL);
+      const file = new File([blob], `${title.replace(/[^a-z0-9]/gi, '_')}_qr.png`, { type: 'image/png' });
+
+      // Check if Web Share API is supported and can share files
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          title: `QR Code - ${title}`,
+          text: `QR Code for ${title}`,
+          files: [file]
+        });
+      } else {
+        // Fallback: copy image to clipboard if supported
+        if (navigator.clipboard && 'write' in navigator.clipboard) {
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              'image/png': blob
+            })
+          ]);
+          copySuccess = true;
+          setTimeout(() => {
+            copySuccess = false;
+          }, 2000);
+        } else {
+          // Final fallback: download the image
+          downloadQRCode();
+        }
+      }
+    } catch (error) {
+      console.error('Error sharing QR code:', error);
+      // Fallback to download
+      downloadQRCode();
+    } finally {
+      isSharing = false;
+    }
+  }
+
+  // Download QR code image
+  function downloadQRCode() {
+    if (!qrcode) return;
+
+    const dataURL = qrcode.toDataURL(8);
+    const link = document.createElement('a');
+    link.download = `${title.replace(/[^a-z0-9]/gi, '_')}_qr.png`;
+    link.href = dataURL;
+    link.click();
+  }
+
+  // Copy QR data to clipboard
+  async function copyQRData() {
+    try {
+      await navigator.clipboard.writeText(qrData);
+      copySuccess = true;
+      setTimeout(() => {
+        copySuccess = false;
+      }, 2000);
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+    }
+  }
+
   function handleShortcut(event: KeyboardEvent) {
     if (event.shiftKey && event.key.toLowerCase() === 'q') {
       event.preventDefault();
@@ -61,6 +144,18 @@
     if (event.key === 'Escape' && isModalOpen) {
       event.preventDefault();
       closeModal();
+    }
+    if (event.key.toLowerCase() === 's' && isModalOpen && qrcode) {
+      event.preventDefault();
+      shareQRCode();
+    }
+    if (event.key.toLowerCase() === 'd' && isModalOpen && qrcode) {
+      event.preventDefault();
+      downloadQRCode();
+    }
+    if (event.key.toLowerCase() === 'c' && isModalOpen) {
+      event.preventDefault();
+      copyQRData();
     }
   }
 
@@ -189,6 +284,15 @@
     }
   }
 
+  @keyframes pulseSuccess {
+    0%, 100% {
+      box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 25px rgba(34, 197, 94, 0.5);
+    }
+  }
+
   @keyframes loadingSpinner {
     0% {
       transform: rotate(0deg);
@@ -225,6 +329,10 @@
 
   .qr-container {
     animation: qrFloat 4s ease-in-out infinite;
+  }
+
+  .success-glow {
+    animation: pulseSuccess 1s ease-in-out;
   }
 
   /* Enhanced 3D effects for desktop */
@@ -396,17 +504,93 @@
           </div>
         </div>
 
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap justify-center gap-2 sm:gap-3 mb-4">
+          <!-- Share Button -->
+          <button
+            onclick={shareQRCode}
+            disabled={isSharing}
+            class="button-hover flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5
+                   text-xs sm:text-sm font-semibold rounded-lg
+                   bg-gradient-to-r from-blue-500 to-blue-600
+                   hover:from-blue-600 hover:to-blue-700
+                   text-white shadow-lg
+                   disabled:opacity-50 disabled:cursor-not-allowed
+                   focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2
+                   focus:ring-offset-white dark:focus:ring-offset-gray-900
+                   transition-all duration-300"
+            aria-label="Share QR Code"
+          >
+            {#if isSharing}
+              <div class="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent"></div>
+            {:else}
+              <Share2 class="w-3 h-3 sm:w-4 sm:h-4" />
+            {/if}
+            <span>Share</span>
+          </button>
+
+          <!-- Download Button -->
+          <button
+            onclick={downloadQRCode}
+            class="button-hover flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5
+                   text-xs sm:text-sm font-semibold rounded-lg
+                   bg-gradient-to-r from-green-500 to-green-600
+                   hover:from-green-600 hover:to-green-700
+                   text-white shadow-lg
+                   focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2
+                   focus:ring-offset-white dark:focus:ring-offset-gray-900
+                   transition-all duration-300"
+            aria-label="Download QR Code"
+          >
+            <Download class="w-3 h-3 sm:w-4 sm:h-4" />
+            <span>Download</span>
+          </button>
+
+          <!-- Copy Data Button -->
+          <button
+            onclick={copyQRData}
+            class="button-hover flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5
+                   text-xs sm:text-sm font-semibold rounded-lg
+                   bg-gradient-to-r from-purple-500 to-purple-600
+                   hover:from-purple-600 hover:to-purple-700
+                   text-white shadow-lg
+                   focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:ring-offset-2
+                   focus:ring-offset-white dark:focus:ring-offset-gray-900
+                   transition-all duration-300
+                   {copySuccess ? 'success-glow' : ''}"
+            aria-label="Copy QR Data"
+          >
+            {#if copySuccess}
+              <Check class="w-3 h-3 sm:w-4 sm:h-4" />
+            {:else}
+              <Copy class="w-3 h-3 sm:w-4 sm:h-4" />
+            {/if}
+            <span>{copySuccess ? 'Copied!' : 'Copy Data'}</span>
+          </button>
+        </div>
+
         <!-- Floating instruction text -->
         <div class="text-center space-y-2">
           <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
             Scan with your device camera or QR reader
           </p>
           <div class="flex flex-wrap justify-center gap-1 sm:gap-2 text-xs text-gray-500 dark:text-gray-500">
-            <span>Press</span>
-            <kbd class="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs font-mono">Esc</kbd>
-            <span class="hidden sm:inline">or</span>
-            <kbd class="hidden sm:inline px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs font-mono">Shift+Q</kbd>
-            <span>to close</span>
+            <div class="flex items-center gap-1">
+              <kbd class="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs font-mono">S</kbd>
+              <span>Share</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <kbd class="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs font-mono">D</kbd>
+              <span>Download</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <kbd class="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs font-mono">C</kbd>
+              <span>Copy</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <kbd class="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs font-mono">Esc</kbd>
+              <span>Close</span>
+            </div>
           </div>
         </div>
       {:else}
