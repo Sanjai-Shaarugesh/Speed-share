@@ -25,12 +25,7 @@ const config: CapacitorConfig = {
         layoutName: "launch_screen",
         useDialog: true,
       },
-      LiveUpdates: {
-            appId: '042a1261',
-            channel: 'Production',
-            autoUpdateMethod: 'background',
-            maxVersions: 2
-          }
+
     },
     android: {
       allowMixedContent: true

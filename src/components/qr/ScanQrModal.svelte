@@ -1018,16 +1018,7 @@
                 </div>
               </div>
             {/if}
-            {#if deviceType === 'mobile' && isCameraActive}
-              <div class="absolute inset-0 z-25 pointer-events-none">
-                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 border-2 border-primary/60 rounded-xl">
-                  <div class="absolute -top-3 -left-3 w-6 h-6 border-l-2 border-t-2 border-primary rounded-tl-lg"></div>
-                  <div class="absolute -top-3 -right-3 w-6 h-6 border-r-2 border-t-2 border-primary rounded-tr-lg"></div>
-                  <div class="absolute -bottom-3 -left-3 w-6 h-6 border-l-2 border-b-2 border-primary rounded-bl-lg"></div>
-                  <div class="absolute -bottom-3 -right-3 w-6 h-6 border-r-2 border-b-2 border-primary rounded-br-lg"></div>
-                </div>
-              </div>
-            {/if}
+
           {:else}
             <div class="relative z-10 w-full h-full flex flex-col items-center justify-center p-4 {deviceType === 'mobile' ? 'p-3' : 'p-8'}">
               {#if uploadedImageUrl}
