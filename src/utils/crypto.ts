@@ -1,8 +1,10 @@
+// crypto-ice-stun.ts
 
+// Existing parameters
 const rsaGenParams: RsaHashedKeyGenParams = {
   name: 'RSA-OAEP',
   modulusLength: 1024,
-  publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+  publicExponent: new Uint8Array([0x01, 0x00, 0x01]), // The most commonly used public exponent is 65537
   hash: 'SHA-256'
 };
 
@@ -24,9 +26,12 @@ interface IceCandidate {
   sdpMLineIndex: number;
 }
 
+// ========== 5-DIGIT CODE GENERATION ==========
+
+// Generate a cryptographically secure 5-digit code
 export function generateSecure5DigitCode(): string {
   const randomBytes = crypto.getRandomValues(new Uint32Array(1));
-  const code = (randomBytes[0] % 90000) + 10000;
+  const code = (randomBytes[0] % 90000) + 10000; // Ensures 5 digits (10000-99999)
   return code.toString();
 }
 
@@ -53,18 +58,18 @@ export function generateValidated5DigitCode(excludePatterns: string[] = []): str
     // Check if code matches any excluded patterns
     const isExcluded = excludePatterns.some(pattern => {
       if (pattern === 'sequential') {
-
+        // Check for sequential numbers like 12345, 54321
         const digits = code.split('').map(Number);
         const isAscending = digits.every((digit, i) => i === 0 || digit === digits[i-1] + 1);
         const isDescending = digits.every((digit, i) => i === 0 || digit === digits[i-1] - 1);
         return isAscending || isDescending;
       }
       if (pattern === 'repeated') {
-
+        // Check for repeated digits like 11111, 22222
         return /^(\d)\1{4}$/.test(code);
       }
       if (pattern === 'palindrome') {
-
+        // Check for palindromes like 12321, 54345
         return code === code.split('').reverse().join('');
       }
       return false;
@@ -86,10 +91,10 @@ const iceServers = {
     { urls: 'stun:stun3.l.google.com:19302' },
     { urls: 'stun:stun4.l.google.com:19302' }
   ],
-  iceCandidatePoolSize: 25
+  iceCandidatePoolSize: 25 // Increase candidate pool for faster connection establishment
 };
 
-
+// Store and retrieve data using WebRTC ICE candidates as signals
 class IceStunKeyStore {
   private static instance: IceStunKeyStore;
   private peerConnection: RTCPeerConnection | null = null;
@@ -129,7 +134,7 @@ class IceStunKeyStore {
           // using the ICE candidate's candidate string as our storage mechanism
           const candidateString = event.candidate.candidate;
           if (candidateString && !this.sessionKeyCache) {
-
+            // Encode session key into the candidate string when needed
           }
         }
       };
