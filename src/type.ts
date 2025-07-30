@@ -9,6 +9,13 @@ export enum FileStatus {
   Error = "Error"
 }
 
+export enum ConnectionStatus {
+  Disconnected = 'Disconnected',
+  Connecting = 'Connecting',
+  Connected = 'Connected',
+  Failed = 'Failed'
+}
+
 export interface FileDetail {
   fileBlob: any;
   metaData: MetaData;
@@ -62,4 +69,40 @@ export interface ReceiveOptions {
   useBinaryMode: boolean;
   prioritizeDownload: boolean;
   chunkTimeout: number;
+}
+
+// Enhanced interfaces for global connectivity
+export interface SignalingMessage {
+  type: 'offer' | 'answer' | 'ice-candidate' | 'connection-request' | 'connection-response' | 'file-metadata' | 'chunk';
+  roomId: string;
+  peerId: string;
+  data: any;
+  timestamp: number;
+}
+
+export interface PeerConnection {
+  id: string;
+  connection: RTCPeerConnection;
+  dataChannel?: RTCDataChannel;
+  status: ConnectionStatus;
+  lastActivity: number;
+}
+
+export interface NetworkInfo {
+  type: 'wifi' | 'cellular' | 'ethernet' | 'unknown';
+  effectiveType: '2g' | '3g' | '4g' | '5g' | 'unknown';
+  downlink: number;
+  rtt: number;
+}
+
+export interface DeviceInfo {
+  id: string;
+  name: string;
+  type: 'mobile' | 'desktop' | 'tablet' | 'unknown';
+  capabilities: {
+    webrtc: boolean;
+    datachannel: boolean;
+    wasm: boolean;
+  };
+  network: NetworkInfo;
 }

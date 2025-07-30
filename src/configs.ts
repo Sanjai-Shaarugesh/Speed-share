@@ -1,4 +1,52 @@
-import type { ReceiveOptions, SendOptions } from './type';
+// types.ts - Type definitions
+export interface SendOptions {
+  chunkSize: number;
+  isEncrypt: boolean;
+  iceServer: string;
+  wasmBufferSize: number;
+  parallelChunks: number;
+  useStreaming: boolean;
+  compressionLevel: number;
+  adaptiveChunking: boolean;
+  retryAttempts: number;
+  priorityQueueing: boolean;
+  retryStrategy: 'linear' | 'exponential';
+  onProgress: (progress: number) => void;
+  signal: AbortSignal;
+  timeout: number;
+}
+
+export interface ReceiveOptions {
+  autoAccept: boolean;
+  maxSize: number;
+  receiverBufferSize: number;
+  useStreaming: boolean;
+  decompressInBackground: boolean;
+  chunkTimeout: number;
+  preallocateStorage: boolean;
+  progressInterval: number;
+  useBinaryMode: boolean;
+  prioritizeDownload: boolean;
+}
+
+export interface NetworkQuality {
+  bandwidth: number;
+  latency: number;
+  reliability: number;
+}
+
+export interface FileTransferMessage {
+  type: 'file-info' | 'chunk' | 'chunk-request' | 'complete' | 'error';
+  fileName?: string;
+  fileSize?: number;
+  chunkIndex?: number;
+  totalChunks?: number;
+  data?: ArrayBuffer;
+  error?: string;
+}
+
+// Enhanced configuration with your existing code
+import type { ReceiveOptions, SendOptions } from './types';
 
 // Diverse STUN and TURN servers for robust connectivity
 export const stunServers: string[] = [
@@ -115,16 +163,42 @@ export async function processFileChunk(chunk: Uint8Array): Promise<Uint8Array> {
   }
 }
 
-// Fallback for chunk processing
+// Fallback for chunk processing with basic compression
 function processFileChunkFallback(chunk: Uint8Array): Uint8Array {
-  return chunk; // Simplified; real impl should mimic WASM compression
+  // Simple run-length encoding for basic compression
+  const compressed: number[] = [];
+  let i = 0;
+
+  while (i < chunk.length) {
+    let count = 1;
+    const current = chunk[i];
+
+    while (i + count < chunk.length && chunk[i + count] === current && count < 255) {
+      count++;
+    }
+
+    if (count > 3) {
+      compressed.push(255, count, current); // Marker for compressed sequence
+    } else {
+      for (let j = 0; j < count; j++) {
+        compressed.push(current);
+      }
+    }
+
+    i += count;
+  }
+
+  return new Uint8Array(compressed);
 }
 
 // Detect network quality for adaptive settings
-export async function detectNetworkQuality(): Promise<{ bandwidth: number; latency: number; reliability: number }> {
+export async function detectNetworkQuality(): Promise<NetworkQuality> {
   try {
     const startTime = performance.now();
-    const response = await fetch('https://www.cloudflare.com/cdn-cgi/trace', { method: 'GET', cache: 'no-store' });
+    const response = await fetch('https://www.cloudflare.com/cdn-cgi/trace', {
+      method: 'GET',
+      cache: 'no-store'
+    });
     const endTime = performance.now();
     const latency = endTime - startTime;
     const text = await response.text();
@@ -165,22 +239,33 @@ export async function optimizeTransferSettings(options: SendOptions): Promise<Se
     optimized.compressionLevel = 5;
   }
 
-  if (networkQuality.latency > 300) optimized.parallelChunks = Math.max(2, optimized.parallelChunks);
+  if (networkQuality.latency > 300) {
+    optimized.parallelChunks = Math.max(2, optimized.parallelChunks);
+  }
 
   return optimized;
 }
 
 // Create reliable data channel with retries
-export async function createReliableDataChannel(peerConnection: RTCPeerConnection, label: string, maxRetries = 3): Promise<RTCDataChannel> {
+export async function createReliableDataChannel(
+  peerConnection: RTCPeerConnection,
+  label: string,
+  maxRetries = 3
+): Promise<RTCDataChannel> {
   let retries = 0;
   while (retries < maxRetries) {
     try {
-      const dataChannel = peerConnection.createDataChannel(label, { ordered: true, maxRetransmits: 10 });
+      const dataChannel = peerConnection.createDataChannel(label, {
+        ordered: true,
+        maxRetransmits: 10
+      });
+
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => reject(new Error('Data channel timeout')), 5000);
         dataChannel.onopen = () => { clearTimeout(timeout); resolve(); };
         dataChannel.onerror = (error) => { clearTimeout(timeout); reject(error); };
       });
+
       return dataChannel;
     } catch (error) {
       retries++;
@@ -191,26 +276,360 @@ export async function createReliableDataChannel(peerConnection: RTCPeerConnectio
   throw new Error('Failed to create data channel');
 }
 
-// Main file transfer function
-export async function sendFile(file: File, peerConnection: RTCPeerConnection) {
-  const options = await optimizeTransferSettings(defaultSendOptions);
-  const dataChannel = await createReliableDataChannel(peerConnection, 'fileTransfer');
-  let offset = 0;
-  const fileSize = file.size;
-  const reader = new FileReader();
+// WebRTC P2P Connection Manager
+export class P2PFileTransfer {
+  private peerConnection: RTCPeerConnection | null = null;
+  private dataChannel: RTCDataChannel | null = null;
+  private isInitiator: boolean = false;
+  private signalingSocket: WebSocket | null = null;
+  private roomId: string = '';
+  private fileBuffer: Uint8Array[] = [];
+  private fileInfo: { name: string; size: number; totalChunks: number } | null = null;
+  private receivedChunks = new Set<number>();
 
-  dataChannel.onopen = async () => {
-    while (offset < fileSize) {
-      const chunk = file.slice(offset, offset + options.chunkSize);
-      reader.readAsArrayBuffer(chunk);
-      await new Promise((resolve) => (reader.onload = resolve));
-      const buffer = reader.result as ArrayBuffer;
-      const compressedChunk = await processFileChunk(new Uint8Array(buffer));
-      dataChannel.send(compressedChunk);
-      offset += options.chunkSize;
-      options.onProgress(offset / fileSize * 100);
+  constructor(private signalingServerUrl = 'wss://your-signaling-server.com') {}
+
+  // Initialize peer connection with multiple ICE servers for reliability
+  private createPeerConnection(): RTCPeerConnection {
+    const configuration: RTCConfiguration = {
+      iceServers: stunServers.map(server => ({ urls: server })),
+      iceCandidatePoolSize: 10,
+      bundlePolicy: 'max-bundle',
+      rtcpMuxPolicy: 'require'
+    };
+
+    const pc = new RTCPeerConnection(configuration);
+
+    pc.oniceconnectionstatechange = () => {
+      console.log('ICE connection state:', pc.iceConnectionState);
+      if (pc.iceConnectionState === 'failed') {
+        this.handleConnectionFailure();
+      }
+    };
+
+    pc.ondatachannel = (event) => {
+      const channel = event.channel;
+      this.setupDataChannel(channel);
+    };
+
+    return pc;
+  }
+
+  // Setup data channel handlers
+  private setupDataChannel(channel: RTCDataChannel) {
+    this.dataChannel = channel;
+
+    channel.onopen = () => {
+      console.log('Data channel opened');
+    };
+
+    channel.onmessage = (event) => {
+      this.handleDataChannelMessage(event.data);
+    };
+
+    channel.onerror = (error) => {
+      console.error('Data channel error:', error);
+    };
+
+    channel.onclose = () => {
+      console.log('Data channel closed');
+    };
+  }
+
+  // Handle incoming data channel messages
+  private handleDataChannelMessage(data: ArrayBuffer | string) {
+    try {
+      const message: FileTransferMessage = JSON.parse(data as string);
+
+      switch (message.type) {
+        case 'file-info':
+          this.handleFileInfo(message);
+          break;
+        case 'chunk':
+          this.handleChunk(message);
+          break;
+        case 'complete':
+          this.handleTransferComplete();
+          break;
+        case 'error':
+          console.error('Transfer error:', message.error);
+          break;
+      }
+    } catch (error) {
+      // Handle binary data (file chunks)
+      if (data instanceof ArrayBuffer) {
+        this.handleBinaryChunk(new Uint8Array(data));
+      }
     }
-    dataChannel.close();
-  };
+  }
+
+  // Handle file information
+  private handleFileInfo(message: FileTransferMessage) {
+    if (message.fileName && message.fileSize && message.totalChunks) {
+      this.fileInfo = {
+        name: message.fileName,
+        size: message.fileSize,
+        totalChunks: message.totalChunks
+      };
+      this.fileBuffer = new Array(message.totalChunks);
+      console.log(`Receiving file: ${message.fileName} (${message.fileSize} bytes)`);
+    }
+  }
+
+  // Handle file chunk
+  private handleChunk(message: FileTransferMessage) {
+    if (message.chunkIndex !== undefined && message.data) {
+      this.fileBuffer[message.chunkIndex] = new Uint8Array(message.data);
+      this.receivedChunks.add(message.chunkIndex);
+
+      if (this.fileInfo) {
+        const progress = (this.receivedChunks.size / this.fileInfo.totalChunks) * 100;
+        console.log(`Received chunk ${message.chunkIndex}/${this.fileInfo.totalChunks} (${progress.toFixed(1)}%)`);
+      }
+    }
+  }
+
+  // Handle binary chunk (for high-performance transfers)
+  private handleBinaryChunk(chunk: Uint8Array) {
+    // Implementation depends on your chunk format
+    console.log('Received binary chunk:', chunk.length, 'bytes');
+  }
+
+  // Handle transfer completion
+  private handleTransferComplete() {
+    if (this.fileInfo && this.fileBuffer.length === this.fileInfo.totalChunks) {
+      const completeFile = this.reconstructFile();
+      this.downloadFile(completeFile, this.fileInfo.name);
+    }
+  }
+
+  // Reconstruct file from chunks
+  private reconstructFile(): Uint8Array {
+    const totalSize = this.fileBuffer.reduce((sum, chunk) => sum + chunk.length, 0);
+    const result = new Uint8Array(totalSize);
+    let offset = 0;
+
+    for (const chunk of this.fileBuffer) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+
+    return result;
+  }
+
+  // Download reconstructed file
+  private downloadFile(data: Uint8Array, filename: string) {
+    const blob = new Blob([data]);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Connect to signaling server
+  async connectToSignalingServer(roomId: string) {
+    this.roomId = roomId;
+    this.signalingSocket = new WebSocket(this.signalingServerUrl);
+
+    return new Promise<void>((resolve, reject) => {
+      this.signalingSocket!.onopen = () => {
+        this.signalingSocket!.send(JSON.stringify({ type: 'join-room', roomId }));
+        resolve();
+      };
+
+      this.signalingSocket!.onmessage = (event) => {
+        this.handleSignalingMessage(JSON.parse(event.data));
+      };
+
+      this.signalingSocket!.onerror = reject;
+    });
+  }
+
+  // Handle signaling messages
+  private async handleSignalingMessage(message: any) {
+    if (!this.peerConnection) {
+      this.peerConnection = this.createPeerConnection();
+    }
+
+    switch (message.type) {
+      case 'offer':
+        await this.peerConnection.setRemoteDescription(message.offer);
+        const answer = await this.peerConnection.createAnswer();
+        await this.peerConnection.setLocalDescription(answer);
+        this.signalingSocket!.send(JSON.stringify({ type: 'answer', answer }));
+        break;
+
+      case 'answer':
+        await this.peerConnection.setRemoteDescription(message.answer);
+        break;
+
+      case 'ice-candidate':
+        await this.peerConnection.addIceCandidate(message.candidate);
+        break;
+
+      case 'peer-joined':
+        this.isInitiator = true;
+        await this.createOffer();
+        break;
+    }
+  }
+
+  // Create and send offer
+  private async createOffer() {
+    if (!this.peerConnection) return;
+
+    this.dataChannel = await createReliableDataChannel(this.peerConnection, 'fileTransfer');
+    this.setupDataChannel(this.dataChannel);
+
+    const offer = await this.peerConnection.createOffer();
+    await this.peerConnection.setLocalDescription(offer);
+
+    this.peerConnection.onicecandidate = (event) => {
+      if (event.candidate) {
+        this.signalingSocket!.send(JSON.stringify({
+          type: 'ice-candidate',
+          candidate: event.candidate
+        }));
+      }
+    };
+
+    this.signalingSocket!.send(JSON.stringify({ type: 'offer', offer }));
+  }
+
+  // Handle connection failure with reconnection
+  private async handleConnectionFailure() {
+    console.log('Connection failed, attempting to reconnect...');
+
+    // Try different STUN servers
+    for (let i = 1; i < stunServers.length; i++) {
+      try {
+        const newConfig: RTCConfiguration = {
+          iceServers: [{ urls: stunServers[i] }]
+        };
+
+        if (this.peerConnection) {
+          this.peerConnection.close();
+        }
+
+        this.peerConnection = new RTCPeerConnection(newConfig);
+        await this.createOffer();
+        break;
+      } catch (error) {
+        console.warn(`Failed to reconnect with server ${stunServers[i]}:`, error);
+      }
+    }
+  }
+
+  // Send file with optimized settings
+  async sendFile(file: File, onProgress?: (progress: number) => void) {
+    if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
+      throw new Error('Data channel not ready');
+    }
+
+    const options = await optimizeTransferSettings(defaultSendOptions);
+    if (onProgress) options.onProgress = onProgress;
+
+    const totalChunks = Math.ceil(file.size / options.chunkSize);
+
+    // Send file info
+    const fileInfoMessage: FileTransferMessage = {
+      type: 'file-info',
+      fileName: file.name,
+      fileSize: file.size,
+      totalChunks
+    };
+
+    this.dataChannel.send(JSON.stringify(fileInfoMessage));
+
+    // Send chunks
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * options.chunkSize;
+      const end = Math.min(start + options.chunkSize, file.size);
+      const chunk = file.slice(start, end);
+
+      const buffer = await chunk.arrayBuffer();
+      const compressedChunk = await processFileChunk(new Uint8Array(buffer));
+
+      const chunkMessage: FileTransferMessage = {
+        type: 'chunk',
+        chunkIndex: i,
+        totalChunks,
+        data: compressedChunk.buffer
+      };
+
+      // Wait for buffer to be available
+      while (this.dataChannel.bufferedAmount > options.wasmBufferSize) {
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+
+      this.dataChannel.send(JSON.stringify(chunkMessage));
+      options.onProgress((i + 1) / totalChunks * 100);
+    }
+
+    // Send completion message
+    this.dataChannel.send(JSON.stringify({ type: 'complete' }));
+  }
+
+  // Clean up resources
+  disconnect() {
+    if (this.dataChannel) {
+      this.dataChannel.close();
+      this.dataChannel = null;
+    }
+
+    if (this.peerConnection) {
+      this.peerConnection.close();
+      this.peerConnection = null;
+    }
+
+    if (this.signalingSocket) {
+      this.signalingSocket.close();
+      this.signalingSocket = null;
+    }
+
+    this.fileBuffer = [];
+    this.fileInfo = null;
+    this.receivedChunks.clear();
+  }
 }
 
+// Usage Example
+export async function initializeFileSharing() {
+  const fileTransfer = new P2PFileTransfer('wss://your-signaling-server.com');
+
+  try {
+    // Connect to room
+    const roomId = prompt('Enter room ID:') || Math.random().toString(36).substr(2, 9);
+    await fileTransfer.connectToSignalingServer(roomId);
+    console.log(`Connected to room: ${roomId}`);
+
+    // Setup file input handler
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.onchange = async (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (file) {
+        console.log(`Sending file: ${file.name}`);
+        await fileTransfer.sendFile(file, (progress) => {
+          console.log(`Upload progress: ${progress.toFixed(1)}%`);
+        });
+      }
+    };
+
+    document.body.appendChild(fileInput);
+
+    return fileTransfer;
+  } catch (error) {
+    console.error('Failed to initialize file sharing:', error);
+    throw error;
+  }
+}
+
+// Auto-initialize when imported
+if (typeof window !== 'undefined') {
+  window.addEventListener('load', () => {
+    console.log('WebRTC File Sharing ready. Call initializeFileSharing() to start.');
+  });
+}

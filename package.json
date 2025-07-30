@@ -122,6 +122,7 @@
     "react-dom": "^19.1.0",
     "sdp": "^3.2.1",
     "simple-social-share": "^1.0.7",
+    "socket.io-client": "^4.8.1",
     "solid-js": "^1.9.7",
     "svelte-filepond": "^0.2.2",
     "svelte-icon": "^2.1.1",

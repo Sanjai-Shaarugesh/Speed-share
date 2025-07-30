@@ -1,0 +1,16 @@
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - '@tailwindcss/oxide'
+  - argon2
+  - aws-sdk
+  - bufferutil
+  - core-js
+  - electron-forge
+  - esbuild
+  - node-datachannel
+  - protobufjs
+  - sharp
+  - spawn-sync
+  - utf-8-validate
+  - utp-native
+  - webassembly
