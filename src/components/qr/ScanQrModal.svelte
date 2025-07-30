@@ -53,57 +53,120 @@
   let isFlashlightOn = $state(false);
   let nativePermissionStatus = $state<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown');
   let isLandscape = $state(false);
+  let isCapacitor = $state(false);
 
   // Native integration
   let electronAPI = $state<any>(null);
   let nativeStreamConstraints = $state<MediaStreamConstraints | null>(null);
   let supportedConstraints = $state<MediaTrackSupportedConstraints | null>(null);
 
-  // Scanner configuration
+  // Mobile optimizations
+  let screenDimensions = $state({ width: 0, height: 0 });
+  let isMobileSafari = $state(false);
+  let isWebView = $state(false);
+
+  // Scanner configuration with mobile optimizations
   let scannerConfig = $derived({
     highlightScanRegion: true,
     highlightCodeOutline: true,
-    preferredCamera: availableCameras[currentCameraIndex]?.id || 'environment',
+    preferredCamera: getPreferredCamera(),
     maxScansPerSecond: getOptimalScanRate(),
     calculateScanRegion: (video: HTMLVideoElement) => {
-      const devicePixelRatio = window.devicePixelRatio || 1;
+      const devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2); // Cap pixel ratio for performance
       const smallerDimension = Math.min(video.videoWidth, video.videoHeight);
-      const scanRegionSize = Math.round(0.85 * smallerDimension);
+      const scanRegionSize = Math.round(0.75 * smallerDimension); // Smaller region for faster processing
 
       return {
         x: Math.round((video.videoWidth - scanRegionSize) / 2),
         y: Math.round((video.videoHeight - scanRegionSize) / 2),
         width: scanRegionSize,
         height: scanRegionSize,
-        downScaledWidth: Math.round(600 * devicePixelRatio),
-        downScaledHeight: Math.round(600 * devicePixelRatio),
+        downScaledWidth: Math.round(deviceType === 'mobile' ? 400 : 600 * devicePixelRatio),
+        downScaledHeight: Math.round(deviceType === 'mobile' ? 400 : 600 * devicePixelRatio),
       };
     },
-    returnDetailedScanResult: true,
+    returnDetailedScanResult: false, // Faster processing
     highlightCodeOutlineColor: currentTheme === 'dark' ? '#00ff88' : '#00aa44',
     highlightScanRegionColor: currentTheme === 'dark' ? 'rgba(0, 255, 136, 0.15)' : 'rgba(0, 170, 68, 0.15)',
   });
 
-  function getOptimalScanRate(): number {
-    if (platform === 'flatpak') return 25;
-    if (platform === 'mobile' || deviceType === 'mobile') return 30;
-    if (platform === 'electron') return 45;
-    return 60;
+  function getPreferredCamera(): string {
+    if (availableCameras.length === 0) return 'environment';
+
+    // Filter out duplicate cameras (common in Samsung phones with Capacitor)
+    const uniqueCameras = filterUniqueCameras(availableCameras);
+
+    // Prefer back camera (environment facing)
+    const backCamera = uniqueCameras.find(camera =>
+      camera.label.toLowerCase().includes('back') ||
+      camera.label.toLowerCase().includes('rear') ||
+      camera.label.toLowerCase().includes('environment') ||
+      camera.id === 'environment'
+    );
+
+    if (backCamera) {
+      const originalIndex = availableCameras.findIndex(cam => cam.id === backCamera.id);
+      if (originalIndex !== -1) {
+        currentCameraIndex = originalIndex;
+        return backCamera.id;
+      }
+    }
+
+    // Fallback to environment constraint
+    return 'environment';
   }
 
-  // Theme classes
+  function filterUniqueCameras(cameras: QrScanner.Camera[]): QrScanner.Camera[] {
+    const seen = new Set<string>();
+    const unique: QrScanner.Camera[] = [];
+
+    for (const camera of cameras) {
+      // Create a key based on label and facing mode to identify duplicates
+      const key = `${camera.label.toLowerCase().trim()}-${getFacingMode(camera)}`;
+
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(camera);
+      }
+    }
+
+    return unique;
+  }
+
+  function getFacingMode(camera: QrScanner.Camera): string {
+    const label = camera.label.toLowerCase();
+    if (label.includes('back') || label.includes('rear') || label.includes('environment')) {
+      return 'environment';
+    }
+    if (label.includes('front') || label.includes('user') || label.includes('facing')) {
+      return 'user';
+    }
+    return 'unknown';
+  }
+
+  function getOptimalScanRate(): number {
+    if (isCapacitor && deviceType === 'mobile') return 15; // Conservative for Capacitor
+    if (platform === 'flatpak') return 20;
+    if (platform === 'mobile' || deviceType === 'mobile') return 25;
+    if (platform === 'electron') return 40;
+    return 50;
+  }
+
+  // Theme classes optimized for mobile
   let themeClasses = $derived({
-    modal: currentTheme === 'dark' ? 'bg-base-300/30 backdrop-blur-2xl border border-base-content/20 shadow-2xl' : 'bg-base-100/30 backdrop-blur-2xl border border-base-content/20 shadow-2xl',
-    card: currentTheme === 'dark' ? 'bg-base-200/40 backdrop-blur-lg border border-base-content/30' : 'bg-base-100/40 backdrop-blur-lg border border-base-content/30',
+    modal: currentTheme === 'dark' ? 'bg-base-300/95 backdrop-blur-xl border border-base-content/20 shadow-2xl' : 'bg-base-100/95 backdrop-blur-xl border border-base-content/20 shadow-2xl',
+    card: currentTheme === 'dark' ? 'bg-base-200/50 backdrop-blur-md border border-base-content/30' : 'bg-base-100/50 backdrop-blur-md border border-base-content/30',
     button: currentTheme === 'dark' ? 'bg-base-content/15 hover:bg-base-content/25 backdrop-blur-sm border border-base-content/30' : 'bg-base-content/10 hover:bg-base-content/20 backdrop-blur-sm border border-base-content/30',
     text: currentTheme === 'dark' ? 'text-base-content' : 'text-base-content',
     accent: currentTheme === 'dark' ? 'text-accent' : 'text-primary'
   });
 
-  // Modal size
+  // Responsive modal size
   let modalSize = $derived(() => {
-    if (deviceType === 'mobile') return 'w-full max-w-sm mx-4';
-    if (deviceType === 'tablet') return 'w-full max-w-md mx-6';
+    if (deviceType === 'mobile') {
+      return isLandscape ? 'w-full max-w-2xl mx-2' : 'w-full max-w-sm mx-2';
+    }
+    if (deviceType === 'tablet') return 'w-full max-w-md mx-4';
     return 'w-full max-w-lg mx-8';
   });
 
@@ -127,9 +190,17 @@
   async function initializePlatformDetection() {
     if (typeof window === 'undefined') return;
 
+    // Screen dimensions
+    screenDimensions = { width: window.innerWidth, height: window.innerHeight };
+
     const userAgent = navigator.userAgent.toLowerCase();
     const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
     const isTablet = /ipad|android(?!.*mobile)/i.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    // Check for Capacitor
+    isCapacitor = !!(window as any).Capacitor;
+    isWebView = !!(window as any).webkit?.messageHandlers || !!(window as any).chrome?.webview;
+    isMobileSafari = /iphone|ipad|ipod/i.test(userAgent) && /safari/i.test(userAgent) && !/chrome|crios|fxios/i.test(userAgent);
 
     deviceType = isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop';
 
@@ -142,13 +213,21 @@
     if (window.electronAPI) {
       electronAPI = window.electronAPI;
       platform = (await checkFlatpakEnvironment()) ? 'flatpak' : 'electron';
-    } else if (deviceType === 'mobile') {
+    } else if (deviceType === 'mobile' || isCapacitor) {
       platform = 'mobile';
     } else {
       platform = 'browser';
     }
 
-    console.log('Platform Detection:', { platform, deviceType, operatingSystem });
+    console.log('Platform Detection:', {
+      platform,
+      deviceType,
+      operatingSystem,
+      isCapacitor,
+      isWebView,
+      isMobileSafari,
+      screenDimensions
+    });
   }
 
   async function checkFlatpakEnvironment(): Promise<boolean> {
@@ -207,7 +286,7 @@
         video: {
           width: { ideal: 1280, min: 640 },
           height: { ideal: 720, min: 480 },
-          frameRate: { ideal: 30, min: 15 },
+          frameRate: { ideal: 25, min: 15 },
           facingMode: 'environment'
         }
       };
@@ -259,23 +338,51 @@
     if (typeof window === 'undefined') return;
 
     const handleOrientationChange = () => {
+      screenDimensions = { width: window.innerWidth, height: window.innerHeight };
       isLandscape = window.matchMedia('(orientation: landscape)').matches;
+
       if (deviceType === 'mobile' && isModalOpen && isCameraActive) {
-        setTimeout(() => restartScanner(), 500);
+        // Restart scanner after orientation change for better performance
+        setTimeout(() => restartScanner(), 300);
       }
     };
 
+    const handleResize = () => {
+      screenDimensions = { width: window.innerWidth, height: window.innerHeight };
+    };
+
     window.addEventListener('orientationchange', handleOrientationChange);
-    window.addEventListener('resize', handleOrientationChange);
+    window.addEventListener('resize', handleResize);
     handleOrientationChange();
   }
 
   async function setupCameraSystem() {
     try {
       availableCameras = await QrScanner.listCameras(true);
+
+      // Filter unique cameras for mobile/Capacitor
+      if (isCapacitor || deviceType === 'mobile') {
+        const uniqueCameras = filterUniqueCameras(availableCameras);
+        console.log('Original cameras:', availableCameras.length, 'Unique cameras:', uniqueCameras.length);
+
+        // Update available cameras list
+        availableCameras = availableCameras.filter(camera =>
+          uniqueCameras.some(unique => unique.id === camera.id)
+        );
+      }
+
       if (availableCameras.length > 0) {
+        // Set back camera as default
+        getPreferredCamera();
         await checkFlashlightSupport();
       }
+
+      console.log('Camera system setup complete:', {
+        totalCameras: availableCameras.length,
+        currentIndex: currentCameraIndex,
+        isCapacitor,
+        preferredCamera: getPreferredCamera()
+      });
     } catch (error) {
       console.warn('Camera system setup failed:', error);
       handleCameraSystemError(error);
@@ -307,14 +414,24 @@
         });
       }
     }
+
     if (deviceType === 'mobile') {
       document.addEventListener('visibilitychange', () => {
         if (document.hidden && isCameraActive) {
           pauseScanner();
         } else if (!document.hidden && isModalOpen && scanMode === 'camera') {
-          resumeScanner();
+          setTimeout(() => resumeScanner(), 100);
         }
       });
+
+      // Handle app resume for Capacitor
+      if (isCapacitor && (window as any).Capacitor?.Plugins?.App) {
+        (window as any).Capacitor.Plugins.App.addListener('appStateChange', (state: any) => {
+          if (state.isActive && isModalOpen && scanMode === 'camera' && !isCameraActive) {
+            setTimeout(() => resumeScanner(), 200);
+          }
+        });
+      }
     }
   }
 
@@ -334,20 +451,23 @@
   function getNativeConstraints(): MediaStreamConstraints {
     const baseConstraints = {
       video: {
-        facingMode: 'environment',
+        facingMode: { ideal: 'environment' }, // Prefer back camera
         width: { ideal: getOptimalWidth(), min: 640 },
         height: { ideal: getOptimalHeight(), min: 480 },
-        frameRate: { ideal: getOptimalScanRate(), min: 15 }
+        frameRate: { ideal: getOptimalScanRate(), min: 10, max: 30 }
       }
     };
+
     if (nativeStreamConstraints?.video) {
       Object.assign(baseConstraints.video, nativeStreamConstraints.video);
     }
+
     Object.assign(baseConstraints.video, getPlatformSpecificConstraints());
     return baseConstraints;
   }
 
   function getOptimalWidth(): number {
+    if (isCapacitor && deviceType === 'mobile') return isLandscape ? 1280 : 720;
     if (platform === 'flatpak') return 1280;
     if (deviceType === 'mobile') return isLandscape ? 1920 : 1080;
     if (platform === 'electron') return 1920;
@@ -355,6 +475,7 @@
   }
 
   function getOptimalHeight(): number {
+    if (isCapacitor && deviceType === 'mobile') return isLandscape ? 720 : 1280;
     if (platform === 'flatpak') return 720;
     if (deviceType === 'mobile') return isLandscape ? 1080 : 1920;
     if (platform === 'electron') return 1080;
@@ -363,19 +484,31 @@
 
   function getPlatformSpecificConstraints(): any {
     const constraints: any = {};
+
     if (supportedConstraints) {
       if (supportedConstraints.focusMode) constraints.focusMode = 'continuous';
       if (supportedConstraints.exposureMode) constraints.exposureMode = 'continuous';
       if (supportedConstraints.whiteBalanceMode) constraints.whiteBalanceMode = 'continuous';
     }
+
     if (deviceType === 'mobile') {
       constraints.aspectRatio = isLandscape ? 16/9 : 9/16;
-      if (operatingSystem === 'ios') constraints.frameRate = { ideal: 30, min: 15 };
+
+      if (isCapacitor) {
+        // Optimize for Capacitor apps
+        constraints.frameRate = { ideal: 15, min: 10, max: 20 };
+        constraints.width = { ideal: isLandscape ? 1280 : 720, min: 480 };
+        constraints.height = { ideal: isLandscape ? 720 : 1280, min: 640 };
+      } else if (operatingSystem === 'ios') {
+        constraints.frameRate = { ideal: 25, min: 15, max: 30 };
+      }
     }
+
     if (platform === 'flatpak') {
-      constraints.frameRate = { ideal: 25, min: 15 };
+      constraints.frameRate = { ideal: 20, min: 15, max: 25 };
       constraints.aspectRatio = 16/9;
     }
+
     return constraints;
   }
 
@@ -415,8 +548,9 @@
     if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
       errorMessage = platform === 'flatpak' ? 'Flatpak camera access denied. Run: flatpak permission-set camera com.yourapp.name yes'
         : platform === 'electron' ? 'Camera access denied. Check system privacy settings.'
+        : isCapacitor ? 'Camera access denied. Enable in app settings.'
         : deviceType === 'mobile' ? (operatingSystem === 'ios' ? 'Camera access denied. Enable in iOS Settings > Safari > Camera.'
-          : operatingSystem === 'android' ? 'Camera access denied. Enable in Android Settings.'
+          : operatingSystem === 'android' ? 'Camera access denied. Enable in Android Settings > Apps > Browser > Permissions.'
           : 'Camera access denied. Allow in browser settings.')
         : getDesktopPermissionMessage();
     } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
@@ -469,9 +603,10 @@
   async function startScannerWithBasicConstraints() {
     const basicConstraints: MediaStreamConstraints = {
       video: {
-        facingMode: 'environment',
-        width: { min: 320 },
-        height: { min: 240 }
+        facingMode: { ideal: 'environment' },
+        width: { min: 320, ideal: 640 },
+        height: { min: 240, ideal: 480 },
+        frameRate: { min: 10, ideal: 15 }
       }
     };
     await startScannerWithCustomConstraints(basicConstraints);
@@ -520,7 +655,7 @@
       setTimeout(() => {
         observer.disconnect();
         if (!videoElement?.parentNode) reject(new Error('Video element not found in DOM'));
-      }, 5000);
+      }, 3000); // Shorter timeout for mobile
     });
   }
 
@@ -545,8 +680,14 @@
       if (supportedConstraints?.focusMode) constraints.focusMode = 'continuous';
       if (supportedConstraints?.exposureMode) constraints.exposureMode = 'continuous';
       if (supportedConstraints?.whiteBalanceMode) constraints.whiteBalanceMode = 'continuous';
-      if (platform === 'mobile' && operatingSystem === 'ios') constraints.frameRate = { ideal: 30 };
-      else if (platform === 'flatpak') constraints.frameRate = { ideal: 25 };
+
+      if (isCapacitor && deviceType === 'mobile') {
+        constraints.frameRate = { ideal: 15, max: 20 };
+      } else if (platform === 'mobile' && operatingSystem === 'ios') {
+        constraints.frameRate = { ideal: 25 };
+      } else if (platform === 'flatpak') {
+        constraints.frameRate = { ideal: 20 };
+      }
 
       if (Object.keys(constraints).length > 0) {
         await videoTrack.applyConstraints(constraints);
@@ -597,8 +738,9 @@
   }
 
   function getRetryDelay(): number {
+    if (isCapacitor) return 2000;
     if (platform === 'flatpak') return 3000;
-    if (deviceType === 'mobile') return 2000;
+    if (deviceType === 'mobile') return 1500;
     return 1000;
   }
 
@@ -625,7 +767,7 @@
     stopScanner();
     setTimeout(() => {
       if (isModalOpen && scanMode === 'camera') startScanner();
-    }, 500);
+    }, isCapacitor ? 700 : 500);
   }
 
   function stopScanner() {
@@ -676,21 +818,26 @@
     }
   }
 
-  function handleScanResult(result: QrScanner.ScanResult) {
+  function handleScanResult(result: QrScanner.ScanResult | string) {
     const currentTime = Date.now();
-    if (currentTime - lastScanTime < 500) return;
+    if (currentTime - lastScanTime < 300) return; // Faster debounce for mobile
     lastScanTime = currentTime;
     scanCount++;
     scanningIndicator = true;
-    setTimeout(() => scanningIndicator = false, 800);
+    setTimeout(() => scanningIndicator = false, 600);
+
+    const data = typeof result === 'string' ? result : result.data;
+
     if (!continuousScanning) {
       stopScanner();
       isModalOpen = false;
     }
-    onScanSuccess(result.data);
+
+    onScanSuccess(data);
+
     if ((platform === 'electron' || platform === 'flatpak') && electronAPI?.ipcRenderer) {
       electronAPI.ipcRenderer.send('qr-scanned', {
-        data: result.data,
+        data,
         timestamp: currentTime,
         scanCount,
         platform,
@@ -718,7 +865,7 @@
       if (uploadedImageUrl) URL.revokeObjectURL(uploadedImageUrl);
       uploadedImageUrl = URL.createObjectURL(file);
       const result = await QrScanner.scanImage(file, {
-        returnDetailedScanResult: true,
+        returnDetailedScanResult: false, // Faster processing
         scanRegion: undefined,
         qrEngine: QrScanner.createQrEngine(),
         inversionAttempts: 'both'
@@ -733,16 +880,19 @@
     }
   }
 
-  function handleImageScanResult(result: QrScanner.ScanResult) {
+  function handleImageScanResult(result: QrScanner.ScanResult | string) {
     const currentTime = Date.now();
     scanCount++;
     scanningIndicator = true;
     setTimeout(() => scanningIndicator = false, 500);
     isModalOpen = false;
-    onScanSuccess(result.data);
+
+    const data = typeof result === 'string' ? result : result.data;
+    onScanSuccess(data);
+
     if ((platform === 'electron' || platform === 'flatpak') && electronAPI?.ipcRenderer) {
       electronAPI.ipcRenderer.send('qr-scanned', {
-        data: result.data,
+        data,
         timestamp: currentTime,
         scanCount,
         source: 'image',
@@ -759,7 +909,7 @@
     currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
     try {
       await qrScanner.setCamera(availableCameras[currentCameraIndex].id);
-      setTimeout(() => applyPlatformOptimizations(), 500);
+      setTimeout(() => applyPlatformOptimizations(), 300);
     } catch (err) {
       console.error('Failed to switch camera:', err);
       currentCameraIndex = previousIndex;
@@ -801,7 +951,7 @@
       errorMessage = '';
       scanMode = 'camera';
       if (nativePermissionStatus === 'granted' || !permissionRequested) {
-        startScanner();
+        setTimeout(() => startScanner(), 100); // Small delay for DOM
       } else if (nativePermissionStatus === 'denied') {
         errorMessage = 'Camera permission was previously denied. Please allow camera access and try again.';
       }
@@ -842,19 +992,22 @@
   }
 </script>
 
+<!-- Mobile-optimized button -->
 <button
-  class="btn btn-ghost relative group overflow-hidden {themeClasses.button} transition-all duration-300 hover:scale-105 hover:shadow-xl {deviceType === 'mobile' ? 'btn-lg' : 'btn-md'}"
+  class="btn btn-ghost relative group overflow-hidden {themeClasses.button} transition-all duration-300 hover:scale-105 hover:shadow-xl
+         {deviceType === 'mobile' ? 'btn-lg min-h-14 px-6 text-base rounded-2xl' : 'btn-md'}
+         {isCapacitor ? 'shadow-lg border-2' : ''}"
   onclick={() => toggleModal(true)}
   aria-label="Open QR Scanner"
 >
   <div class="absolute inset-0 bg-gradient-to-r from-primary/30 to-secondary/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-  <ScanLine class="{scanningIndicator ? 'animate-pulse text-success scale-110' : 'group-hover:rotate-12'} relative z-10 transition-all duration-300" />
-  <span class="relative z-10 {deviceType === 'mobile' ? 'text-sm' : 'text-base'}">{buttonText}</span>
+  <ScanLine class="{scanningIndicator ? 'animate-pulse text-success scale-110' : 'group-hover:rotate-12'} relative z-10 transition-all duration-300 {deviceType === 'mobile' ? 'w-6 h-6' : 'w-5 h-5'}" />
+  <span class="relative z-10 font-medium {deviceType === 'mobile' ? 'text-base' : 'text-sm'}">{buttonText}</span>
   {#if scanCount > 0}
-    <div class="absolute -top-2 -right-2 badge badge-success badge-sm animate-bounce shadow-lg backdrop-blur-sm">{scanCount}</div>
+    <div class="absolute -top-2 -right-2 badge badge-success {deviceType === 'mobile' ? 'badge-md' : 'badge-sm'} animate-bounce shadow-lg backdrop-blur-sm">{scanCount}</div>
   {/if}
   <div class="absolute bottom-1 right-1 flex items-center gap-1">
-    <div class="w-2 h-2 rounded-full {getPlatformColor()}"></div>
+    <div class="w-2 h-2 rounded-full {getPlatformColor()} {isCapacitor ? 'animate-pulse' : ''}"></div>
     {#if deviceType !== 'mobile'}
       <svelte:component this={getPlatformIcon()} class="w-3 h-3 opacity-60" />
     {/if}
@@ -871,70 +1024,80 @@
 />
 
 {#if isModalOpen}
-  <div class="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 {deviceType === 'mobile' ? 'p-2' : 'p-4'} animate-fade-in">
-    <div class="{modalSize} {themeClasses.modal} rounded-3xl shadow-2xl animate-scale-in overflow-hidden max-h-[95vh] {deviceType === 'mobile' ? 'mx-2' : ''}">
-      <div class="relative p-4 {deviceType === 'mobile' ? 'p-3' : 'p-6'} border-b border-base-content/20">
+  <div class="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50
+              {deviceType === 'mobile' ? 'p-1' : 'p-4'} animate-fade-in">
+    <div class="{modalSize} {themeClasses.modal} rounded-3xl shadow-2xl animate-scale-in overflow-hidden
+                {deviceType === 'mobile' ? 'max-h-[98vh] mx-1' : 'max-h-[95vh]'}">
+
+      <!-- Header -->
+      <div class="relative p-3 {deviceType === 'mobile' ? 'p-2' : 'p-4'} border-b border-base-content/20">
         <div class="absolute inset-0 opacity-10">
           <div class="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-accent"></div>
           <div class="absolute inset-0" style="background-image: radial-gradient(circle at 25% 25%, rgba(255,255,255,0.2) 1px, transparent 1px); background-size: 15px 15px;"></div>
         </div>
         <div class="relative flex justify-between items-center">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center backdrop-blur-sm border border-base-content/20">
-              <ScanQrCode class="w-5 h-5 {themeClasses.accent}" />
+          <div class="flex items-center gap-2 {deviceType === 'mobile' ? 'gap-2' : 'gap-3'}">
+            <div class="w-8 h-8 {deviceType === 'mobile' ? 'w-8 h-8' : 'w-10 h-10'} rounded-xl bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center backdrop-blur-sm border border-base-content/20">
+              <ScanQrCode class="w-4 h-4 {deviceType === 'mobile' ? 'w-4 h-4' : 'w-5 h-5'} {themeClasses.accent}" />
             </div>
             <div>
-              <h3 class="text-lg {deviceType === 'mobile' ? 'text-base' : 'text-xl'} font-bold {themeClasses.text}">{modalTitle}</h3>
-              <div class="flex items-center gap-2 text-xs opacity-70 {themeClasses.text}">
+              <h3 class="text-base {deviceType === 'mobile' ? 'text-sm' : 'text-lg'} font-bold {themeClasses.text}">{modalTitle}</h3>
+              <div class="flex items-center gap-1 text-xs {deviceType === 'mobile' ? 'text-[10px]' : 'text-xs'} opacity-70 {themeClasses.text}">
                 <svelte:component this={getPlatformIcon()} class="w-3 h-3" />
-                <span>{platform} • {deviceType} • {operatingSystem}</span>
+                <span>{platform} • {operatingSystem}</span>
+                {#if isCapacitor}
+                  <span class="text-warning">• native</span>
+                {/if}
                 {#if isLandscape && deviceType === 'mobile'}
                   <span>• landscape</span>
                 {/if}
               </div>
             </div>
           </div>
-          <div class="flex gap-1 {deviceType === 'mobile' ? 'gap-1' : 'gap-2'}">
+          <div class="flex gap-1">
             <button
-              class="btn btn-ghost {deviceType === 'mobile' ? 'btn-xs' : 'btn-sm'} {themeClasses.button} rounded-xl"
+              class="btn btn-ghost btn-xs {themeClasses.button} rounded-lg"
               onclick={toggleTheme}
               aria-label="Toggle Theme"
             >
               {#if currentTheme === 'dark'}
-                <Sun class="w-4 h-4" />
+                <Sun class="w-3 h-3" />
               {:else}
-                <Moon class="w-4 h-4" />
+                <Moon class="w-3 h-3" />
               {/if}
             </button>
             {#if scanMode === 'camera'}
               {#if availableCameras.length > 1}
                 <button
-                  class="btn btn-ghost {deviceType === 'mobile' ? 'btn-xs' : 'btn-sm'} {themeClasses.button} rounded-xl"
+                  class="btn btn-ghost btn-xs {themeClasses.button} rounded-lg"
                   onclick={switchCamera}
-                  aria-label="Switch Camera"
+                  aria-label="Switch Camera ({availableCameras.length} available)"
                 >
-                  <Camera class="w-4 h-4" />
+                  <Camera class="w-3 h-3" />
+                  {#if deviceType !== 'mobile'}
+                    <span class="text-xs">{currentCameraIndex + 1}</span>
+                  {/if}
                 </button>
               {/if}
               <button
-                class="btn btn-ghost {deviceType === 'mobile' ? 'btn-xs' : 'btn-sm'} {themeClasses.button} rounded-xl"
+                class="btn btn-ghost btn-xs {themeClasses.button} rounded-lg"
                 onclick={flipCamera}
                 aria-label="Flip Camera"
               >
-                <RotateCcw class="w-4 h-4" />
+                <RotateCcw class="w-3 h-3" />
               </button>
               {#if hasFlashlight}
                 <button
-                  class="btn btn-ghost {deviceType === 'mobile' ? 'btn-xs' : 'btn-sm'} {themeClasses.button} rounded-xl {isFlashlightOn ? 'text-warning bg-warning/20' : ''}"
+                  class="btn btn-ghost btn-xs {themeClasses.button} rounded-lg {isFlashlightOn ? 'text-warning bg-warning/20' : ''}"
                   onclick={toggleFlashlight}
                   aria-label="Toggle Flashlight"
                 >
-                  <Flashlight class="w-4 h-4" />
+                  <Flashlight class="w-3 h-3" />
                 </button>
               {/if}
             {/if}
             <button
-              class="btn btn-ghost {deviceType === 'mobile' ? 'btn-xs' : 'btn-sm'} {themeClasses.button} rounded-xl hover:bg-error/20"
+              class="btn btn-ghost btn-xs {themeClasses.button} rounded-lg hover:bg-error/20"
               onclick={() => toggleModal(false)}
               aria-label="Close QR Scanner"
             >
@@ -944,88 +1107,92 @@
         </div>
       </div>
 
+      <!-- Mode Toggle -->
       {#if allowImageUpload}
-        <div class="p-3 {deviceType === 'mobile' ? 'p-2' : 'p-4'}">
-          <div class="bg-base-200/30 backdrop-blur-lg rounded-2xl p-1 flex border border-base-content/20">
+        <div class="p-2 {deviceType === 'mobile' ? 'p-1' : 'p-3'}">
+          <div class="bg-base-200/30 backdrop-blur-lg rounded-xl p-1 flex border border-base-content/20">
             <button
-              class="flex-1 flex items-center justify-center gap-2 py-2 {deviceType === 'mobile' ? 'py-2 px-2' : 'py-3 px-4'} rounded-xl text-sm font-medium transition-all duration-300 {scanMode === 'camera' ? 'bg-primary text-primary-content shadow-lg scale-[0.98] backdrop-blur-sm' : 'hover:bg-base-content/15 ' + themeClasses.text}"
+              class="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-medium transition-all duration-300
+                     {scanMode === 'camera' ? 'bg-primary text-primary-content shadow-lg scale-[0.98] backdrop-blur-sm' : 'hover:bg-base-content/15 ' + themeClasses.text}"
               onclick={() => switchScanMode('camera')}
             >
-              <Camera class="w-4 h-4" />
-              <span class="{deviceType === 'mobile' ? 'text-xs' : 'text-sm'}">Camera</span>
+              <Camera class="w-3 h-3" />
+              <span>Camera</span>
             </button>
             <button
-              class="flex-1 flex items-center justify-center gap-2 py-2 {deviceType === 'mobile' ? 'py-2 px-2' : 'py-3 px-4'} rounded-xl text-sm font-medium transition-all duration-300 {scanMode === 'image' ? 'bg-secondary text-secondary-content shadow-lg scale-[0.98] backdrop-blur-sm' : 'hover:bg-base-content/15 ' + themeClasses.text}"
+              class="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-medium transition-all duration-300
+                     {scanMode === 'image' ? 'bg-secondary text-secondary-content shadow-lg scale-[0.98] backdrop-blur-sm' : 'hover:bg-base-content/15 ' + themeClasses.text}"
               onclick={() => switchScanMode('image')}
             >
-              <ImageIcon class="w-4 h-4" />
-              <span class="{deviceType === 'mobile' ? 'text-xs' : 'text-sm'}">Upload</span>
+              <ImageIcon class="w-3 h-3" />
+              <span>Upload</span>
             </button>
           </div>
         </div>
       {/if}
 
-      <div class="p-3 {deviceType === 'mobile' ? 'p-2' : 'p-4'}">
-        <div class="relative w-full {deviceType === 'mobile' && isLandscape ? 'aspect-[16/9]' : 'aspect-square'} {themeClasses.card} rounded-2xl overflow-hidden shadow-inner border-2 border-transparent bg-gradient-to-br from-primary/20 via-transparent to-secondary/20 bg-clip-border">
+      <!-- Scanner Area -->
+      <div class="p-2 {deviceType === 'mobile' ? 'p-1' : 'p-3'}">
+        <div class="relative w-full {deviceType === 'mobile' && isLandscape ? 'aspect-[16/10]' : 'aspect-square'}
+                    {themeClasses.card} rounded-2xl overflow-hidden shadow-inner border-2 border-transparent
+                    bg-gradient-to-br from-primary/20 via-transparent to-secondary/20 bg-clip-border">
           <div class="absolute inset-[2px] rounded-2xl bg-base-100/10 backdrop-blur-lg border border-base-content/10"></div>
+
           {#if scanMode === 'camera'}
             <div class="relative w-full h-full bg-gray-100 rounded-lg overflow-hidden">
-              <video bind:this={videoElement} class="w-full h-full object-cover" playsinline>
+              <video
+                bind:this={videoElement}
+                class="w-full h-full object-cover {isCapacitor ? 'video-capacitor' : ''}"
+                playsinline
+                muted
+                style="transform: {isFlipped ? 'scaleX(-1)' : 'scaleX(1)'}"
+              >
                 <track kind="captions" />
               </video>
+
               {#if !isCameraActive && !errorMessage}
-                <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
-                  <div class="text-white text-lg">Initializing camera...</div>
-                </div>
-              {/if}
-              {#if errorMessage}
-                <div class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 p-4">
-                  <div class="text-white text-center mb-4">{errorMessage}</div>
-                  <button class="btn btn-sm btn-primary" onclick={retryScanner}>
-                    Request Permission Again
-                  </button>
+                <div class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gradient-to-br from-base-200/90 to-base-300/90 backdrop-blur-xl rounded-2xl border border-base-content/20">
+                  <div class="loading loading-spinner loading-lg text-primary mb-3"></div>
+                  <div class="text-sm {deviceType === 'mobile' ? 'text-xs' : 'text-sm'} font-semibold {themeClasses.text} mb-2 text-center">
+                    Starting camera...
+                  </div>
+                  <div class="text-xs opacity-60 {themeClasses.text} text-center">
+                    <div class="flex items-center justify-center gap-2 mb-1">
+                      <svelte:component this={getPlatformIcon()} class="w-3 h-3" />
+                      <span>{platform}</span>
+                      {#if isCapacitor}
+                        <span class="text-warning">• Capacitor</span>
+                      {/if}
+                    </div>
+                    {#if isCapacitor}
+                      <div class="text-[10px]">Optimizing for native app...</div>
+                    {:else if platform === 'mobile'}
+                      <div class="text-[10px]">Requesting back camera...</div>
+                    {/if}
+                  </div>
                 </div>
               {/if}
             </div>
-            {#if !isCameraActive && !errorMessage}
-              <div class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gradient-to-br from-base-200/90 to-base-300/90 backdrop-blur-xl rounded-2xl border border-base-content/20">
-                <div class="loading loading-spinner loading-lg text-primary mb-4"></div>
-                <div class="text-lg {deviceType === 'mobile' ? 'text-base' : 'text-lg'} font-semibold {themeClasses.text} mb-2 text-center">
-                  Initializing camera...
-                </div>
-                <div class="text-sm opacity-60 {themeClasses.text} text-center">
-                  <div class="flex items-center justify-center gap-2 mb-1">
-                    <svelte:component this={getPlatformIcon()} class="w-4 h-4" />
-                    <span>{platform} • {operatingSystem}</span>
-                  </div>
-                  {#if platform === 'flatpak'}
-                    <div class="text-xs">Checking portal permissions...</div>
-                  {:else if platform === 'electron'}
-                    <div class="text-xs">Requesting native access...</div>
-                  {:else if deviceType === 'mobile'}
-                    <div class="text-xs">Optimizing for mobile...</div>
-                  {/if}
-                </div>
-              </div>
-            {/if}
+
             {#if scanningIndicator}
               <div class="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
-                <div class="bg-success/95 text-success-content px-6 py-3 rounded-full shadow-xl backdrop-blur-lg animate-pulse border border-success/30">
+                <div class="bg-success/95 text-success-content px-4 py-2 rounded-full shadow-xl backdrop-blur-lg animate-pulse border border-success/30">
                   <div class="flex items-center gap-2">
-                    <Zap class="w-5 h-5 animate-bounce" />
-                    <span class="font-medium {deviceType === 'mobile' ? 'text-sm' : 'text-base'}">Scanning...</span>
+                    <Zap class="w-4 h-4 animate-bounce" />
+                    <span class="font-medium text-sm">Scanned!</span>
                   </div>
                 </div>
               </div>
             {/if}
 
           {:else}
-            <div class="relative z-10 w-full h-full flex flex-col items-center justify-center p-4 {deviceType === 'mobile' ? 'p-3' : 'p-8'}">
+            <!-- Image Upload Mode -->
+            <div class="relative z-10 w-full h-full flex flex-col items-center justify-center p-3">
               {#if uploadedImageUrl}
                 <div class="relative w-full h-full flex items-center justify-center">
                   <img src={uploadedImageUrl} alt="Uploaded QR Code" class="max-w-full max-h-full object-contain rounded-xl shadow-xl border border-base-content/20" />
                   <button
-                    class="absolute top-2 right-2 btn btn-circle {deviceType === 'mobile' ? 'btn-sm' : 'btn-md'} bg-error/90 hover:bg-error text-error-content border-none shadow-lg backdrop-blur-sm"
+                    class="absolute top-2 right-2 btn btn-circle btn-sm bg-error/90 hover:bg-error text-error-content border-none shadow-lg backdrop-blur-sm"
                     onclick={() => {
                       if (uploadedImageUrl) {
                         URL.revokeObjectURL(uploadedImageUrl);
@@ -1038,21 +1205,19 @@
                 </div>
               {:else}
                 <div class="text-center w-full">
-                  <div class="relative mb-4 {deviceType === 'mobile' ? 'mb-3' : 'mb-6'}">
-                    <div class="w-16 h-16 {deviceType === 'mobile' ? 'w-12 h-12' : 'w-20 h-20'} mx-auto bg-gradient-to-br from-secondary/30 to-primary/30 rounded-full flex items-center justify-center backdrop-blur-lg border border-base-content/20 shadow-lg">
-                      <Upload class="w-8 h-8 {deviceType === 'mobile' ? 'w-6 h-6' : 'w-10 h-10'} {themeClasses.accent} animate-bounce" />
+                  <div class="relative mb-3">
+                    <div class="w-12 h-12 mx-auto bg-gradient-to-br from-secondary/30 to-primary/30 rounded-full flex items-center justify-center backdrop-blur-lg border border-base-content/20 shadow-lg">
+                      <Upload class="w-6 h-6 {themeClasses.accent} animate-bounce" />
                     </div>
-                    <div class="absolute -top-2 -right-2 w-4 h-4 bg-primary/70 rounded-full animate-ping shadow-lg"></div>
-                    <div class="absolute -bottom-1 -left-1 w-3 h-3 bg-secondary/70 rounded-full animate-ping shadow-lg" style="animation-delay: 0.5s;"></div>
-                    <div class="absolute top-1/2 -right-3 w-2 h-2 bg-accent/60 rounded-full animate-ping shadow-lg" style="animation-delay: 1s;"></div>
+                    <div class="absolute -top-1 -right-1 w-3 h-3 bg-primary/70 rounded-full animate-ping shadow-lg"></div>
+                    <div class="absolute -bottom-1 -left-1 w-2 h-2 bg-secondary/70 rounded-full animate-ping shadow-lg" style="animation-delay: 0.5s;"></div>
                   </div>
-                  <h4 class="text-lg {deviceType === 'mobile' ? 'text-base' : 'text-lg'} font-semibold {themeClasses.text} mb-2">Upload QR Code Image</h4>
-                  <p class="text-sm {deviceType === 'mobile' ? 'text-xs' : 'text-sm'} opacity-70 {themeClasses.text} mb-4 {deviceType === 'mobile' ? 'mb-3' : 'mb-6'} leading-relaxed">
-                    Select an image file containing a QR code<br />
-                    Supports JPG, PNG, WebP, and other formats
+                  <h4 class="text-sm font-semibold {themeClasses.text} mb-2">Upload QR Code</h4>
+                  <p class="text-xs opacity-70 {themeClasses.text} mb-3 leading-relaxed">
+                    Select an image containing a QR code
                   </p>
                   <button
-                    class="btn {deviceType === 'mobile' ? 'btn-md' : 'btn-lg'} bg-gradient-to-r from-primary via-secondary to-accent text-primary-content border-none rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 active:scale-95 transition-all duration-300 backdrop-blur-lg"
+                    class="btn btn-md bg-gradient-to-r from-primary via-secondary to-accent text-primary-content border-none rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 active:scale-95 transition-all duration-300 backdrop-blur-lg"
                     onclick={handleFileSelect}
                     disabled={isProcessingImage}
                   >
@@ -1060,7 +1225,7 @@
                       <span class="loading loading-spinner loading-sm"></span>
                       Processing...
                     {:else}
-                      <Upload class="w-5 h-5" />
+                      <Upload class="w-4 h-4" />
                       Choose Image
                     {/if}
                   </button>
@@ -1068,95 +1233,96 @@
               {/if}
             </div>
           {/if}
+
+          <!-- Error Overlay -->
           {#if errorMessage}
             <div class="absolute inset-0 z-40 flex flex-col items-center justify-center bg-error/15 backdrop-blur-xl rounded-2xl border border-error/30">
-              <div class="max-w-sm mx-auto text-center p-4 {deviceType === 'mobile' ? 'p-3 max-w-xs' : 'p-6'} bg-base-100/30 backdrop-blur-lg rounded-xl border border-base-content/20 shadow-xl">
-                <div class="w-12 h-12 {deviceType === 'mobile' ? 'w-10 h-10' : 'w-16 h-16'} mx-auto mb-3 {deviceType === 'mobile' ? 'mb-2' : 'mb-4'} bg-error/30 rounded-full flex items-center justify-center backdrop-blur-sm border border-error/40">
-                  <svg class="w-6 h-6 {deviceType === 'mobile' ? 'w-5 h-5' : 'w-8 h-8'} text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="max-w-xs mx-auto text-center p-3 bg-base-100/30 backdrop-blur-lg rounded-xl border border-base-content/20 shadow-xl">
+                <div class="w-10 h-10 mx-auto mb-2 bg-error/30 rounded-full flex items-center justify-center backdrop-blur-sm border border-error/40">
+                  <svg class="w-5 h-5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
                 </div>
-                <p class="text-sm {deviceType === 'mobile' ? 'text-xs' : 'text-sm'} {themeClasses.text} mb-3 {deviceType === 'mobile' ? 'mb-2' : 'mb-4'} leading-relaxed">{errorMessage}</p>
+                <p class="text-xs {themeClasses.text} mb-2 leading-relaxed">{errorMessage}</p>
                 {#if scanMode === 'camera'}
                   <button
-                    class="btn {deviceType === 'mobile' ? 'btn-sm' : 'btn-md'} bg-primary/90 hover:bg-primary text-primary-content border-none rounded-lg backdrop-blur-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                    class="btn btn-sm bg-primary/90 hover:bg-primary text-primary-content border-none rounded-lg backdrop-blur-lg shadow-lg hover:shadow-xl transition-all duration-300"
                     onclick={retryScanner}
                   >
-                    <RotateCcw class="w-4 h-4" />
+                    <RotateCcw class="w-3 h-3" />
                     Try Again
                   </button>
                 {:else}
                   <button
-                    class="btn {deviceType === 'mobile' ? 'btn-sm' : 'btn-md'} bg-secondary/90 hover:bg-secondary text-secondary-content border-none rounded-lg backdrop-blur-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                    class="btn btn-sm bg-secondary/90 hover:bg-secondary text-secondary-content border-none rounded-lg backdrop-blur-lg shadow-lg hover:shadow-xl transition-all duration-300"
                     onclick={handleFileSelect}
                   >
-                    <Upload class="w-4 h-4" />
+                    <Upload class="w-3 h-3" />
                     Choose Different Image
                   </button>
                 {/if}
               </div>
             </div>
           {/if}
+
+          <!-- Processing Overlay -->
           {#if isProcessingImage}
             <div class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-base-200/90 backdrop-blur-xl rounded-2xl border border-base-content/20">
-              <div class="loading loading-spinner loading-lg text-secondary mb-4"></div>
-              <div class="text-lg {deviceType === 'mobile' ? 'text-base' : 'text-lg'} font-semibold {themeClasses.text} mb-2">Processing image...</div>
-              <div class="text-sm opacity-60 {themeClasses.text}">Scanning for QR codes</div>
+              <div class="loading loading-spinner loading-lg text-secondary mb-3"></div>
+              <div class="text-sm font-semibold {themeClasses.text} mb-1">Processing image...</div>
+              <div class="text-xs opacity-60 {themeClasses.text}">Scanning for QR codes</div>
             </div>
           {/if}
         </div>
       </div>
 
-      <div class="p-3 {deviceType === 'mobile' ? 'p-2' : 'p-4'}">
-        <div class="{themeClasses.card} rounded-2xl p-3 {deviceType === 'mobile' ? 'p-2' : 'p-4'} border border-base-content/20">
-          <div class="flex items-start gap-3">
-            <div class="w-8 h-8 {deviceType === 'mobile' ? 'w-6 h-6' : 'w-8 h-8'} bg-info/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 backdrop-blur-sm border border-info/40">
-              <svg class="w-4 h-4 {deviceType === 'mobile' ? 'w-3 h-3' : 'w-4 h-4'} text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <!-- Info Panel -->
+      <div class="p-2 {deviceType === 'mobile' ? 'p-1' : 'p-3'}">
+        <div class="{themeClasses.card} rounded-xl p-2 border border-base-content/20">
+          <div class="flex items-start gap-2">
+            <div class="w-6 h-6 bg-info/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 backdrop-blur-sm border border-info/40">
+              <svg class="w-3 h-3 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
             </div>
             <div class="flex-1">
-              <p class="text-sm {deviceType === 'mobile' ? 'text-xs' : 'text-sm'} {themeClasses.text} leading-relaxed">
+              <p class="text-xs {themeClasses.text} leading-relaxed">
                 {#if scanMode === 'camera'}
-                  Position QR codes within the camera frame. Optimized for {platform} on {operatingSystem}.
-                  {#if hasFlashlight}
-                    <br />Use flashlight for low light.
+                  Position QR codes within the camera frame. Back camera selected by default.
+                  {#if isCapacitor}
+                    <br />Optimized for native app performance.
                   {/if}
-                  {#if deviceType === 'mobile'}
-                    <br />Best results when QR code fills the scan area.
+                  {#if hasFlashlight}
+                    <br />Use flashlight for low light conditions.
                   {/if}
                 {:else}
                   Upload images containing QR codes. Supports common formats.
                 {/if}
               </p>
-              {#if scanCount > 0 || nativePermissionStatus !== 'unknown'}
-                <div class="mt-2 {deviceType === 'mobile' ? 'mt-1' : 'mt-3'} flex flex-wrap items-center gap-2 {deviceType === 'mobile' ? 'gap-1' : 'gap-4'} text-xs {deviceType === 'mobile' ? 'text-[10px]' : 'text-xs'} opacity-60 {themeClasses.text}">
+              {#if scanCount > 0 || availableCameras.length > 0}
+                <div class="mt-1 flex flex-wrap items-center gap-1 text-[10px] opacity-60 {themeClasses.text}">
                   {#if scanCount > 0}
                     <span class="flex items-center gap-1">
-                      <Zap class="w-3 h-3" />
-                      Scans: {scanCount}
+                      <Zap class="w-2 h-2" />
+                      {scanCount}
                     </span>
                   {/if}
-                  <span class="flex items-center gap-1">
-                    <svelte:component this={getPlatformIcon()} class="w-3 h-3" />
-                    {platform}
-                  </span>
                   {#if scanMode === 'camera' && availableCameras.length > 0}
                     <span class="flex items-center gap-1">
-                      <Camera class="w-3 h-3" />
-                      {availableCameras.length} camera{availableCameras.length > 1 ? 's' : ''}
-                    </span>
-                  {/if}
-                  {#if nativePermissionStatus !== 'unknown'}
-                    <span class="flex items-center gap-1">
-                      <div class="w-2 h-2 rounded-full {nativePermissionStatus === 'granted' ? 'bg-success' : nativePermissionStatus === 'denied' ? 'bg-error' : 'bg-warning'}"></div>
-                      {nativePermissionStatus}
+                      <Camera class="w-2 h-2" />
+                      {availableCameras.length} cam{availableCameras.length > 1 ? 's' : ''}
                     </span>
                   {/if}
                   {#if hasFlashlight}
                     <span class="flex items-center gap-1">
-                      <Flashlight class="w-3 h-3" />
+                      <Flashlight class="w-2 h-2" />
                       flash
+                    </span>
+                  {/if}
+                  {#if isCapacitor}
+                    <span class="flex items-center gap-1">
+                      <div class="w-2 h-2 rounded-full bg-warning animate-pulse"></div>
+                      native
                     </span>
                   {/if}
                 </div>
@@ -1166,83 +1332,69 @@
         </div>
       </div>
 
-      <div class="p-3 {deviceType === 'mobile' ? 'p-2' : 'p-4'} border-t border-base-content/20">
-        <div class="flex justify-between items-center gap-2 {deviceType === 'mobile' ? 'gap-1' : 'gap-3'}">
-          <div class="flex gap-1 {deviceType === 'mobile' ? 'gap-1' : 'gap-2'}">
+      <!-- Footer -->
+      <div class="p-2 {deviceType === 'mobile' ? 'p-1' : 'p-3'} border-t border-base-content/20">
+        <div class="flex justify-between items-center gap-1">
+          <div class="flex gap-1">
             {#if scanMode === 'camera' && isCameraActive && !continuousScanning}
               <button
-                class="btn {deviceType === 'mobile' ? 'btn-xs' : 'btn-sm'} bg-success/90 hover:bg-success text-success-content border-none rounded-lg backdrop-blur-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                class="btn btn-xs bg-success/90 hover:bg-success text-success-content border-none rounded-lg backdrop-blur-lg shadow-lg hover:shadow-xl transition-all duration-300"
                 onclick={() => {
                   continuousScanning = true;
                   setupContinuousScanning();
                 }}
               >
-                <Zap class="w-4 h-4" />
+                <Zap class="w-3 h-3" />
                 {#if deviceType !== 'mobile'}
-                  <span>Continuous</span>
+                  <span class="text-xs">Continuous</span>
                 {/if}
               </button>
             {/if}
             {#if scanMode === 'image' && !uploadedImageUrl}
               <button
-                class="btn {deviceType === 'mobile' ? 'btn-xs' : 'btn-sm'} bg-secondary/90 hover:bg-secondary text-secondary-content border-none rounded-lg backdrop-blur-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                class="btn btn-xs bg-secondary/90 hover:bg-secondary text-secondary-content border-none rounded-lg backdrop-blur-lg shadow-lg hover:shadow-xl transition-all duration-300"
                 onclick={handleFileSelect}
                 disabled={isProcessingImage}
               >
                 {#if isProcessingImage}
                   <span class="loading loading-spinner loading-xs"></span>
-                  {#if deviceType !== 'mobile'}
-                    Processing...
-                  {/if}
                 {:else}
-                  <Upload class="w-4 h-4" />
+                  <Upload class="w-3 h-3" />
                   {#if deviceType !== 'mobile'}
-                    <span>Choose</span>
+                    <span class="text-xs">Choose</span>
                   {/if}
                 {/if}
               </button>
             {/if}
-            {#if (platform === 'electron' || platform === 'flatpak') && electronAPI}
-              <div class="flex items-center gap-1 px-2 py-1 bg-base-content/10 rounded-lg backdrop-blur-sm text-xs {themeClasses.text}">
-                <div class="w-2 h-2 rounded-full bg-success animate-pulse"></div>
+            {#if isCapacitor}
+              <div class="flex items-center gap-1 px-2 py-1 bg-warning/20 rounded-lg backdrop-blur-sm text-xs {themeClasses.text}">
+                <div class="w-2 h-2 rounded-full bg-warning animate-pulse"></div>
                 {#if deviceType !== 'mobile'}
-                  <span>Native</span>
+                  <span class="text-xs">Native</span>
                 {/if}
               </div>
             {/if}
           </div>
-          <div class="flex gap-1 {deviceType === 'mobile' ? 'gap-1' : 'gap-2'}">
+          <div class="flex gap-1">
             {#if !isCameraActive && errorMessage && scanMode === 'camera'}
               <button
-                class="btn {deviceType === 'mobile' ? 'btn-xs' : 'btn-sm'} bg-warning/90 hover:bg-warning text-warning-content border-none rounded-lg backdrop-blur-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                class="btn btn-xs bg-warning/90 hover:bg-warning text-warning-content border-none rounded-lg backdrop-blur-lg shadow-lg hover:shadow-xl transition-all duration-300"
                 onclick={retryScanner}
               >
-                <RotateCcw class="w-4 h-4" />
+                <RotateCcw class="w-3 h-3" />
                 {#if deviceType !== 'mobile'}
-                  <span>Retry</span>
-                {/if}
-              </button>
-            {/if}
-            {#if platform === 'electron' || platform === 'flatpak'}
-              <button
-                class="btn {deviceType === 'mobile' ? 'btn-xs' : 'btn-sm'} bg-base-content/10 hover:bg-base-content/20 {themeClasses.text} border-none rounded-lg backdrop-blur-sm opacity-70 hover:opacity-100 transition-all duration-300"
-                onclick={() => console.log('Platform Info:', { platform, deviceType, operatingSystem, nativePermissionStatus, availableCameras: availableCameras.length, hasFlashlight, electronAPI: !!electronAPI, supportedConstraints })}
-                title="Debug Info"
-              >
-                <svelte:component this={getPlatformIcon()} class="w-4 h-4" />
-                {#if deviceType !== 'mobile'}
-                  <span>Debug</span>
+                  <span class="text-xs">Retry</span>
                 {/if}
               </button>
             {/if}
             <button
-              class="btn {deviceType === 'mobile' ? 'btn-xs' : 'btn-sm'} bg-base-content/15 hover:bg-base-content/25 {themeClasses.text} border-none rounded-lg backdrop-blur-lg transition-all duration-300"
+              class="btn btn-xs bg-base-content/15 hover:bg-base-content/25 {themeClasses.text} border-none rounded-lg backdrop-blur-lg transition-all duration-300"
               onclick={() => toggleModal(false)}
             >
               {#if deviceType === 'mobile'}
                 ✕
               {:else}
-                Cancel
+                <span class="text-xs">Cancel</span>
               {/if}
             </button>
           </div>
@@ -1263,44 +1415,155 @@
     to { opacity: 1; transform: scale(1) translateY(0); }
   }
 
-  .animate-fade-in { animation: fade-in 0.3s ease-out; }
-  .animate-scale-in { animation: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .animate-fade-in { animation: fade-in 0.2s ease-out; }
+  .animate-scale-in { animation: scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
   .backdrop-blur-xs { backdrop-filter: blur(2px); }
   .backdrop-blur-2xl { backdrop-filter: blur(40px); }
   .shadow-inner { box-shadow: inset 0 2px 8px 0 rgba(0, 0, 0, 0.1); }
-  .btn:hover { transform: translateY(-2px); }
+
+  .btn:hover { transform: translateY(-1px); }
   .btn:active { transform: translateY(0); }
+
+  /* Mobile optimizations */
   @media (max-width: 640px) {
-    .btn-lg { @apply btn-md; }
-    .modal-box { margin: 0.5rem; }
-    .btn-xs { min-height: 2rem; min-width: 2rem; }
+    .btn-lg {
+      min-height: 3.5rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .modal-box { margin: 0.25rem; }
+    .btn-xs { min-height: 1.75rem; min-width: 1.75rem; padding: 0.25rem 0.5rem; }
   }
+
+  /* Landscape mobile adjustments */
   @media (max-height: 640px) and (orientation: landscape) {
-    .aspect-square { aspect-ratio: 16/9; }
+    .aspect-square { aspect-ratio: 16/10; }
+    .btn-lg { min-height: 3rem; }
   }
+
+  /* Capacitor-specific optimizations */
+  .video-capacitor {
+    image-rendering: optimizeQuality;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  /* Platform-specific styles */
   .flatpak-optimized { image-rendering: crisp-edges; }
   .electron-native { -webkit-app-region: no-drag; }
+
+  /* Performance optimizations */
   .loading-spinner { animation-duration: 0.8s; }
-  .scan-guide-mobile { border-width: 3px; border-style: dashed; animation: scan-pulse 2s infinite ease-in-out; }
+  video {
+    filter: contrast(1.05) brightness(1.02);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  /* Scan guide for mobile */
+  .scan-guide-mobile {
+    border-width: 2px;
+    border-style: dashed;
+    animation: scan-pulse 2s infinite ease-in-out;
+  }
+
   @keyframes scan-pulse {
     0%, 100% { opacity: 0.5; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.02); }
+    50% { opacity: 1; transform: scale(1.01); }
   }
-  video { filter: contrast(1.1) brightness(1.05); }
+
+  /* Native app indicator */
   .native-indicator { position: relative; }
   .native-indicator::after {
-    content: ''; position: absolute; top: -2px; right: -2px; width: 6px; height: 6px; background: #00ff00; border-radius: 50%; animation: native-pulse 2s infinite;
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 6px;
+    height: 6px;
+    background: #fbbf24;
+    border-radius: 50%;
+    animation: native-pulse 2s infinite;
   }
+
   @keyframes native-pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.7; transform: scale(0.9); }
   }
-  @media (prefers-reduced-motion: reduce) {
-    .animate-fade-in, .animate-scale-in, .animate-bounce, .animate-pulse { animation: none; }
+
+  /* Touch-friendly buttons for mobile */
+  @media (pointer: coarse) {
+    .btn {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    .btn-xs {
+      min-height: 36px;
+      min-width: 36px;
+    }
   }
+
+  /* Reduce motion for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-in,
+    .animate-scale-in,
+    .animate-bounce,
+    .animate-pulse,
+    .scan-pulse,
+    .native-pulse {
+      animation: none;
+    }
+    .btn:hover { transform: none; }
+  }
+
+  /* High contrast mode */
   @media (prefers-contrast: high) {
-    .backdrop-blur-xl, .backdrop-blur-lg, .backdrop-blur-md {
-      backdrop-filter: none; background-color: var(--fallback-b1, oklch(var(--b1)));
+    .backdrop-blur-xl,
+    .backdrop-blur-lg,
+    .backdrop-blur-md {
+      backdrop-filter: none;
+      background-color: var(--fallback-b1, oklch(var(--b1)));
+    }
+    .border-base-content\/20 {
+      border-color: var(--fallback-bc, oklch(var(--bc)));
+    }
+  }
+
+  /* iOS Safari specific fixes */
+  @supports (-webkit-touch-callout: none) {
+    .fixed {
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+    }
+    video {
+      -webkit-playsinline: true;
+      object-position: center center;
+    }
+  }
+
+  /* Android WebView optimizations */
+  @media screen and (-webkit-min-device-pixel-ratio: 2) {
+    video {
+      image-rendering: -webkit-optimize-contrast;
+    }
+  }
+
+  /* Capacitor status bar safe area */
+  @supports (padding-top: env(safe-area-inset-top)) {
+    .capacitor-safe-top {
+      padding-top: env(safe-area-inset-top);
+    }
+    .capacitor-safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
+
+  /* PWA display optimizations */
+  @media (display-mode: standalone) {
+    .btn-lg {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
   }
 </style>
