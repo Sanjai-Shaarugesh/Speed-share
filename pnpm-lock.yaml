@@ -369,6 +369,9 @@ importers:
       ts-proto:
         specifier: ^1.181.2
         version: 1.181.2
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
 
 packages:
 

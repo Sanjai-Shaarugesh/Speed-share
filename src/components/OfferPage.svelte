@@ -65,25 +65,10 @@
       return;
     }
 
-    console.log('WebRTC Connection Details:', {
-      signalingState: connection.signalingState,
-      iceConnectionState: connection.iceConnectionState,
-      connectionState: connection.connectionState,
-      hasLocalDescription: !!connection.localDescription,
-      hasRemoteDescription: !!connection.remoteDescription
-    });
+
   }
 
-  function debugAcceptAnswer() {
-    console.log('Debug Accept Answer:', {
-      answerCode,
-      sendOptions,
-      isEncrypting: sendOptions.isEncrypt,
-      connectionExists: !!connection
-    });
 
-    logWebRTCState();
-  }
 
   async function createOfferCode(offer: RTCSessionDescription) {
     let publicKeyBase64 = '';

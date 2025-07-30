@@ -199,7 +199,7 @@
       }
     }
 
-    console.log(`Camera deduplication: ${cameras.length} → ${unique.length}`, { isSamsungDevice, isCapacitor });
+
     return unique;
   }
 
@@ -647,11 +647,7 @@
 
       if (isSamsungDevice || isCapacitor || deviceType === 'mobile') {
         const uniqueCameras = filterUniqueCameras(newAvailableCameras);
-        console.log(`Camera filtering - Original: ${newAvailableCameras.length}, Unique: ${uniqueCameras.length}`, {
-          isSamsungDevice,
-          samsungCameraWorkaround,
-          isOneUI
-        });
+
 
         // Update available cameras list to only include unique ones
         availableCameras = newAvailableCameras.filter(camera =>
@@ -1218,13 +1214,7 @@
     }
   }
 
-  function setupContinuousScanning() {
-    console.log(`Continuous scanning enabled for ${platform} on ${deviceType}`, {
-      isSamsungDevice,
-      samsungCameraWorkaround,
-      isCapacitor
-    });
-  }
+
 
   function handleScannerError(err: any) {
     console.error('Scanner error:', err);
