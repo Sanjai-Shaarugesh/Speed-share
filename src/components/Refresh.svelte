@@ -1,37 +1,38 @@
 <script lang='ts'>
   import { Capacitor } from '@capacitor/core';
   import { onMount , onDestroy } from 'svelte';
+    import {RadioTower} from '@lucide/svelte';
 
 
   let isNative = $state(false);
-  
+
   onMount(() => {
-   
+
     isNative = Capacitor.isNativePlatform();
   });
 
   function refreshPage() {
     if (isNative) {
-      
-      
+
+
       setTimeout(() => {
         window.location.href = window.location.href;
       }, 300);
     } else {
-      
+
       window.location.reload();
     }
   }
-  
+
   onMount(()=>{
     const handleShorcuts = (e:KeyboardEvent) =>{
       if(e.ctrlKey && e.key.toLowerCase() == 'r'){
          window.location.reload();
       }
     }
-    
+
     window.addEventListener('keydown', handleShorcuts);
-    
+
     onDestroy(()=>{
       window.removeEventListener('keydown', handleShorcuts);
     })
@@ -39,16 +40,16 @@
 </script>
 
 <main class="flex flex-col justify-between">
-  
-  <div class="fixed bottom-6 left-0 right-0 flex justify-center px-4 mb-10 mt-10 animate-bounce duration-1000">
+
+  <div class="fixed bottom-10 left-0 right-0 flex justify-center px-4 mb-10 mt-10 animate-bounce duration-1000">
     <button
       onclick={refreshPage}
       class="group flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-blue-700 active:scale-95 transition duration-200"
     >
         {#if isNative}
-      Refresh 
+     New Connection <RadioTower size={20} />
       {:else}
-      Refresh Page
+      New Connection <RadioTower size={20} />
       {/if}
       <svg
         xmlns="http://www.w3.org/2000/svg"
